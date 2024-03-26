@@ -5,10 +5,21 @@ const {
   storeUserMemory,
   getRelevantMemories,
 } = require("./remember.js");
+const {
+  createTodo,
+  deleteTodo,
+  updateTodo,
+} = require("../capabilities/supabasetodo.js");
 const chance = require("chance").Chance();
 const vision = require("./vision.js");
 const logger = require("../src/logger.js")("memory");
-const preambleLogger = require("../src/logger.js")("preamble");
+// const preambleLogger = require("../src/logger.js")("preamble");
+
+const preambleLogger = {
+  info: (message) => {},
+};
+
+
 const { getPromptsFromSupabase, getConfigFromSupabase } = require("../helpers");
 
 module.exports = (async () => {
@@ -24,11 +35,11 @@ module.exports = (async () => {
    * @param {string} username - The username of the user to generate a completion for
    * @param {Array} conversationHistory - The entire conversation history up to the point of the user's last message
    * @param {boolean} isCapability - Whether the completion is for a capability or not
-   * @param {strin } capabilityName - The name of the capability (if applicable)
+   * @param {string} capabilityName - The name of the capability (if applicable)
    *
    * @returns {string} - The completion text
    */
-  async function generateAndStoreCompletion(
+  async function logInteraction(
     prompt,
     response,
     { username = "", channel = "", guild = "" },
@@ -87,7 +98,6 @@ module.exports = (async () => {
         content: isCapability ? PROMPT_CAPABILITY_REMEMBER : PROMPT_REMEMBER,
       },
     ];
-
     // make sure none of the completeMessages have an image
     // completeMessages.forEach((message) => {
     //   if (message.image) {
@@ -95,9 +105,9 @@ module.exports = (async () => {
     //   }
     // });
 
-    preambleLogger.info(
-      `📜 Preamble messages ${JSON.stringify(completeMessages)}`,
-    );
+    // preambleLogger.info(
+    //   `📜 Preamble messages ${JSON.stringify(completeMessages)}`,
+    // );
 
     // de-dupe memories
     memories = [...userMemories, ...generalMemories, ...relevantMemories];
@@ -144,7 +154,7 @@ module.exports = (async () => {
     //   }
     // });
 
-    const rememberCompletion = await openai.createChatCompletion({
+    const rememberCompletion = await openai.chat.completions.create({
       model: REMEMBER_MODEL,
       // temperature: 1.1,
       // top_p: 0.9,
@@ -176,7 +186,10 @@ module.exports = (async () => {
       ],
     });
 
-    const rememberText = rememberCompletion.data.choices[0].message.content;
+
+    console.log('remember completion', rememberCompletion);
+
+    const rememberText = rememberCompletion.choices[0].message.content;
 
     // if the remember text is ✨ AKA empty, we don't wanna store it
     if (rememberText === "✨") return rememberText;
@@ -184,10 +197,63 @@ module.exports = (async () => {
     if (rememberText.length <= 0) return rememberText;
     await storeUserMemory({ username: "capability" }, rememberText);
 
-    return rememberText;
+
+
+    // TODO: ANALYZE EXCHANGE FOR ANY TODOS/TASKS AND THEN MODIFY THE TODOS TABLE BASED ON WHAT IS NEEDED
+
+    const taskAnalysisMessages = [
+      ...memoryMessages,
+      ...conversationHistory,
+      {
+        role: "system",
+        content: `Analyze the previous messages for any content that could be a task or todo. If found, please add or modify the todo list using a few simple capabilities: 
+
+        - todo:createTodo(name, description)
+        - todo:deleteTodo(todoId)
+        - todo:updateTodo(todoId, updates)
+        `
+      }
+    ];
+
+    const taskAnalysisCompletion = await openai.chat.completions.create({
+      model: REMEMBER_MODEL,
+      presence_penalty: -0.1,
+      max_tokens: 256,
+      messages: taskAnalysisMessages,
+    });
+
+    const taskAnalysisText = taskAnalysisCompletion.choices[0].message.content;
+
+    // TODO: Look for any commands in the response and execute them - note: a response could contain MANY commands
+    const createTodoRegex = /todo:createTodo\((.*)\)/g;
+    const deleteTodoRegex = /todo:deleteTodo\((.*)\)/g;
+    const updateTodoRegex = /todo:updateTodo\((.*)\)/g;
+
+    // look for createTodo commands
+    const createTodoMatches = taskAnalysisText.match(createTodoRegex);
+    const deleteTodoMatches = taskAnalysisText.match(deleteTodoRegex);
+    const updateTodoMatches = taskAnalysisText.match(updateTodoRegex);
+
+    const createTodosPromises = createTodoMatches ? createTodoMatches.map((match) => {
+      const [name, description] = match.split(",");
+      return createTodo(name, description);
+    }) : [];
+
+    const deleteTodosPromises = deleteTodoMatches ? deleteTodoMatches.map((match) => {
+      const [todoId] = match.split(",");
+      return deleteTodo(todoId);
+    }) : [];
+
+    const updateTodosPromises = updateTodoMatches ? updateTodoMatches.map((match) => {
+      const [todoId, updates] = match.split(",");
+      return updateTodo(todoId, updates);
+    }) : [];
+
+    const promises = await Promise.all([...createTodosPromises, ...deleteTodosPromises, ...updateTodosPromises]);
+    return JSON.stringify(promises);
   }
 
   return {
-    generateAndStoreCompletion,
+    logInteraction,
   };
 })();
