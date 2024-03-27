@@ -1,13 +1,6 @@
 const { parseJSONArg } = require("../helpers");
 const { createSharedLabel, createPost } = require("../src/missive");
-const { createClient } = require("@supabase/supabase-js");
 require("dotenv").config();
-
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_API_KEY,
-  { db: { schema: "tachio" } },
-);
 
 const ORG_TABLE_NAME = "orgs";
 const EMAIL_TABLE_NAME = "emails";
@@ -70,7 +63,7 @@ async function createOrg({
     newlyAddedEmails = data
   }
 
-  const { data, error } = await supabase.from(ORG_TABLE_NAME).insert([
+  const { data, error } = await supabaseTachio.from(ORG_TABLE_NAME).insert([
     {
       name,
       shortname: shortname || name.replace(/\s/g, '-'),
@@ -90,7 +83,7 @@ async function createOrg({
     org_id: data[0].id,
   }))
   if (orgEmails.length > 0) {
-    const { error: orgEmailError } = await supabase.from(ORG_EMAIL_TABLE_NAME).insert(orgEmails)
+    const { error: orgEmailError } = await supabaseTachio.from(ORG_EMAIL_TABLE_NAME).insert(orgEmails)
     if (orgEmailError) throw new Error(orgEmailError.message);
   }
   return `Successfully added org: ${name}`;

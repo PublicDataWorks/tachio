@@ -12,6 +12,7 @@ const vision = require("./src/vision.js");
 const { createHmac } = require("crypto");
 const logger = require("./src/logger.js")("api");
 const { getMessage } = require("./src/missive.js");
+const { processLinearRequest } = require("./src/linear");
 require("dotenv").config();
 
 const apiFront = "https://public.missiveapp.com/v1";
@@ -423,6 +424,12 @@ app.post("/api/webhook-prompt", async (req, res) => {
   logger.info(`Processed message: ${JSON.stringify(processedMessage)}`);
 })
 
+app.post("/api/linear", async (req, res) => {
+  processLinearRequest(req.body).then(() => logger.info(`Linear webhook processed`))
+    .catch((error) => logger.error(`Error processing Linear webhook: ${error.message}`));
+  logger.info(`Sending 200 response`);
+  res.status(200).end();
+});
 
 function jsonToMarkdownList(jsonObj, indentLevel = 0) {
   let str = "";
