@@ -20,8 +20,14 @@ const apiKey = process.env.MISSIVE_API_KEY;
 const port = process.env.EXPRESS_PORT;
 const BOT_NAME = process.env.BOT_NAME;
 
-app.use(express.json());
-
+app.use(
+    express.json({
+      // Save raw body buffer before JSON parsing
+      verify: (req, res, buf) => {
+        req.rawBody = buf;
+      },
+    })
+);
 
 app.post("/api/message", async (req, res) => {
   const { processMessageChain } = await require("./src/chain");
@@ -425,6 +431,11 @@ app.post("/api/webhook-prompt", async (req, res) => {
 })
 
 app.post("/api/linear", async (req, res) => {
+  const signature = createHmac("sha256", process.env.LINEAR_WEBHOOK_SECRET).update(req.rawBody).digest("hex");
+    if (signature !== req.headers['linear-signature']) {
+        res.sendStatus(400);
+        return
+    }
   processLinearRequest(req.body).then(() => logger.info(`Linear webhook processed`))
     .catch((error) => logger.error(`Error processing Linear webhook: ${error.message}`));
   logger.info(`Sending 200 response`);

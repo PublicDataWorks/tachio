@@ -4,24 +4,24 @@ const WEBHOOK_TABLE_NAME = "linear_webhooks";
 const PROJECT_TABLE_NAME = "linear_projects";
 const TEAM_TABLE_NAME = "linear_teams";
 
-async function processLinearRequest(body) {
-    if (body.data.project) {
+async function processLinearRequest(payload) {
+    if (payload.data.project) {
         const {error} = await supabaseTachio.from(PROJECT_TABLE_NAME).upsert({
-            id: body.data.project.id,
-            name: body.data.project.name,
+            id: payload.data.project.id,
+            name: payload.data.project.name,
         }, {onConflict: 'id', ignoreDuplicates: true});
         if (error) throw new Error(error.message)
     }
 
-    if (body.data.team) {
+    if (payload.data.team) {
         const {error} = await supabaseTachio.from(TEAM_TABLE_NAME).upsert({
-            id: body.data.team.id,
-            key: body.data.team.key,
-            name: body.data.team.name,
+            id: payload.data.team.id,
+            key: payload.data.team.key,
+            name: payload.data.team.name,
         }, {onConflict: 'id', ignoreDuplicates: true});
         if (error) throw new Error(error.message)
     }
-    const {error} = await supabaseTachio.from(WEBHOOK_TABLE_NAME).insert(processWebhookPayload(body));
+    const {error} = await supabaseTachio.from(WEBHOOK_TABLE_NAME).insert(processWebhookPayload(payload));
     if (error) throw new Error(error.message)
 }
 
