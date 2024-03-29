@@ -13,6 +13,7 @@ const { createHmac } = require("crypto");
 const logger = require("./src/logger.js")("api");
 const { getMessage } = require("./src/missive.js");
 const { processLinearRequest } = require("./src/linear");
+const {processGithubRequest} = require("./src/github");
 require("dotenv").config();
 
 const apiFront = "https://public.missiveapp.com/v1";
@@ -438,6 +439,13 @@ app.post("/api/linear", async (req, res) => {
     }
   processLinearRequest(req.body).then(() => logger.info(`Linear webhook processed`))
     .catch((error) => logger.error(`Error processing Linear webhook: ${error.message}`));
+  logger.info(`Sending 200 response`);
+  res.status(200).end();
+});
+
+app.post("/api/github", async (req, res) => {
+  processGithubRequest(req).then(() => logger.info(`Github webhook processed`))
+      .catch((error) => logger.error(`Error processing Github webhook: ${error.message}`));
   logger.info(`Sending 200 response`);
   res.status(200).end();
 });
