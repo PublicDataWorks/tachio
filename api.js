@@ -21,6 +21,7 @@ const apiKey = process.env.MISSIVE_API_KEY;
 const port = process.env.EXPRESS_PORT;
 const BOT_NAME = process.env.BOT_NAME;
 
+
 app.use(
     express.json({
       // Save raw body buffer before JSON parsing
@@ -68,6 +69,7 @@ app.post("/api/message-image", async (req, res) => {
   res.json({ response: processedMessage });
 });
 
+
 const server = app.listen(port, "0.0.0.0", () => {
   logger.info(`Server is running on port ${port}`);
 });
@@ -79,31 +81,6 @@ server.on("error", (err) => {
     server.listen(port);
   }
 });
-
-/* These are endpoints to interact with Missive- we will have one endpoint that simply "receives" information, parses it and adds it to memory 
-
-Then we will also have a second endpoint that does all of the above, and then gets the message ID and uses POST to send the response to the location the webhook came from */
-
-// app.post("/api/missive-read", async (req, res) => {
-//   const username = req.body.username || "API User";
-
-//   const body = req.body;
-//   const webhookDescription = `${body?.rule?.description}`;
-
-//   await processMessageChain(
-//     [
-//       {
-//         role: "user",
-//         content: `New data received from webhook: ${webhookDescription} \n ${req.body.message}`,
-//       },
-//     ],
-//     username
-//   );
-
-//   // res.json({ response: processedMessage });
-//   // just give a 200 response
-//   res.status(200).end();
-// });
 
 async function listMessages(emailMessageId) {
   let url = `${apiFront}/conversations/${emailMessageId}/messages`;
@@ -121,9 +98,12 @@ async function listMessages(emailMessageId) {
   const response = await fetch(url, options);
   const data = await response.json();
 
+
   logger.info(`Data: ${JSON.stringify(data)}`);
+
   return data.messages;
 }
+
 function processWebhookPayload(payload) {
   const userMessage = payload.comment.body
   const userName = payload.userName;
@@ -165,6 +145,7 @@ function processWebhookPayload(payload) {
 
   return simplifiedPayload;
 }
+
 async function processMissiveRequest(body) {
   // Require the processMessageChain function from the chain module
   const { processMessageChain } = await require("./src/chain");
@@ -207,7 +188,7 @@ async function processMissiveRequest(body) {
         // Use the Missive conversationId as the channel
         // Store the attachment description as a memory in the database
         await storeUserMemory(
-          { username, channel: conversationId, guild: "missive" },
+          { username, channel: conversationId, guild: "missive"  },
           `Attachment ${body.comment.attachment.filename}: ${attachmentDescription}`,
           "attachment",
           resourceId
@@ -243,7 +224,7 @@ async function processMissiveRequest(body) {
     }
   } else {
     // Log if no attachment is found in the comment
-    logger.info(`No attachment found in body.comment`);
+    // logger.info(`No attachment found in body.comment`);
   }
 
   // Fetch the context messages for the conversation from the database
