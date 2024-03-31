@@ -1,24 +1,12 @@
-# Coach Artie Discord Bot
-
-Hello and welcome to the repository of Coach Artie, the hyper-intelligent AI assistant for [Room 302 Studio](https://www.room302.studio/). 
-
-## About Coach Artie
-
-Coach Artie is an advanced AI assistant that facilitates collaboration, helps answer questions, and sources resources to support the members of Room 302 Studio - a creative space dedicated to cultivating innovative projects and ideas. Coach Artie's goal is promoting a growth-conscious and explorative learning environment and assisting the studio in day-to-day tasks.
-
-## Features
-
-1. **Information Storage:** Coach Artie can remember key details from past interactions, providing a personalized support experience.
-2. **Versatile Capabilities:** from fetching URL summaries, integrating with Google Drive, to generating pytorch-friendly code snippets, Coach Artie showcases a wide array of skills.
-3. **Ease of Communication:** by joining your Discord server, Coach Artie can seamlessly engage with the studio members in real-time.
+# Tachio
 
 ## API Overview
 
-`api.js` is responsible for handling API requests. It allows you to interact with the bot, including all memories and capabilities, without using Discord.
+`api.js` is responsible for handling API requests. It allows you to interact with tachio's memories and capabilities directly.
 
 #### POST `/api/message`
 
-**Purpose:** Processes a message in the same way as if it were a message from Discord.
+**Purpose:** Processes a message in the same way as if it were a message from Missive or Discord.
 
 **Request Body:**
 - `message` (String): The text of the message to be processed.
@@ -27,9 +15,9 @@ Coach Artie is an advanced AI assistant that facilitates collaboration, helps an
 **Response:**
 - Returns a JSON object with the key `response` containing the processed message.
 
-## Discord Bot Code Overview
+## Code Overview
 
-The codebase is primarily divided into three main files: `discord.js`, `capabilities.js`, and `chain.js`.
+`missive.js` is responsible for interacting with Missive's API.
 
 `discord.js` is responsible for setting up the Discord bot client, handling message creation events, and sending messages or embed messages to the Discord server. It also includes functions to detect if the bot was mentioned or if the channel name includes a bot.
 
@@ -194,8 +182,12 @@ limit match_count;
 $$;
 ```
 
-## Acquiring API Keys and Tokens
+## API Keys and Tokens
 
+### Missive
+- **MISSIVE_API_KEY**: Setup your team on [Missive](https://missiveapp.com) and then you can generate an API key in Settings.
+- Note that Missive requires a paid plan for API and Rules/Webhooks.
+  
 ### Discord
 - **DISCORD_PUBLIC_KEY**: Visit the [Discord Developer Portal](https://discord.com/developers/applications), create a new application, and find your Public Key under the 'General Information' tab.
 - **DISCORD_APP_ID**: This is the 'Client ID' found in the same section as above in the Discord Developer Portal.
