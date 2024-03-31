@@ -1,14 +1,8 @@
 const { parseJSONArg } = require("../helpers");
 const { createSharedLabel, createPost } = require("../src/missive");
-const { createClient } = require("@supabase/supabase-js");
 const { ORG_TABLE_NAME } = require("./supabaseorg");
+const {supabaseTachio} = require("../src/supabaseclient");
 require("dotenv").config();
-
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_API_KEY,
-  { db: { schema: "tachio" } },
-);
 
 const PROJECT_TABLE_NAME = "projects";
 
@@ -51,7 +45,7 @@ async function createProject({
   })
   const conversationId = newPost.posts.conversation
 
-  const { error: errAddProject } = await supabase.from(PROJECT_TABLE_NAME).insert([
+  const { error: errAddProject } = await supabaseTachio.from(PROJECT_TABLE_NAME).insert([
     {
       name: projectName,
       org_id: org.id,
@@ -81,7 +75,7 @@ async function updateProject({
                              }) {
   if (!newProjectName && !newOrgId && !newAliases && !newStatus && !newStartDate && !newEndDate) return "No changes made"
 
-  const { data: [projectBefore], error } = await supabase
+  const { data: [projectBefore], error } = await supabaseTachio
     .from(PROJECT_TABLE_NAME)
     .select('org_id, aliases, status, start_date, end_date')
     .match({ name: projectName })
@@ -95,7 +89,7 @@ async function updateProject({
     (!newEndDate || newEndDate === projectBefore.end_date)
   ) return "No changes made";
 
-  const { error: errUpdateProject } = await supabase
+  const { error: errUpdateProject } = await supabaseTachio
     .from(PROJECT_TABLE_NAME)
     .update({
       name: newProjectName,

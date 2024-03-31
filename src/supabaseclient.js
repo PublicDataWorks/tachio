@@ -7,4 +7,10 @@ const supabase = createClient(
   process.env.SUPABASE_API_KEY,
 );
 
-module.exports = { supabase };
+const supabaseTachio = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_API_KEY,
+  { db: { schema: "tachio" } },
+);
+
+module.exports = { supabase, supabaseTachio };

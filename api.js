@@ -12,6 +12,8 @@ const vision = require("./src/vision.js");
 const { createHmac } = require("crypto");
 const logger = require("./src/logger.js")("api");
 const { getMessage } = require("./src/missive.js");
+const { processLinearRequest } = require("./src/linear");
+const {processGithubRequest} = require("./src/github");
 require("dotenv").config();
 
 const apiFront = "https://public.missiveapp.com/v1";
@@ -19,7 +21,54 @@ const apiKey = process.env.MISSIVE_API_KEY;
 const port = process.env.EXPRESS_PORT;
 const BOT_NAME = process.env.BOT_NAME;
 
-app.use(express.json());
+
+app.use(
+    express.json({
+      // Save raw body buffer before JSON parsing
+      verify: (req, res, buf) => {
+        req.rawBody = buf;
+      },
+    })
+);
+
+app.post("/api/message", async (req, res) => {
+  const { processMessageChain } = await require("./src/chain");
+  const message = req.body.message;
+  const username = req.body.username || "API User";
+
+  const processedMessage = await processMessageChain(
+    [
+      {
+        role: "user",
+        content: message,
+      },
+    ],
+    username,
+  );
+
+  res.json({ response: processedMessage });
+});
+
+app.post("/api/message-image", async (req, res) => {
+  const { processMessageChain } = await require("./src/chain");
+  const message = req.body.message;
+  const image = req.body.image;
+  const username = req.body.username || "API User";
+
+  const processedMessage = await processMessageChain(
+    [
+      {
+        role: "user",
+        content: message,
+        image: image,
+      },
+    ],
+    { username },
+  );
+
+  res.json({ response: processedMessage });
+});
+
 
 const server = app.listen(port, "0.0.0.0", () => {
   logger.info(`Server is running on port ${port}`);
@@ -49,7 +98,9 @@ async function listMessages(emailMessageId) {
   const response = await fetch(url, options);
   const data = await response.json();
 
-  // logger.info(`Data: ${JSON.stringify(data)}`);
+
+  logger.info(`Data: ${JSON.stringify(data)}`);
+
   return data.messages;
 }
 
@@ -360,6 +411,24 @@ app.post("/api/webhook-prompt", async (req, res) => {
   logger.info(`Processed message: ${JSON.stringify(processedMessage)}`);
 })
 
+app.post("/api/linear", async (req, res) => {
+  const signature = createHmac("sha256", process.env.LINEAR_WEBHOOK_SECRET).update(req.rawBody).digest("hex");
+    if (signature !== req.headers['linear-signature']) {
+        res.sendStatus(400);
+        return
+    }
+  processLinearRequest(req.body).then(() => logger.info(`Linear webhook processed`))
+    .catch((error) => logger.error(`Error processing Linear webhook: ${error.message}`));
+  logger.info(`Sending 200 response`);
+  res.status(200).end();
+});
+
+app.post("/api/github", async (req, res) => {
+  processGithubRequest(req).then(() => logger.info(`Github webhook processed`))
+      .catch((error) => logger.error(`Error processing Github webhook: ${error.message}`));
+  logger.info(`Sending 200 response`);
+  res.status(200).end();
+});
 
 function jsonToMarkdownList(jsonObj, indentLevel = 0) {
   let str = "";
