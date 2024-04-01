@@ -13,7 +13,8 @@ const { createHmac } = require("crypto");
 const logger = require("./src/logger.js")("api");
 const { getMessage } = require("./src/missive.js");
 const { processLinearRequest } = require("./src/linear");
-const {processGithubRequest} = require("./src/github");
+const { processGithubRequest, verifyGithubSignature } = require("./src/github");
+const { processPTRequest } = require("./src/pivotal-tracker");
 require("dotenv").config();
 
 const apiFront = "https://public.missiveapp.com/v1";
@@ -23,52 +24,13 @@ const BOT_NAME = process.env.BOT_NAME;
 
 
 app.use(
-    express.json({
-      // Save raw body buffer before JSON parsing
-      verify: (req, res, buf) => {
-        req.rawBody = buf;
-      },
-    })
+  express.json({
+    // Save raw body buffer before JSON parsing
+    verify: (req, res, buf) => {
+      req.rawBody = buf;
+    },
+  }),
 );
-
-app.post("/api/message", async (req, res) => {
-  const { processMessageChain } = await require("./src/chain");
-  const message = req.body.message;
-  const username = req.body.username || "API User";
-
-  const processedMessage = await processMessageChain(
-    [
-      {
-        role: "user",
-        content: message,
-      },
-    ],
-    username,
-  );
-
-  res.json({ response: processedMessage });
-});
-
-app.post("/api/message-image", async (req, res) => {
-  const { processMessageChain } = await require("./src/chain");
-  const message = req.body.message;
-  const image = req.body.image;
-  const username = req.body.username || "API User";
-
-  const processedMessage = await processMessageChain(
-    [
-      {
-        role: "user",
-        content: message,
-        image: image,
-      },
-    ],
-    { username },
-  );
-
-  res.json({ response: processedMessage });
-});
-
 
 const server = app.listen(port, "0.0.0.0", () => {
   logger.info(`Server is running on port ${port}`);
@@ -99,7 +61,7 @@ async function listMessages(emailMessageId) {
   const data = await response.json();
 
 
-  logger.info(`Data: ${JSON.stringify(data)}`);
+  // logger.info(`Data: ${JSON.stringify(data)}`);
 
   return data.messages;
 }
