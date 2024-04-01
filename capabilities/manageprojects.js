@@ -1,7 +1,7 @@
 const { parseJSONArg } = require("../helpers");
 const { createSharedLabel, createPost } = require("../src/missive");
-const { ORG_TABLE_NAME } = require("./supabaseorg");
-const {supabaseTachio} = require("../src/supabaseclient");
+const { supabaseTachio } = require("../src/supabaseclient");
+const { ORG_TABLE_NAME } = require("./manageorgs");
 require("dotenv").config();
 
 const PROJECT_TABLE_NAME = "projects";
@@ -16,10 +16,11 @@ async function createProject({
                                status,
                                startDate,
                                endDate,
+                               linearTeamId,
                              }) {
   if (!orgName || !projectName) throw new Error("Missing required fields");
 
-  const { data: [org], error } = await supabase
+  const { data: [org], error } = await supabaseTachio
     .from(ORG_TABLE_NAME)
     .select("id, missive_label_id")
     .match({ name: orgName })
@@ -58,6 +59,7 @@ async function createProject({
       missive_label_id: labelId,
       start_date: startDate || new Date(),
       end_date: endDate,
+      linear_team_id: linearTeamId,
     },
   ]);
   if (errAddProject) throw new Error(errAddProject.message);
@@ -109,7 +111,7 @@ async function updateProjectStatus({ name, shortname, alias, endDate, newStatus 
 
   let newValue = { status: newStatus }
   if (endDate) newValue.end_date = endDate
-  let query = supabase
+  let query = supabaseTachio
     .from(PROJECT_TABLE_NAME)
     .update(newValue)
   if (name) query = query.eq('name', name);
@@ -124,7 +126,7 @@ async function updateProjectStatus({ name, shortname, alias, endDate, newStatus 
 
 module.exports = {
   handleCapabilityMethod: async (method, args) => {
-    console.log(`⚡️ Calling capability method: supabaseproject.${method}`);
+    console.log(`⚡️ Calling capability method: manageprojects.${method}`);
     const arg = parseJSONArg(args)
     if (method === "createProject") {
       return await createProject(arg);
@@ -141,4 +143,5 @@ module.exports = {
       throw new Error(`Invalid method: ${method}`);
     }
   },
+  PROJECT_TABLE_NAME,
 };

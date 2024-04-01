@@ -1,5 +1,6 @@
 const { parseJSONArg } = require("../helpers");
 const { createSharedLabel, createPost } = require("../src/missive");
+const { supabaseTachio } = require("../src/supabaseclient");
 require("dotenv").config();
 
 const ORG_TABLE_NAME = "orgs";
@@ -17,6 +18,9 @@ const ORG_EMAIL_TABLE_NAME = "org_emails";
  * @param {Date} firstContact - The date of the first contact with the organization. If not provided, the current date is used.
  * @param {string} primaryEmailAddress - The primary email address of the organization.
  * @param {Array} emailAddresses - The email addresses of the organization.
+ * @param {string} linearId - The Linear ID of the organization.
+ * @param {string} githubId - The GitHub ID of the organization.
+ * @param {string} pivotalTrackerId - The Pivotal Tracker ID of the organization.
  *
  * @returns {Promise<string>} A promise that resolves to a string message indicating the result of the operation.
  *
@@ -31,9 +35,11 @@ async function createOrg({
                            firstContact,
                            primaryEmailAddress,
                            emailAddresses,
+                           linearId,
+                           githubId,
+                           pivotalTrackerId,
                          }) {
   if (!name) throw new Error("Missing required fields");
-
   const newLabel = await createSharedLabel({
     name,
     shareWithOrganization: true,
@@ -55,7 +61,7 @@ async function createOrg({
   let newlyAddedEmails = []
   if (primaryEmailAddress || emailAddresses) {
     const newEmailAddresses = [primaryEmailAddress, ...(emailAddresses || [])].map(emailAddress => ({ email_address: emailAddress }))
-    const { data, error } = await supabase
+    const { data, error } = await supabaseTachio
       .from(EMAIL_TABLE_NAME)
       .upsert(newEmailAddresses, { onConflict: 'email_address', ignoreDuplicates: false })
       .select("id, email_address");
@@ -74,6 +80,9 @@ async function createOrg({
       missive_label_id: labelId,
       first_contact: firstContact || new Date(),
       primary_email_address: primaryEmailAddress,
+      linear_id: linearId,
+      github_id: githubId,
+      pivotal_tracker_id: pivotalTrackerId,
     },
   ]).select("id");
   if (error) throw new Error(error.message);
@@ -105,7 +114,7 @@ async function createOrg({
 async function updateOrg({ name, newName, newAliases, newFirstContact }) {
   if (!newName && !newAliases && !newFirstContact) return "No changes made"
 
-  const { data: [orgBefore], error: errorGetOrg } = await supabase
+  const { data: [orgBefore], error: errorGetOrg } = await supabaseTachio
     .from(ORG_TABLE_NAME)
     .select('aliases, first_contact, missive_conversation_id')
     .match({ name })
@@ -116,7 +125,7 @@ async function updateOrg({ name, newName, newAliases, newFirstContact }) {
     (!newFirstContact || newFirstContact === orgBefore.first_contact)
   ) return "No changes made";
 
-  const { error } = await supabase
+  const { error } = await supabaseTachio
     .from(ORG_TABLE_NAME)
     .update({ newName, aliases: newAliases, first_contact: newFirstContact })
     .match({ name });
@@ -146,7 +155,7 @@ async function updateOrg({ name, newName, newAliases, newFirstContact }) {
 
 module.exports = {
   handleCapabilityMethod: async (method, args) => {
-    console.log(`⚡️ Calling capability method: supabaseorg.${method}`);
+    console.log(`⚡️ Calling capability method: manageorgs.${method}`);
     const arg = parseJSONArg(args)
     if (method === "createOrg") {
       return await createOrg(arg);
@@ -156,5 +165,5 @@ module.exports = {
       throw new Error(`Invalid method: ${method}`);
     }
   },
-  ORG_TABLE_NAME
+  ORG_TABLE_NAME,
 };
