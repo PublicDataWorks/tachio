@@ -7,7 +7,7 @@ const {
   isExceedingTokenLimit,
   getUniqueEmoji,
   getConfigFromSupabase,
-  createTokenLimitWarning,
+  createTokenLimitWarning, trimResponseByLineCount
 } = require("../helpers");
 
 // const {
