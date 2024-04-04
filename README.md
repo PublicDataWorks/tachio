@@ -9,10 +9,12 @@
 **Purpose:** Processes a message in the same way as if it were a message from Missive or Discord.
 
 **Request Body:**
+
 - `message` (String): The text of the message to be processed.
 - `username` (String, optional): Identifier for the user sending the message. Defaults to "API User" if not provided.
 
 **Response:**
+
 - Returns a JSON object with the key `response` containing the processed message.
 
 ## Code Overview
@@ -48,7 +50,6 @@
   ]
 ```
 
-
 ## Database Overview
 
 ### Messages Table
@@ -73,6 +74,7 @@ create table
 ```
 
 ### Memories Table
+
 ```sql
 create table
   public.memories (
@@ -94,6 +96,7 @@ create table
 ```
 
 ### TODOs Table
+
 ```sql
 create table
   public.todos (
@@ -106,6 +109,7 @@ create table
 ```
 
 ### Prompts Table
+
 ```sql
 create table
   public.prompts (
@@ -124,6 +128,7 @@ create table
 ```
 
 ### Config Table
+
 ```sql
 create table
   public.config (
@@ -151,7 +156,7 @@ VALUES
 ```
 
 ### Matching Query
-  
+
 ```sql
 create or replace function match_memories (
   query_embedding public.vector(1536),
@@ -185,32 +190,42 @@ $$;
 ## API Keys and Tokens
 
 ### Missive
+
 - **MISSIVE_API_KEY**: Setup your team on [Missive](https://missiveapp.com) and then you can generate an API key in Settings.
+- **MISSIVE_WEBHOOK_SECRET:** Create rules in Missive for each type of event that you want your robot to respond to (e.g., a new user comment) and select "webhook" as the action to be triggered by the rule, then set your own webhook secret that matches with the environment variable.
 - Note that Missive requires a paid plan for API and Rules/Webhooks.
-  
+
 ### Discord
+
 - **DISCORD_PUBLIC_KEY**: Visit the [Discord Developer Portal](https://discord.com/developers/applications), create a new application, and find your Public Key under the 'General Information' tab.
 - **DISCORD_APP_ID**: This is the 'Client ID' found in the same section as above in the Discord Developer Portal.
 - **DISCORD_BOT_TOKEN**: In the Discord Developer Portal, navigate to 'Bot', create a new bot, and use the token provided here.
 - **DISCORD_VOICE_CHANNEL_ID** and **DISCORD_GUILD_ID**: These IDs can be obtained by enabling 'Developer Mode' in Discord settings, right-clicking on the channel/guild, and selecting 'Copy ID'.
 
 ### OpenAI
+
 - **OPENAI_API_KEY**: Sign up at [OpenAI](https://beta.openai.com/signup/), and after verification, you can access your API key in your account settings.
 - **OPENAI_API_ORGANIZATION**: This is your organization ID on OpenAI, available in your account settings on the OpenAI dashboard.
 
 ### GitHub
+
 - **GITHUB_USER**: The bot's github username.
 - **GITHUB_TOKEN**, **GITHUB_APP_ID**, **GITHUB_INSTALLATION_ID**, **GITHUB_PERSONAL_ACCESS_TOKEN**: Generate these tokens by going to your GitHub settings, selecting 'Developer settings' → 'Personal access tokens', and creating a new token with the appropriate scopes.
 - **GITHUB_PERSONAL_ACCESS_TOKEN**: (Duplicate entry, see above)
 
 ### Wolfram Alpha
+
 - **WOLFRAM_APP_ID**: Sign up at [Wolfram Alpha Developer Portal](https://developer.wolframalpha.com/portal/myapps/), create an application, and use the AppID provided.
 
 ### ElevenLabs
+
 - **ELEVENLABS_VOICE_ID** and **ELEVEN_LABS_API_KEY**: Register at [ElevenLabs](https://www.elevenlabs.io/), create an application, and find your API Key and Voice ID under your application settings.
 
 ### Google
+
 - **GOOGLE_CLIENT_ID** and **GOOGLE_SECRET**: Go to the [Google Cloud Console](https://console.cloud.google.com/), create a new project, and navigate to 'APIs & Services' > 'Credentials'. Here, you can create your OAuth 2.0 credentials. You will need to create a service account and download the JSON file containing your credentials. You will also need to enable the Google Drive, Calendar, and Docs APIs for your project.
+- **Google Calendar** requires the service account to [&#34;insert&#34;](https://developers.google.com/calendar/api/v3/reference/calendarList/insert) your calendar to the service account's calendar list through the API (even after you have explicitly shared it from the).
 
 ### Mastodon
+
 - **MASTODON_API_URL** and **MASTODON_ACCESS_TOKEN**: Register your application with your Mastodon instance to receive the API URL, then follow the authentication process to obtain your access token.

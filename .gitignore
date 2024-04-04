@@ -15,3 +15,7 @@ auth/coach-artie-e95c8660132f.json
 auth/coach-artie-*.json
 .idea
 .DS_Store
+dockerfile
+tachio-b165984603e7.json
+.env-example
+db/migrations/20240401130926_remote_schema.sql
