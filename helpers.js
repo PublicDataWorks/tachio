@@ -1462,4 +1462,5 @@ module.exports = {
   cleanUrlForPuppeteer,
   processChunks,
   sleep,
+  trimResponseByLineCount
 };
