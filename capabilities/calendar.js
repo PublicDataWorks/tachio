@@ -176,8 +176,8 @@ async function listEventsBetweenDates(calendarId, startDate, endDate) {
   const calendar = await getCalendarInstance();
   const response = await calendar.events.list({
     calendarId,
-    timeMin: startDate.toISOString(),
-    timeMax: endDate.toISOString(),
+    timeMin: new Date(startDate).toISOString(),
+    timeMax: new Date(endDate).toISOString(),
     singleEvents: true,
     orderBy: "startTime",
   });
