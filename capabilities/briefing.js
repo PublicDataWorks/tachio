@@ -154,7 +154,7 @@ async function makeDailyBriefing() {
 
 /**
  * Makes a briefing on one particular project.
- * @param {String} project - The project name to make a briefing on.
+ * @param {String} projectName - The project name to make a briefing on.
  */
 async function makeProjectBriefing(projectName) {
   try {

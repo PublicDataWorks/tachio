@@ -29,8 +29,7 @@ const { supabase } = require("./src/supabaseclient.js");
 const Anthropic = require("@anthropic-ai/sdk");
 const anthropic = new Anthropic();
 
-const capabilityRegex = /(\w+):(\w+)\(([^]*?)\)/; // captures newlines in the  third argument
-
+const capabilityRegex = /(\w+)[\:-](\w+)\(([^]*?)\)/; // captures newlines in the  third argument
 /**
  * Retrieves prompts from Supabase.
  * @returns {Promise<Object>} An object containing different prompts.
@@ -583,7 +582,7 @@ async function createChatCompletion(
     `);
 
     try {
-      res = await openai.chat.completions.create({
+      const res = await openai.chat.completions.create({
         model: OPENAI_COMPLETION_MODEL,
         temperature: config.temperature,
         presence_penalty: config.presence_penalty,
@@ -611,17 +610,18 @@ async function createClaudeCompletion(messages, config) {
   // convert the messages into an xml format for claude, sent as a single well-formatted user message
   const xmlMessages = convertMessagesToXML(messages);
   // completionLogger.info(`xmlMessages: ${xmlMessages}`);
+  const { data, error } = await supabase
+    .from("config")
+    .select("config_value")
+    .match({ config_key: "MANIFEST" })
+  if (error) throw new Error(error.message);
 
-  const claudeCompletion = await anthropic.messages.create({
-    // model: "claude-2.1",
-    // model: "claude-3-sonnet-20240229",
-    // model: "claude-3-haiku-20240307",
-    model: CLAUDE_COMPLETION_MODEL,
+  return anthropic.beta.tools.messages.create({
+    model: "claude-3-opus-20240229",
     max_tokens: config.max_tokens,
+    tools: data.config_value,
     messages: [{ role: "user", content: xmlMessages }],
   });
-
-  return claudeCompletion;
 }
 
 /**
@@ -755,29 +755,20 @@ function loadCapabilityManifest() {
 /**
  * Adds a capability manifest message to the given array of messages.
  * @param {Array} messages - The array of messages to add the capability manifest message to.
- * @returns {Array} - The updated array of messages.
+ * @returns {Promise<Array>} - The updated array of messages.
  */
 async function addCapabilityManifestMessage(messages) {
   const { CHAT_MODEL } = await getConfigFromSupabase();
   const manifest = loadCapabilityManifest();
 
-  if (CHAT_MODEL === "claude") {
-    // convert the manifest to XML
-    const xmlManifest = convertCapabilityManifestToXML(manifest);
+  if (CHAT_MODEL !== "claude" && manifest) {
     messages.push({
       role: "user",
-      content: `## CAPABILITY MANIFEST\n\n${xmlManifest}`,
+      // content: `Capability manifest: ${JSON.stringify(manifest)}`,
+      content: `## CAPABILITY MANIFEST\n\n${formatCapabilityManifest(
+        manifest
+      )}`,
     });
-  } else {
-    if (manifest) {
-      messages.push({
-        role: "user",
-        // content: `Capability manifest: ${JSON.stringify(manifest)}`,
-        content: `## CAPABILITY MANIFEST\n\n${formatCapabilityManifest(
-          manifest
-        )}`,
-      });
-    }
   }
   return messages;
 }
