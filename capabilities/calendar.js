@@ -168,8 +168,8 @@ async function listEventsPrevWeek(calendarId) {
 /**
  * Retrieves a list of events occurring between the specified dates for the specified calendar.
  * @param {string} calendarId - The ID of the calendar to retrieve events from.
- * @param {Date} startDate - The start date of the range.
- * @param {Date} endDate - The end date of the range.
+ * @param {string} startDate - The start date of the range.
+ * @param {string} endDate - The end date of the range.
  * @returns {Promise<object>} - A promise that resolves to the list of events.
  */
 async function listEventsBetweenDates(calendarId, startDate, endDate) {
@@ -181,7 +181,12 @@ async function listEventsBetweenDates(calendarId, startDate, endDate) {
     singleEvents: true,
     orderBy: "startTime",
   });
-  return JSON.stringify(response);
+  return JSON.stringify(response.data.items.map(item => ({
+    summary: item.summary,
+    description: item.description,
+    status: item.status,
+    created: item.created,
+  })));
 }
 
 module.exports = {

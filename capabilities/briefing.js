@@ -8,7 +8,7 @@ const {
   getMemoriesByString,
 } = require("../src/remember");
 const logger = require("../src/logger")("briefing");
-const { listEventsThisWeek, listEventsBetweenDates } = require("./calendar.js"); // Adjust the path as necessary
+const { listEventsBetweenDates } = require("./calendar.js"); // Adjust the path as necessary
 
 const { destructureArgs, countTokens } = require("../helpers");
 
@@ -237,10 +237,10 @@ async function identifyProjectsInMemories(processedMemories) {
       // this is an example message to extract IDs out of
       content: `We should add a new issue to coachartie - we had three conversations about it in #23ij2329, #sdijs, and #studio. We also had a long conversation about Project 2 in #studio.
 
-In the previous message I just sent, please identify any GitHub Repos, Issues, Missive Conversations, or Projects. Please respond in the following format, newline-delimited with no other text: 
+In the previous message I just sent, please identify any GitHub Repos, Issues, Missive Conversations, or Projects. Please respond in the following format, newline-delimited with no other text:
 
 - Discussion on Project 1: Missive#fkdf993ek9k93k
-- Discussion on Project 2: Missive#fkdf993ek9k93k      
+- Discussion on Project 2: Missive#fkdf993ek9k93k
       `,
     },
     {
@@ -261,7 +261,7 @@ In the previous message I just sent, please identify any GitHub Repos, Issues, M
     },
     {
       role: "user",
-      content: `In the previous message I just sent, please identify any GitHub Repos, Issues, Missive Conversations, or Projects. Please respond in the following format, newline-delimited with no other text: 
+      content: `In the previous message I just sent, please identify any GitHub Repos, Issues, Missive Conversations, or Projects. Please respond in the following format, newline-delimited with no other text:
 
 - Discussion on Project 1: Missive#fkdf993ek9k93k
 - Discussion on Project 2: Missive#fkdf993ek9k93k

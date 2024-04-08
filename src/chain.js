@@ -142,12 +142,11 @@ module.exports = (async () => {
       );
 
       try {
-        const updatedMessages = await processMessage(
+        messages = await processMessage(
           messages,
           lastMessage.content,
           { username, channel, guild, related_message_id }
         );
-        messages = updatedMessages;
 
         if (doesMessageContainCapability(lastMessage.content)) {
           capabilityCallCount++;
@@ -190,7 +189,7 @@ module.exports = (async () => {
           containsCapability && !exceedsTokenLimit && withinCapabilityLimit
         );
       })()
-    );
+      );
 
     logger.info(`${chainId} - Chain Report:\n${chainReport}`);
     return messages;
@@ -459,17 +458,23 @@ module.exports = (async () => {
       }
     );
 
-    messages.push({
-      role: "assistant",
-      content: aiResponse,
-    });
 
-    logInteraction(
-      prompt,
-      aiResponse,
-      { username, channel, guild, related_message_id: storedMessageId },
-      messages
-    );
+    const lastAssistantMessage = messages
+      .toReversed()
+      .find((m) => m.role === "assistant");
+    if (lastAssistantMessage?.content !== aiResponse) {
+      messages.push({
+        role: "assistant",
+        content: aiResponse,
+      });
+      logInteraction(
+        prompt,
+        aiResponse,
+        { username, channel, guild, related_message_id: storedMessageId },
+        messages
+      );
+    }
+
 
     return messages;
   }
@@ -480,13 +485,14 @@ module.exports = (async () => {
    * @returns {string} - The trimmed response.
    */
   function trimResponseIfNeeded(capabilityResponse) {
-    while (isResponseExceedingLimit(capabilityResponse)) {
-      capabilityResponse = trimResponseByLineCount(
-        capabilityResponse,
-        countTokens(capabilityResponse)
-      );
+    let lines = JSON.parse(capabilityResponse)
+    if (!Array.isArray(lines)) {
+      lines = capabilityResponse.split("\n");
     }
-    return capabilityResponse;
+    while (isResponseExceedingLimit(lines)) {
+      lines = trimResponseByLineCount(lines, 0.2);
+    }
+    return lines.map((line) => JSON.stringify(line)).join("\n");
   }
 
   /**
@@ -495,7 +501,7 @@ module.exports = (async () => {
    * @returns {boolean} - True if the response exceeds the limit, false otherwise.
    */
   function isResponseExceedingLimit(response) {
-    return countTokens(response) > TOKEN_LIMIT;
+    return countTokens(response) > 5000;
   }
 
   /**

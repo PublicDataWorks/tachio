@@ -7,7 +7,7 @@ const logger = require("../src/logger.js")("capabilities");
 /**
  * Executes a SELECT query on the specified table with the given columns and conditions.
  * @param {string} table - The name of the table to select from.
- * @param {string[]} columns - An array of column names to include in the result.
+ * @param {array} columns - An array of column names to include in the result.
  * @param {object} where - An object representing the conditions to filter the result.
  * @returns {Promise<any>} - A promise that resolves to the result of the SELECT query.
  * @example supabaseraw:select("todos", "*", { id: 1 })
@@ -103,7 +103,7 @@ module.exports = {
     } else if (method === "update") {
       return await update(arg1, JSON.parse(arg2), JSON.parse(arg3));
     } else if (method === "delete") {
-      return await del(arg1, JSON.parse(arg2));      
+      return await del(arg1, JSON.parse(arg2));
     } else {
       throw new Error(`Invalid method: ${method}`);
     }

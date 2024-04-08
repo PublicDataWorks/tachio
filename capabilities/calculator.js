@@ -3,7 +3,7 @@ const { destructureArgs } = require("../helpers");
 /**
  * Adds up an array of numbers.
  *
- * @param {number[]} numbers - The array of numbers to be added.
+ * @param {array} numbers - The array of numbers to be added.
  * @returns {number} The sum of the numbers.
  */
 function add(numbers) {
@@ -12,7 +12,7 @@ function add(numbers) {
 
 /**
  * Subtracts the numbers in the array.
- * @param {number[]} numbers - The array of numbers to subtract.
+ * @param {array} numbers - The array of numbers to subtract.
  * @returns {number} - The result of subtracting the numbers.
  */
 function subtract(numbers) {
@@ -22,7 +22,7 @@ function subtract(numbers) {
 /**
  * Multiplies an array of numbers.
  *
- * @param {number[]} numbers - The array of numbers to multiply.
+ * @param {array} numbers - The array of numbers to multiply.
  * @returns {number} The product of the numbers.
  */
 function multiply(numbers) {
@@ -32,7 +32,7 @@ function multiply(numbers) {
 /**
  * Divides an array of numbers.
  *
- * @param {number[]} numbers - The array of numbers to be divided.
+ * @param {array} numbers - The array of numbers to be divided.
  * @returns {number} - The result of dividing the numbers.
  */
 function divide(numbers) {
@@ -41,7 +41,7 @@ function divide(numbers) {
 
 /**
  * Calculates the power of numbers.
- * @param {number[]} numbers - The numbers to calculate the power of.
+ * @param {array} numbers - The numbers to calculate the power of.
  * @returns {number} The result of the power calculation.
  */
 function pow(numbers) {
@@ -50,8 +50,8 @@ function pow(numbers) {
 
 /**
  * Calculates the square root of each number in the given array.
- * @param {number[]} numbers - The array of numbers to calculate the square root for.
- * @returns {number[]} - The array of square roots.
+ * @param {array} numbers - The array of numbers to calculate the square root for.
+ * @returns {array} - The array of square roots.
  */
 function sqrt(numbers) {
   return numbers.reduce((a, b) => Math.sqrt(+a));
@@ -59,7 +59,7 @@ function sqrt(numbers) {
 
 /**
  * Calculates the logarithm of an array of numbers.
- * @param {number[]} numbers - The array of numbers to calculate the logarithm for.
+ * @param {array} numbers - The array of numbers to calculate the logarithm for.
  * @returns {number} The result of the logarithm calculation.
  */
 function log(numbers) {

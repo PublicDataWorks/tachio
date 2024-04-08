@@ -1,6 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-const { supabase } = require("../helpers");
+const { supabase } = require("../src/supabaseclient");
 const logger = require("../src/logger.js")("generate-manifest");
 const capabilitiesDir = path.join(__dirname);
 
@@ -12,7 +12,6 @@ let manifest = [];
 // Convert the loop to an async function to use await
 async function generateManifest() {
   const documentation = await import("documentation"); // Move import outside the loop if possible
-
   for (const file of files) {
     if (path.extname(file) !== ".js" || file === "_template.js" || file === "_generate-manifest.js") {
       continue; // Skip non-JS, _template, and self
@@ -36,8 +35,6 @@ async function generateManifest() {
       { onConflict: 'config_key', ignoreDuplicates: false }
     )
   if (error) throw new Error(error.message);
-
-  console.log(JSON.stringify(manifest, null, 2))
   // fs.writeFileSync("capabilities/_manifest.json", JSON.stringify(manifest, null, 2));
 }
 
@@ -46,7 +43,7 @@ function parseJSDoc(jsDocData, moduleName) {
 
   jsDocData.forEach((func) => {
     const funcInfo = {
-      name: `${moduleName}-${func.name}()`,
+      name: `${moduleName}-${func.name}`,
     };
 
     // if this is the handleCapabilityMethod, skip it
@@ -69,7 +66,7 @@ function parseJSDoc(jsDocData, moduleName) {
         .filter((param) => param.description?.children)
         .reduce((schema, param) => {
           schema[param.name] = {
-            type: param.type.name,
+            type: param.type.name.toLowerCase(),
             description: getTextFromChildren(param.description.children),
           };
           return schema;

@@ -320,7 +320,7 @@ app.post("/api/webhook-prompt", async (req, res) => {
   const { getPromptsFromSupabase } = require("./helpers.js");
   const { processMessageChain } = await require('./src/chain.js');
 
-  // this is will be an authorized call from pgcron to send a request to the robot as if a user sent, but specifiying a prompt from the prompts table to use 
+  // this is will be an authorized call from pgcron to send a request to the robot as if a user sent, but specifiying a prompt from the prompts table to use
 
   const passphrase = process.env.MISSIVE_WEBHOOK_SECRET; // Assuming PASSPHRASE is the environment variable name
 
