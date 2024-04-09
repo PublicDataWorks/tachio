@@ -89,27 +89,6 @@ module.exports = (async () => {
       delete response.image;
     }
 
-    const completeMessages = [
-      ...conversationHistory,
-      ...memoryMessages,
-      {
-        role: "system",
-        content: "---",
-      },
-      {
-        role: "system",
-        content: PROMPT_REMEMBER_INTRO,
-      },
-      {
-        role: "user",
-        content: `# User (${username}): ${prompt} \n # Robot (Artie): ${response}`,
-      },
-      {
-        role: "user",
-        content: isCapability ? PROMPT_CAPABILITY_REMEMBER : PROMPT_REMEMBER,
-      },
-    ];
-
     // de-dupe memories
     memories = [...userMemories, ...generalMemories, ...relevantMemories];
 

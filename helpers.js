@@ -29,7 +29,9 @@ const { supabase } = require("./src/supabaseclient.js");
 const Anthropic = require("@anthropic-ai/sdk");
 const anthropic = new Anthropic();
 
-const capabilityRegex = /(\w+)[:-](\w+)\(([^]*?)\)/; // captures newlines in the  third argument
+const capabilityRegex = /(\w+):(\w+)\(([^]*?)\)/; // captures newlines in the third argument
+const toolUseCapabilityRegex = /(toolu_[a-zA-Z0-9_-]{1,64})-(\w+)-(\w+)\(([^]*?)\)/;
+const anthropicThinkingRegex = /<thinking>(.*?)<\/thinking>\s*(?:<result>)?(.*?)(?:(?=<\/result>)|$)/s;
 /**
  * Retrieves prompts from Supabase.
  * @returns {Promise<Object>} An object containing different prompts.
@@ -75,7 +77,7 @@ async function getConfigFromSupabase() {
  * @returns {number} - The number of tokens in the string.
  */
 function countTokens(str) {
-  const encodedMessage = encode(str.toString());
+  const encodedMessage = encode(JSON.stringify(str));
   return encodedMessage.length;
 }
 
@@ -224,7 +226,7 @@ function getHexNameMap() {
  * @returns {boolean} - True if the message contains a capability, false otherwise.
  */
 function doesMessageContainCapability(message) {
-  return !!message.match(capabilityRegex);
+  return !!(message.match(capabilityRegex) || message.match(toolUseCapabilityRegex));
 }
 
 /**
@@ -605,7 +607,7 @@ async function createChatCompletion(
     });
     if (res.content.length > 1 && res.content[1].type === 'tool_use') {
       const parameters = Object.values(res.content[1].input).join(",");
-      return `${res.content[1].name}(${parameters})`;
+      return `${res.content[1].id}-${res.content[1].name}(${parameters})`;
     }
     return res.content[0].text;
   }
@@ -1414,9 +1416,6 @@ async function processChunks(chunks, processFunction, limit = 2, options = {}) {
       .map(async (chunk, index) => {
         // Sleep to avoid rate limits or to stagger requests
         await sleep(500);
-
-        // console.log(`Processing chunk ${i + index + 1} of ${chunkLength}...`);
-
         // Call the provided processFunction for each chunk
         return processFunction(chunk, options);
       });
@@ -1437,14 +1436,12 @@ module.exports = {
   removeMentionFromMessage,
   doesMessageContainCapability,
   isBreakingMessageChain,
-  // trimResponseIfNeeded,
   generateAiCompletionParams,
   addSystemPrompt,
   addCurrentDateTime,
   displayTypingIndicator,
   generateAiCompletion,
   assembleMessagePreamble,
-  splitMessageIntoChunks,
   splitAndSendMessage,
   createTokenLimitWarning,
   isExceedingTokenLimit,
@@ -1452,13 +1449,12 @@ module.exports = {
   getUniqueEmoji,
   getPromptsFromSupabase,
   getConfigFromSupabase,
-  capabilityRegex,
   createChatCompletion,
   parseJSONArg,
-  convertCapabilityManifestToXML,
-  convertMessagesToXML,
-  cleanUrlForPuppeteer,
   processChunks,
   sleep,
-  trimResponseByLineCount
+  trimResponseByLineCount,
+  capabilityRegex,
+  toolUseCapabilityRegex,
+  anthropicThinkingRegex
 };

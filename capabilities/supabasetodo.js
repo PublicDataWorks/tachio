@@ -71,7 +71,7 @@ async function updateTodo(todoId, updates) {
     .match({ id: todoId });
 
   if (error) throw new Error(error.message);
-  return data[0];
+  return data?.length > 0 ? data[0] : null
 }
 /*
 This capability enables updating specific fields of an existing todo item, such as its status, priority, or due date. It allows partial updates, making it flexible for reflecting changes in todo items over time without needing to specify the entire todo details.
@@ -112,7 +112,7 @@ module.exports = {
     // const [arg1, arg2] = desArgs;
     const [arg1, arg2] = destructureArgs(args);
     logger.info(`⚡️ Calling capability method: supabasetodo.${method}
-    
+
     ${JSON.stringify(args)}`);
 
     if (method === "createTodo") {

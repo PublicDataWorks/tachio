@@ -10,8 +10,9 @@ module.exports = function (serviceName) {
   const MAX_MESSAGE_SIZE = 1024 * 5; // 5KB, adjust as needed
 
   // Function to truncate message if it exceeds the maximum size
+
   const truncateMessage = (message) => {
-    if (Buffer.byteLength(message, 'utf8') > MAX_MESSAGE_SIZE) {
+    if (message && Buffer.byteLength(message, 'utf8') > MAX_MESSAGE_SIZE) {
       return message.substring(0, MAX_MESSAGE_SIZE) + '... [Message truncated]';
     }
     return message;
@@ -73,7 +74,7 @@ module.exports = function (serviceName) {
     papertrail.on('error', (err) => {
       console.error('Error in Papertrail logging:', err);
     });
-    
+
     loggers.push(papertrail);
   }
 
