@@ -13,6 +13,7 @@ dotenv.config();
 
 const { MEMORIES_TABLE_NAME, MESSAGES_TABLE_NAME } = require("../config");
 const { supabase } = require("./supabaseclient.js");
+const { encode } = require("@nem035/gpt-3-encoder");
 
 /**
  * Retrieves user memories from the database.
@@ -546,12 +547,10 @@ async function getRelevantMemories(queryString, limit = 5) {
   }
 
   // const { embedding1: embedding } = await stringToEmbedding(queryString);
-
   const openAiEmbeddingResponse = await openai.embeddings.create({
     model: "text-embedding-ada-002",
     input: queryString,
   });
-
   const [{ embedding }] = openAiEmbeddingResponse.data;
 
   // query the database for the most relevant memories, currently this is only supported on the openai embeddings

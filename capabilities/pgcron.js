@@ -58,7 +58,7 @@ async function createWebhook(schedule, url, body, headers, name) {
       "Content-Type": "application/json",
     };
   }
-  
+
   // if there is no body we need to return an error about it
   if (!body) {
     return `Error: No body provided for the webhook`;
@@ -66,7 +66,7 @@ async function createWebhook(schedule, url, body, headers, name) {
 
   // load webhook-authentication key from environment
   const webhookAuthentication = process.env.OUTGOING_WEBHOOK_AUTHENTICATION;
-  if!webhookAuthentication) {
+  if (!webhookAuthentication) {
     headers["Authorization"] = `Bearer ${webhookAuthentication}`;
   }
 

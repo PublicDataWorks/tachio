@@ -2,19 +2,16 @@ const express = require("express");
 const app = express();
 const {
   getChannelMessageHistory,
-  hasRecentMemoryOfResource,
   hasMemoryOfResource,
   getResourceMemories,
   storeUserMemory,
 } = require("./src/remember.js");
 const vision = require("./src/vision.js");
-// const net = require('net');
 const { createHmac } = require("crypto");
 const logger = require("./src/logger.js")("api");
-const { getMessage } = require("./src/missive.js");
 const { processLinearRequest } = require("./src/linear");
 const { processGithubRequest, verifyGithubSignature } = require("./src/github");
-const { processPTRequest } = require("./src/pivotal-tracker");
+const { anthropicThinkingRegex } = require("./helpers");
 require("dotenv").config();
 
 const apiFront = "https://public.missiveapp.com/v1";
@@ -150,7 +147,7 @@ async function processMissiveRequest(body) {
         // Use the Missive conversationId as the channel
         // Store the attachment description as a memory in the database
         await storeUserMemory(
-          { username, channel: conversationId, guild: "missive"  },
+          { username, channel: conversationId, guild: "missive" },
           `Attachment ${body.comment.attachment.filename}: ${attachmentDescription}`,
           "attachment",
           resourceId
@@ -252,7 +249,26 @@ async function processMissiveRequest(body) {
 
   // Extract the last message from the processed message chain
   const lastMessage = processedMessage[processedMessage.length - 1];
-
+  // Separate thinking part out of result part of Claude's message
+  const messageMatches = lastMessage.content.match(anthropicThinkingRegex)
+  let attachments
+  if (messageMatches && messageMatches.length > 2) {
+    // Thinking part is always presented
+    attachments = [
+      {
+        "text": messageMatches[1].trim(),
+        "timestamp": Math.floor(Date.now() / 1000)
+      },
+    ]
+    if (messageMatches[2].trim()) {
+      attachments.push({
+        "color": "#2266ED",
+        "text": messageMatches[2].trim(),
+        "timestamp": Math.floor(Date.now() / 1000) + 1
+      })
+    }
+    console.log("kyky", lastMessage)
+  }
   // POST the response back to the Missive API using the conversation ID
   const responsePost = await fetch(`${apiFront}/posts/`, {
     method: "POST",
@@ -268,7 +284,8 @@ async function processMissiveRequest(body) {
           body: "",
         },
         username: BOT_NAME,
-        markdown: lastMessage.content,
+        attachments,
+        markdown: attachments ? undefined : lastMessage.content,
       },
     }),
   });
@@ -320,7 +337,7 @@ app.post("/api/webhook-prompt", async (req, res) => {
   const { getPromptsFromSupabase } = require("./helpers.js");
   const { processMessageChain } = await require('./src/chain.js');
 
-  // this is will be an authorized call from pgcron to send a request to the robot as if a user sent, but specifiying a prompt from the prompts table to use 
+  // this is will be an authorized call from pgcron to send a request to the robot as if a user sent, but specifiying a prompt from the prompts table to use
 
   const passphrase = process.env.MISSIVE_WEBHOOK_SECRET; // Assuming PASSPHRASE is the environment variable name
 
@@ -366,8 +383,7 @@ app.post("/api/webhook-prompt", async (req, res) => {
         content: `${prompt.prompt_text} \n ${message}`
       },
     ],
-    {username},
-
+    { username },
   );
 
   logger.info(`Processed message: ${JSON.stringify(processedMessage)}`);
@@ -375,10 +391,10 @@ app.post("/api/webhook-prompt", async (req, res) => {
 
 app.post("/api/linear", async (req, res) => {
   const signature = createHmac("sha256", process.env.LINEAR_WEBHOOK_SECRET).update(req.rawBody).digest("hex");
-    if (signature !== req.headers['linear-signature']) {
-        res.sendStatus(400);
-        return
-    }
+  if (signature !== req.headers['linear-signature']) {
+    res.sendStatus(400);
+    return
+  }
   processLinearRequest(req.body).then(() => logger.info(`Linear webhook processed`))
     .catch((error) => logger.error(`Error processing Linear webhook: ${error.message}`));
   logger.info(`Sending 200 response`);
@@ -387,7 +403,7 @@ app.post("/api/linear", async (req, res) => {
 
 app.post("/api/github", async (req, res) => {
   processGithubRequest(req).then(() => logger.info(`Github webhook processed`))
-      .catch((error) => logger.error(`Error processing Github webhook: ${error.message}`));
+    .catch((error) => logger.error(`Error processing Github webhook: ${error.message}`));
   logger.info(`Sending 200 response`);
   res.status(200).end();
 });

@@ -55,7 +55,7 @@ module.exports = (async () => {
     if(!channel) logger.info(`logInteraction: No channel provided`);
     if(!guild) logger.info(`logInteraction: No guild provided`);
     if(!related_message_id) logger.info(`logInteraction: No related_message_id provided`);
-    
+
 
 
     const userMemoryCount = chance.integer({ min: 4, max: 24 });
@@ -88,27 +88,6 @@ module.exports = (async () => {
       response.content = `${response.content}\n\nDescription of user-provided image: ${imageDescription}`;
       delete response.image;
     }
-
-    const completeMessages = [
-      ...conversationHistory,
-      ...memoryMessages,
-      {
-        role: "system",
-        content: "---",
-      },
-      {
-        role: "system",
-        content: PROMPT_REMEMBER_INTRO,
-      },
-      {
-        role: "user",
-        content: `# User (${username}): ${prompt} \n # Robot (Artie): ${response}`,
-      },
-      {
-        role: "user",
-        content: isCapability ? PROMPT_CAPABILITY_REMEMBER : PROMPT_REMEMBER,
-      },
-    ];
 
     // de-dupe memories
     memories = [...userMemories, ...generalMemories, ...relevantMemories];
@@ -150,10 +129,6 @@ module.exports = (async () => {
         ...conversationHistory,
         {
           role: "system",
-          content: "Take a deep breath and take things step by step.",
-        },
-        {
-          role: "system",
           content: `You previously ran the capability: ${capabilityName} and got the response: ${capabilityResponse}`,
         },
         {
@@ -178,11 +153,11 @@ module.exports = (async () => {
     if (rememberText === "✨") return rememberText;
     // if remember text length is 0 or less, we don't wanna store it
     if (rememberText.length <= 0) return rememberText;
-    storeUserMemory({ 
+    storeUserMemory({
       username,
-      channel, 
-      conversation_id: channel, 
-      related_message_id  }, 
+      channel,
+      conversation_id: channel,
+      related_message_id  },
       rememberText);
 
 
@@ -194,7 +169,7 @@ module.exports = (async () => {
       ...conversationHistory,
       {
         role: "system",
-        content: `Analyze the previous messages for any content that could be a task or todo. If found, please add or modify the todo list using a few simple capabilities: 
+        content: `Analyze the previous messages for any content that could be a task or todo. If found, please add or modify the todo list using a few simple capabilities:
 
         - todo:createTodo(name, description)
         - todo:deleteTodo(todoId)

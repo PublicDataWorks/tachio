@@ -79,11 +79,6 @@ async function processInputAsMessage(input) {
   const chain = await require("./src/chain");
   const { processAndLogCapabilityResponse } = chain;
 
-  console.log(
-    "processAndLogCapabilityResponse",
-    processAndLogCapabilityResponse
-  );
-
   messages = await processAndLogCapabilityResponse(messages, [
     null,
     capSlug,

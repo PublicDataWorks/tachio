@@ -15,7 +15,7 @@ const ORG_EMAIL_TABLE_NAME = "org_emails";
  * @param {Array} aliases - The aliases of the organization.
  * @param {string} summary - The summary of the organization.
  * @param {string} note - The note for the organization.
- * @param {Date} firstContact - The date of the first contact with the organization. If not provided, the current date is used.
+ * @param {string} firstContact - The date of the first contact with the organization. If not provided, the current date is used.
  * @param {string} primaryEmailAddress - The primary email address of the organization.
  * @param {Array} emailAddresses - The email addresses of the organization.
  * @param {string} linearId - The Linear ID of the organization.
@@ -105,7 +105,7 @@ async function createOrg({
  * @param {string} name - The current name of the organization.
  * @param {string} newName - The new name of the organization.
  * @param {Array} newAliases - The new aliases of the organization.
- * @param {Date} newFirstContact - The new date of the first contact with the organization.
+ * @param {string} newFirstContact - The new date of the first contact with the organization.
  *
  * @returns {Promise<string>} A promise that resolves to a string message indicating the result of the operation.
  *

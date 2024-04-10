@@ -1,15 +1,13 @@
 const { Chance } = require("chance");
 const chance = new Chance();
 const dotenv = require("dotenv");
-const util = require("util");
 const fs = require("fs");
 const convert = require("xml-js");
 const { openai } = require("./src/openai");
-// const { capabilityRegex } = require("./src/capabilities.js");
 dotenv.config();
 const { encode, decode } = require("@nem035/gpt-3-encoder");
 // TODO: Swap out for getConfigFromSupabase
-const { TOKEN_LIMIT, MAX_OUTPUT_TOKENS } = require("./config");
+const { TOKEN_LIMIT } = require("./config");
 const {
   getUserMemory,
   getUserMessageHistory,
@@ -20,17 +18,20 @@ const logger = require("./src/logger.js")("helpers");
 
 const completionLogger = process.env.COMPLETION_LOGGING_DISABLED
   ? {
-      info: () => {},
-      error: () => {},
-    }
+    info: () => {
+    },
+    error: () => {
+    },
+  }
   : require("./src/logger.js")("completion");
 
 const { supabase } = require("./src/supabaseclient.js");
 const Anthropic = require("@anthropic-ai/sdk");
 const anthropic = new Anthropic();
 
-const capabilityRegex = /(\w+):(\w+)\(([^]*?)\)/; // captures newlines in the  third argument
-
+const capabilityRegex = /(\w+):(\w+)\(([^]*?)\)/; // captures newlines in the third argument
+const toolUseCapabilityRegex = /(toolu_[a-zA-Z0-9_-]{1,64})-(\w+)-(\w+)\(([^]*?)\)/;
+const anthropicThinkingRegex = /<thinking>(.*?)<\/thinking>\s*(?:<result>)?(.*?)(?:(?=<\/result>)|$)/s;
 /**
  * Retrieves prompts from Supabase.
  * @returns {Promise<Object>} An object containing different prompts.
@@ -40,8 +41,7 @@ const capabilityRegex = /(\w+):(\w+)\(([^]*?)\)/; // captures newlines in the  t
  *
  */
 async function getPromptsFromSupabase() {
-  const { data, error } = await supabase.from("prompts").select("*");
-  console.log("Error when fetching prompts", error);
+  const { data, error } = await supabase.from("prompts").select()
   const promptArray = data;
   const promptKeys = promptArray.map((prompt) => prompt.prompt_name);
   const promptValues = promptArray.map((prompt) => prompt.prompt_text);
@@ -58,7 +58,7 @@ async function getPromptsFromSupabase() {
  * @returns {Promise<Object>} An object containing the configuration keys and values.
  */
 async function getConfigFromSupabase() {
-  const { data, error } = await supabase.from("config").select("*");
+  const { data, error } = await supabase.from("config").select("config_key, config_value");
 
   // turn the array of objects into a big object that can be destructured
   const configArray = data;
@@ -66,10 +66,9 @@ async function getConfigFromSupabase() {
   const configKeys = configArray.map((config) => config.config_key);
   const configValues = configArray.map((config) => config.config_value);
   // return an object with all the keys and values
-  const config = Object.fromEntries(
+  return Object.fromEntries(
     configKeys.map((_, i) => [configKeys[i], configValues[i]])
   );
-  return config;
 }
 
 /**
@@ -78,7 +77,7 @@ async function getConfigFromSupabase() {
  * @returns {number} - The number of tokens in the string.
  */
 function countTokens(str) {
-  const encodedMessage = encode(str.toString());
+  const encodedMessage = encode(JSON.stringify(str));
   return encodedMessage.length;
 }
 
@@ -227,7 +226,7 @@ function getHexNameMap() {
  * @returns {boolean} - True if the message contains a capability, false otherwise.
  */
 function doesMessageContainCapability(message) {
-  return message.match(capabilityRegex);
+  return !!(message.match(capabilityRegex) || message.match(toolUseCapabilityRegex));
 }
 
 /**
@@ -403,17 +402,16 @@ function isMessagesEmpty(messages) {
 
 /**
  * Trims a response by a certain percentage.
- * @param {string} response - The response to trim.
+ * @param {array} response - The response to trim.
  * @param {number} lineCount - The number of lines in the response.
  * @param {number} trimAmount - The percentage to trim by.
- * @returns {string} - The trimmed response.
+ * @returns {array} - The trimmed response.
  */
-function trimResponseByLineCount(response, lineCount, trimAmount = 0.1) {
-  const lines = splitResponseIntoLines(response);
+function trimResponseByLineCount(response, trimAmount = 0.1) {
+  const lineCount = response.length;
   const linesToRemove = calculateLinesToRemove(lineCount, trimAmount);
-  const randomLines = selectRandomLines(lines, linesToRemove);
-  const trimmedLines = removeRandomLines(lines, randomLines);
-  return joinLinesIntoResponse(trimmedLines);
+  const randomLines = selectRandomLines(response, linesToRemove);
+  return removeRandomLines(response, randomLines);
 }
 
 /**
@@ -422,6 +420,10 @@ function trimResponseByLineCount(response, lineCount, trimAmount = 0.1) {
  * @returns {Array} - The lines of the response.
  */
 function splitResponseIntoLines(response) {
+  const parsed = JSON.parse(response)
+  if (Array.isArray(parsed)) {
+    return parsed;
+  }
   return response.split("\n");
 }
 
@@ -530,8 +532,10 @@ async function generateAiCompletion(prompt, username, messages, config) {
 
     completion = await createChatCompletion(
       messages,
-      temperature,
-      presence_penalty
+      {
+        temperature,
+        presence_penalty
+      }
     );
   } catch (err) {
     logger.info(`Error creating chat completion ${err}`);
@@ -544,6 +548,7 @@ async function generateAiCompletion(prompt, username, messages, config) {
   messages.push(aiResponse);
   return { messages, aiResponse };
 }
+
 /**
  * Creates a chat completion using the specified messages, temperature, and presence penalty.
  * @param {Array} messages - The array of messages in the chat.
@@ -565,11 +570,9 @@ async function createChatCompletion(
 
   const {
     CHAT_MODEL,
-    CLAUDE_COMPLETION_MODEL,
     OPENAI_COMPLETION_MODEL,
   } = await getConfigFromSupabase();
   const completionModel = CHAT_MODEL || "openai";
-
   logger.info(`createChatCompletion Config: ${JSON.stringify(config, null, 2)}`);
 
   if (completionModel === "openai") {
@@ -583,7 +586,7 @@ async function createChatCompletion(
     `);
 
     try {
-      res = await openai.chat.completions.create({
+      const res = await openai.chat.completions.create({
         model: OPENAI_COMPLETION_MODEL,
         temperature: config.temperature,
         presence_penalty: config.presence_penalty,
@@ -600,28 +603,33 @@ async function createChatCompletion(
   } else if (completionModel === "claude") {
     const res = await createClaudeCompletion(messages, {
       temperature: config.temperature,
-      max_tokens: +config.max_tokens,      
+      max_tokens: +config.max_tokens,
     });
+    if (res.content.length > 1 && res.content[1].type === 'tool_use') {
+      const parameters = Object.values(res.content[1].input).join(",");
+      return `${res.content[1].id}-${res.content[1].name}(${parameters})`;
+    }
     return res.content[0].text;
   }
 }
 
 async function createClaudeCompletion(messages, config) {
   const { CLAUDE_COMPLETION_MODEL } = await getConfigFromSupabase();
-  // convert the messages into an xml format for claude, sent as a single well-formatted user message
+  // convert the messages into a xml format for claude, sent as a single well-formatted user message
   const xmlMessages = convertMessagesToXML(messages);
   // completionLogger.info(`xmlMessages: ${xmlMessages}`);
+  const { data, error } = await supabase
+    .from("config")
+    .select("config_value")
+    .match({ config_key: "MANIFEST" })
+  if (error) throw new Error(error.message);
 
-  const claudeCompletion = await anthropic.messages.create({
-    // model: "claude-2.1",
-    // model: "claude-3-sonnet-20240229",
-    // model: "claude-3-haiku-20240307",
+  return anthropic.beta.tools.messages.create({
     model: CLAUDE_COMPLETION_MODEL,
     max_tokens: config.max_tokens,
+    tools: JSON.parse(data[0].config_value),
     messages: [{ role: "user", content: xmlMessages }],
   });
-
-  return claudeCompletion;
 }
 
 /**
@@ -676,7 +684,7 @@ async function addTodosToMessages(messages) {
   const todoString = JSON.stringify(todos);
   messages.push({
     role: "system",
-    content: `Here are your todos: 
+    content: `Here are your todos:
 ${todoString}`,
   });
 }
@@ -755,29 +763,20 @@ function loadCapabilityManifest() {
 /**
  * Adds a capability manifest message to the given array of messages.
  * @param {Array} messages - The array of messages to add the capability manifest message to.
- * @returns {Array} - The updated array of messages.
+ * @returns {Promise<Array>} - The updated array of messages.
  */
 async function addCapabilityManifestMessage(messages) {
   const { CHAT_MODEL } = await getConfigFromSupabase();
   const manifest = loadCapabilityManifest();
 
-  if (CHAT_MODEL === "claude") {
-    // convert the manifest to XML
-    const xmlManifest = convertCapabilityManifestToXML(manifest);
+  if (CHAT_MODEL !== "claude" && manifest) {
     messages.push({
       role: "user",
-      content: `## CAPABILITY MANIFEST\n\n${xmlManifest}`,
+      // content: `Capability manifest: ${JSON.stringify(manifest)}`,
+      content: `## CAPABILITY MANIFEST\n\n${formatCapabilityManifest(
+        manifest
+      )}`,
     });
-  } else {
-    if (manifest) {
-      messages.push({
-        role: "user",
-        // content: `Capability manifest: ${JSON.stringify(manifest)}`,
-        content: `## CAPABILITY MANIFEST\n\n${formatCapabilityManifest(
-          manifest
-        )}`,
-      });
-    }
   }
   return messages;
 }
@@ -842,11 +841,11 @@ function convertCapabilityManifestToXML(manifest) {
           : "";
         const parametersXml = capability.parameters
           ? `    <parameters>\n${capability.parameters
-              .map(
-                (parameter) =>
-                  `      <parameter>\n        <name>${parameter.name}</name>\n        <description>${parameter.description}</description>\n      </parameter>\n`
-              )
-              .join("")}    </parameters>\n`
+            .map(
+              (parameter) =>
+                `      <parameter>\n        <name>${parameter.name}</name>\n        <description>${parameter.description}</description>\n      </parameter>\n`
+            )
+            .join("")}    </parameters>\n`
           : "";
 
         return `  <capability>\n${nameXml}${descriptionXml}${parametersXml}  </capability>\n`;
@@ -856,6 +855,7 @@ function convertCapabilityManifestToXML(manifest) {
 
   return `<capabilities>\n${capabilitiesXml}</capabilities>`;
 }
+
 /**
  * Retrieves previous messages for a user and adds them to the messages array.
  * @param {string} username - The username of the user.
@@ -1416,9 +1416,6 @@ async function processChunks(chunks, processFunction, limit = 2, options = {}) {
       .map(async (chunk, index) => {
         // Sleep to avoid rate limits or to stagger requests
         await sleep(500);
-
-        // console.log(`Processing chunk ${i + index + 1} of ${chunkLength}...`);
-
         // Call the provided processFunction for each chunk
         return processFunction(chunk, options);
       });
@@ -1439,14 +1436,12 @@ module.exports = {
   removeMentionFromMessage,
   doesMessageContainCapability,
   isBreakingMessageChain,
-  // trimResponseIfNeeded,
   generateAiCompletionParams,
   addSystemPrompt,
   addCurrentDateTime,
   displayTypingIndicator,
   generateAiCompletion,
   assembleMessagePreamble,
-  splitMessageIntoChunks,
   splitAndSendMessage,
   createTokenLimitWarning,
   isExceedingTokenLimit,
@@ -1454,13 +1449,12 @@ module.exports = {
   getUniqueEmoji,
   getPromptsFromSupabase,
   getConfigFromSupabase,
-  capabilityRegex,
   createChatCompletion,
   parseJSONArg,
-  convertCapabilityManifestToXML,
-  convertMessagesToXML,
-  cleanUrlForPuppeteer,
   processChunks,
   sleep,
-  trimResponseByLineCount
+  trimResponseByLineCount,
+  capabilityRegex,
+  toolUseCapabilityRegex,
+  anthropicThinkingRegex
 };

@@ -35,7 +35,7 @@ async function accessCalendar(calendarId) {
 
 /**
  * Retrieves a list of all calendars.
- * @returns {Promise<string[]>} An array of calendar summaries and IDs.
+ * @returns {Promise<string>} An array of calendar summaries and IDs.
  * @description This function uses the Google Calendar API to retrieve a list of all calendars available to the authenticated user.
  * @throws {Error} If no calendars are found or an error occurs.
  */
@@ -47,13 +47,12 @@ async function listAllCalendars() {
     logger.info("Response from listAllCalendars:" + JSON.stringify(response));
 
     if (!(response.data.items.length > 0)) {
-      throw new Error("No calendars found", response.data);
+      throw new Error(`No calendars found, ${response.data}`);
     }
 
-    const calendars = response.data.items.map(
+    return JSON.stringify(response.data.items.map(
       ({ summary, id }) => `${summary} (${id})`,
-    );
-    return calendars;
+    ))
   } catch (error) {
     logger.info("Error occurred while listing calendars:" + error);
     throw error;
@@ -62,7 +61,7 @@ async function listAllCalendars() {
 
 /**
  * Retrieves a specific event from a Google Calendar.
- * @param {string} calendarId - The ID of the calendar.
+ * @param {string} calendarId - The ID (email address) of the calendar.
  * @param {string} eventId - The ID of the event.
  * @returns {Promise<object>} - A promise that resolves to the event object.
  */
@@ -74,8 +73,8 @@ async function accessEvent(calendarId, eventId) {
 /**
  * Adds a person to an event in the Google Calendar.
  *
- * @param {string} calendarId - The ID of the calendar.
- * @param {string} eventId - Th e ID of the event.
+ * @param {string} calendarId - The ID (email address) of the calendar.
+ * @param {string} eventId - The ID of the event.
  * @param {string} attendeeEmail - The email address of the attendee to be added.
  * @returns {Promise} - A promise that resolves to the updated event.
  */
@@ -94,7 +93,7 @@ async function addPersonToEvent(calendarId, eventId, attendeeEmail) {
 
 /**
  * Creates a new event in the specified calendar.
- * @param {string} calendarId - The ID of the calendar.
+ * @param {string} calendarId - The ID (email address) of the calendar.
  * @param {object} event - The event object to be created.
  * @returns {Promise<object>} - A promise that resolves to the created event.
  */
@@ -124,7 +123,7 @@ async function createEvent(calendarId, event) {
 
 /**
  * Retrieves a list of events occurring within the current week for the specified calendar.
- * @param {string} calendarId - The ID of the calendar to retrieve events from.
+ * @param {string} calendarId - The ID (email address) of the calendar to retrieve events from.
  * @returns {Promise<object>} - A promise that resolves to the list of events.
  */
 async function listEventsThisWeek(calendarId) {
@@ -140,13 +139,13 @@ async function listEventsThisWeek(calendarId) {
     singleEvents: true,
     orderBy: "startTime",
   });
-  return JSON.stringify(response);
+  return JSON.stringify(response.data.items.map(extractCalendarData));
 }
 
 // TODO: listEventsPrevWeek
 /**
  * Retrieves a list of events occurring within the previous week for the specified calendar.
- * @param {string} calendarId - The ID of the calendar to retrieve events from.
+ * @param {string} calendarId - The ID (email address) of the calendar to retrieve events from.
  * @returns {Promise<object>} - A promise that resolves to the list of events.
  */
 async function listEventsPrevWeek(calendarId) {
@@ -162,26 +161,36 @@ async function listEventsPrevWeek(calendarId) {
     singleEvents: true,
     orderBy: "startTime",
   });
-  return JSON.stringify(response);
+  return JSON.stringify(response.data.items.map(extractCalendarData));
 }
 
 /**
  * Retrieves a list of events occurring between the specified dates for the specified calendar.
- * @param {string} calendarId - The ID of the calendar to retrieve events from.
- * @param {Date} startDate - The start date of the range.
- * @param {Date} endDate - The end date of the range.
+ * @param {string} calendarId - The ID (email address) of the calendar to retrieve events from.
+ * @param {string} startDate - The start date of the range.
+ * @param {string} endDate - The end date of the range.
  * @returns {Promise<object>} - A promise that resolves to the list of events.
  */
 async function listEventsBetweenDates(calendarId, startDate, endDate) {
   const calendar = await getCalendarInstance();
+  const timeMax = endDate === startDate ? new Date(new Date(endDate).setHours(23, 59, 59, 999)).toISOString() : new Date(endDate).toISOString()
   const response = await calendar.events.list({
     calendarId,
     timeMin: new Date(startDate).toISOString(),
-    timeMax: new Date(endDate).toISOString(),
+    timeMax,
     singleEvents: true,
     orderBy: "startTime",
   });
-  return JSON.stringify(response);
+  return JSON.stringify(response.data.items.map(extractCalendarData));
+}
+
+function extractCalendarData(event) {
+  return {
+    status: event.status,
+    summary: event.summary,
+    start: event.start,
+    end: event.end,
+  };
 }
 
 module.exports = {
