@@ -12,6 +12,7 @@ const logger = require("./src/logger.js")("api");
 const { processLinearRequest } = require("./src/linear");
 const { processGithubRequest, verifyGithubSignature } = require("./src/github");
 const { anthropicThinkingRegex } = require("./helpers");
+const { processDailyReport } = require("./src/missive");
 require("dotenv").config();
 
 const apiFront = "https://public.missiveapp.com/v1";
@@ -407,6 +408,19 @@ app.post("/api/github", async (req, res) => {
   logger.info(`Sending 200 response`);
   res.status(200).end();
 });
+
+app.post("/api/missive-daily-report", async (req, res) => {
+  res.status(200).end();
+
+  processDailyReport(req.body)
+    .then(() => {
+      logger.info(`Message processed`);
+    })
+    .catch((error) => {
+      logger.error(`Error processing message: ${error.message}`);
+    });
+});
+
 
 function jsonToMarkdownList(jsonObj, indentLevel = 0) {
   let str = "";

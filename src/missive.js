@@ -1,4 +1,6 @@
-const { openai } = require("./openai");
+const { JSDOM } = require("jsdom");
+const DAILY_REPORT_REGEX = /Hi.*What has the team done since the last call\/email regarding this project\??(.*)What will the team do between now and the next call\/email regarding this project\??(.*)What impedes the team from performing their work as effectively as possible\??(.*)How much time have we spent today\??(.*)How much time have we spent this week\??(.*)How much time have we spent this month\??(.*)Our team today:?(.*)Regards/;
+
 /*
 
 You must transmit your Missive user token as a Bearer token in the Authorization HTTP header.
@@ -299,8 +301,7 @@ async function getMessage(messageId) {
   };
 
   const response = await fetch(url, options);
-  const data = await response.json();
-  return data;
+  return response.json();
 }
 
 /*
@@ -359,17 +360,17 @@ async function createSharedLabel({ name, organization, parent, shareWithOrganiza
 
 
 async function createPost({
-  conversationSubject,
-  username,
-  usernameIcon,
-  organization,
-  addSharedLabels,
-  notificationTitle,
-  notificationBody,
-  text,
-  markdown,
-  conversation
-}) {
+                            conversationSubject,
+                            username,
+                            usernameIcon,
+                            organization,
+                            addSharedLabels,
+                            notificationTitle,
+                            notificationBody,
+                            text,
+                            markdown,
+                            conversation
+                          }) {
   const url = `${apiFront}/posts`;
   const options = {
     method: "POST",
@@ -429,10 +430,28 @@ async function listUsers() {
   };
 
   const response = await fetch(url, options);
-  const data = await response.json();
-  return data;
+  return response.json();
+}
+
+async function processDailyReport(payload) {
+  if (!payload.rule.description.toLowerCase().includes("daily report")) return
+  const { id: messageId, subject } = payload.message;
+  const message = await getMessage(messageId)
+  const dom = new JSDOM(message.messages.body);
+  const text = dom.window.document.body.textContent;
+  console.log(text)
+
+  const match = text.match(DAILY_REPORT_REGEX);
+
+  const doneText = match ? match[1].trim() : '';
+  const willDoText = match ? match[2].trim() : '';
+  const impedesText = match ? match[3].trim() : '';
+  const timeSpentToday = match ? match[4].trim() : '';
+  const timeSpentWeek = match ? match[5].trim() : '';
+  const timeSpentMonth = match ? match[6].trim() : '';
+  const teamToday = match ? match[7].trim() : '';
 }
 
 module.exports = {
-  listConversations, listConversationMessages, getMessage, listSharedLabels, createSharedLabel, createPost, listUsers,
+  createSharedLabel, createPost, processDailyReport
 };
