@@ -1,6 +1,6 @@
 const { parseJSONArg } = require("../helpers");
 const logger = require("../src/logger")('capability-supabasetodo')
-  const { supabaseTachio } = require("../src/supabaseclient");
+const { supabaseTachio } = require("../src/supabaseclient");
 
 /**
  * Creates a new todo item in the database. This capability allows for the creation of a new todo item within a specified project. It supports optional details such as description, status, priority, due date, external URLs, and attachments, making it flexible for various use cases. The function defaults to setting the todo's status to "To Do" if not specified, ensuring a new todo is actionable immediately upon creation.
@@ -14,15 +14,17 @@ const logger = require("../src/logger")('capability-supabasetodo')
  * @param {string} description - The description of the todo item.
  * @param {string} status - The status of the todo item. The value is one of 'icebox', 'todo', 'in_progress', 'done'.
  * @param {string} priority - The priority of the todo item. The value is one of 'now', 'next', 'later'.
+ * @param {array} external_urls - The external URLs (e.g., linear or github issue or pull request).
  * @returns {Promise<string>} A promise that resolves to a success message.
  */
-async function createTodo({ name, status = "todo", priority = "later", description = "" }) {
+async function createTodo({ name, status = "todo", priority = "later", description = "", external_urls = [] }) {
   if (!name) throw new Error("A name is required to create a todo");
   const { error } = await supabaseTachio.from("todos").insert([
     {
       name,
       status,
       priority,
+      external_urls,
       description,
     },
   ]);
@@ -43,7 +45,7 @@ async function createTodo({ name, status = "todo", priority = "later", descripti
  * Verify Deletion: The function returns a boolean value indicating the success of the deletion operation. Use this to provide feedback to the user or to update the application state accordingly.
  *
  * @param {number} todoId - ID of the todo to be deleted.
- * @returns {Promise<boolean>} A promise that resolves to true if the deletion was successful, false otherwise.
+ * @returns {Promise<string>} A promise that resolves to true if the deletion was successful, false otherwise.
  */
 async function deleteTodo(todoId) {
   const { error } = await supabaseTachio
@@ -70,14 +72,16 @@ async function deleteTodo(todoId) {
  * @returns {Promise<Object>} A promise that resolves to the updated todo item.
  */
 async function updateTodo(todoId, updates) {
-  const { supabase } = require("../src/supabaseclient");
-  const { data, error } = await supabase
+  if (!updates || Object.keys(updates).length === 0) {
+    throw new Error("Updates object is required and cannot be empty");
+  }
+  const { error } = await supabaseTachio
     .from("todos")
     .update(updates)
     .match({ id: todoId });
 
   if (error) throw new Error(error.message);
-  return data?.length > 0 ? data[0] : null
+  return `Successfully update todo with ID: ${todoId}`;
 }
 
 /*
@@ -101,12 +105,11 @@ Process Response: Use the updated todo item returned by the function to verify t
  * How to Use:
  * Call the Function: Execute the listTodos function. Handle the promise to catch any errors and process the array of todo items returned.
  * Process Response: Use the array of todo items for display, processing, or further manipulation as needed.
- * @param {number} projectId - ID of the project to list todos for.
- * @returns {Promise<Object[]>} A promise that resolves to an array of all todo items.
+ * @returns {Promise<string>} A promise that resolves to an array of all todo items.
  *
  */
 async function listTodos() {
-  const { data, error } = await supabaseTachio.from("todos").select("*");
+  const { data, error } = await supabaseTachio.from("todos").select();
 
   if (error) throw new Error(error.message);
   return JSON.stringify(data);
@@ -114,17 +117,17 @@ async function listTodos() {
 
 module.exports = {
   handleCapabilityMethod: async (method, args) => {
-    // const desArgs = destructureArgs(args);
-    // const [arg1, arg2] = desArgs;
-    const arg = parseJSONArg(args)
-    logger.info(`⚡️ Calling capability method: supabasetodo.${method} \n ${JSON.stringify(args)}`);
+    const jsonArgs = parseJSONArg(args)
+    logger.info(`⚡️ Calling capability method: supabasetodo.${method} \n ${args}`);
 
     if (method === "createTodo") {
-      return await createTodo(arg);
+      return await createTodo(jsonArgs);
     } else if (method === "deleteTodo") {
-      return await deleteTodo(arg1);
+      return await deleteTodo(jsonArgs.todoId);
     } else if (method === "updateTodo") {
-      return await updateTodo(arg1);
+      const { todoId } = jsonArgs
+      delete jsonArgs.todoId;
+      return await updateTodo(todoId, jsonArgs);
     } else if (method === "listTodos") {
       return await listTodos();
     } else {

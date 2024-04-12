@@ -1,5 +1,5 @@
-const { google, batchUpdate } = require("googleapis");
-const { destructureArgs } = require("../helpers");
+const { google } = require("googleapis");
+const { parseJSONArg } = require("../helpers");
 const logger = require("../src/logger.js")("capabilities");
 const dotenv = require("dotenv");
 dotenv.config();
@@ -195,25 +195,26 @@ function extractCalendarData(event) {
 
 module.exports = {
   handleCapabilityMethod: async (method, args) => {
-    const [arg1, arg2, arg3] = destructureArgs(args);
+    const jsonArgs = parseJSONArg(args)
+    logger.info(`⚡️ Calling capability method: calendar.${method} \n ${jsonArgs}`);
 
     switch (method) {
       case "listAllCalendars":
         return await listAllCalendars();
       case "accessCalendar":
-        return await accessCalendar(arg1);
+        return await accessCalendar(jsonArgs.calendarId);
       case "accessEvent":
-        return await accessEvent(arg1, arg2);
+        return await accessEvent(jsonArgs.calendarId, jsonArgs.eventId);
       case "addPersonToEvent":
-        return await addPersonToEvent(arg1, arg2, arg3);
+        return await addPersonToEvent(jsonArgs.calendarId, jsonArgs.eventId, jsonArgs.attendeeEmail)
       case "createEvent":
-        return await createEvent(arg1, arg2);
+        return await createEvent(jsonArgs.calendarId, jsonArgs.event);
       case "listEventsThisWeek":
-        return await listEventsThisWeek(arg1);
+        return await listEventsThisWeek(jsonArgs.calendarId);
       case "listEventsPrevWeek":
-        return await listEventsPrevWeek(arg1);
+        return await listEventsPrevWeek(jsonArgs.calendarId);
       case "listEventsBetweenDates":
-        return await listEventsBetweenDates(arg1, arg2, arg3);
+        return await listEventsBetweenDates(jsonArgs.calendarId, jsonArgs.startDate, jsonArgs.endDate);
       default:
         throw new Error(`Invalid method: ${method}`);
     }
