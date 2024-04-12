@@ -606,8 +606,8 @@ async function createChatCompletion(
       max_tokens: +config.max_tokens,
     });
     if (res.content.length > 1 && res.content[1].type === 'tool_use') {
-      const parameters = Object.values(res.content[1].input).join(",");
-      return `${res.content[1].id}-${res.content[1].name}(${parameters})`;
+      const toolUse = res.content[1];
+      return `${toolUse.id}-${toolUse.name}(${JSON.stringify(toolUse.input)})`;
     }
     return res.content[0].text;
   }

@@ -1,23 +1,28 @@
-const { destructureArgs } = require("../helpers");
+const { parseJSONArg } = require("../helpers");
 const logger = require("../src/logger")('capability-supabasetodo')
+  const { supabaseTachio } = require("../src/supabaseclient");
+
 /**
  * Creates a new todo item in the database. This capability allows for the creation of a new todo item within a specified project. It supports optional details such as description, status, priority, due date, external URLs, and attachments, making it flexible for various use cases. The function defaults to setting the todo's status to "To Do" if not specified, ensuring a new todo is actionable immediately upon creation.
  * When to Use: Use this capability when a new task arises that needs tracking within a project's context. It's suitable for user-driven todo creation based on input or automated task generation from project activities or milestones.
  * How to Use:
- * Prepare Todo Details: Construct an object containing the details of the todo to be created, including the mandatory projectId and name fields, along with any other optional information.
+ * Prepare Todo Details: Construct an object containing the details of the todo to be created, including the mandatory name fields, along with any other optional information.
  * Call the Function: Invoke the createTodo function with the prepared object. Handle the promise returned by the function to deal with the newly created todo or to catch any errors.
  * Process Response: On successful creation, use the returned todo item for display, further processing, or confirmation to the user.
  *
  * @param {string} name - The name of the todo item.
  * @param {string} description - The description of the todo item.
+ * @param {string} status - The status of the todo item. The value is one of 'icebox', 'todo', 'in_progress', 'done'.
+ * @param {string} priority - The priority of the todo item. The value is one of 'now', 'next', 'later'.
  * @returns {Promise<string>} A promise that resolves to a success message.
  */
-async function createTodo(name, description = "") {
-  const { supabase } = require("../src/supabaseclient");
-  if(!name) throw new Error("A name is required to create a todo");
-  const { data, error } = await supabase.from("todos").insert([
+async function createTodo({ name, status = "todo", priority = "later", description = "" }) {
+  if (!name) throw new Error("A name is required to create a todo");
+  const { error } = await supabaseTachio.from("todos").insert([
     {
       name,
+      status,
+      priority,
       description,
     },
   ]);
@@ -25,6 +30,7 @@ async function createTodo(name, description = "") {
   if (error) throw new Error(error.message);
   return `Successfully added todo: ${name}`;
 }
+
 // deleteTodo.js
 
 /**
@@ -40,8 +46,7 @@ async function createTodo(name, description = "") {
  * @returns {Promise<boolean>} A promise that resolves to true if the deletion was successful, false otherwise.
  */
 async function deleteTodo(todoId) {
-  const { supabase } = require("../src/supabaseclient");
-  const { data, error } = await supabase
+  const { error } = await supabaseTachio
     .from("todos")
     .delete()
     .match({ id: todoId });
@@ -52,6 +57,7 @@ async function deleteTodo(todoId) {
   }
   return `Successfully deleted todo with ID: ${todoId}`;
 }
+
 /*
 
 */
@@ -73,6 +79,7 @@ async function updateTodo(todoId, updates) {
   if (error) throw new Error(error.message);
   return data?.length > 0 ? data[0] : null
 }
+
 /*
 This capability enables updating specific fields of an existing todo item, such as its status, priority, or due date. It allows partial updates, making it flexible for reflecting changes in todo items over time without needing to specify the entire todo details.
 
@@ -99,8 +106,7 @@ Process Response: Use the updated todo item returned by the function to verify t
  *
  */
 async function listTodos() {
-  const { supabase } = require("../src/supabaseclient");
-  const { data, error } = await supabase.from("todos").select("*");
+  const { data, error } = await supabaseTachio.from("todos").select("*");
 
   if (error) throw new Error(error.message);
   return JSON.stringify(data);
@@ -110,19 +116,11 @@ module.exports = {
   handleCapabilityMethod: async (method, args) => {
     // const desArgs = destructureArgs(args);
     // const [arg1, arg2] = desArgs;
-    const [arg1, arg2] = destructureArgs(args);
-    logger.info(`⚡️ Calling capability method: supabasetodo.${method}
-
-    ${JSON.stringify(args)}`);
+    const arg = parseJSONArg(args)
+    logger.info(`⚡️ Calling capability method: supabasetodo.${method} \n ${JSON.stringify(args)}`);
 
     if (method === "createTodo") {
-      // const todoJsonString = arg1
-      // const todoJson = JSON.parse(todoJsonString);
-      /*{"name":"Implement priority labels for todos", "description":"Add priority labels such as High, Medium, Low to each todo item for better task prioritization."}*/
-      // pull the name out of the json and use it to create the todo
-      // const name = todoJson.name;
-      const res = await createTodo(arg1);
-      return res;
+      return await createTodo(arg);
     } else if (method === "deleteTodo") {
       return await deleteTodo(arg1);
     } else if (method === "updateTodo") {
