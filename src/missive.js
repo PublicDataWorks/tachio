@@ -1,4 +1,5 @@
 const { JSDOM } = require("jsdom");
+const { supabaseTachio } = require("./supabaseclient");
 const DAILY_REPORT_REGEX = /Hi.*What has the team done since the last call\/email regarding this project\??(.*)What will the team do between now and the next call\/email regarding this project\??(.*)What impedes the team from performing their work as effectively as possible\??(.*)How much time have we spent today\??(.*)How much time have we spent this week\??(.*)How much time have we spent this month\??(.*)Our team today:?(.*)Regards/;
 
 /*
@@ -168,8 +169,6 @@ async function listConversationMessages(emailMessageId) {
   return data;
 }
 
-const conversationId = "2939b050-496f-4128-a249-61576f897720";
-
 // const messages = listConversationMessages(conversationId).then((data) => {
 //   console.log(data);
 // });
@@ -332,8 +331,7 @@ async function listSharedLabels() {
   };
 
   const response = await fetch(url, options);
-  const data = await response.json();
-  return data;
+  return response.json();
 }
 
 async function createSharedLabel({ name, organization, parent, shareWithOrganization }) {
@@ -438,18 +436,37 @@ async function processDailyReport(payload) {
   const { id: messageId, subject } = payload.message;
   const message = await getMessage(messageId)
   const dom = new JSDOM(message.messages.body);
+  const listItems = dom.window.document.querySelectorAll('li');
+  // Append a space after each list item
+  listItems.forEach(li => {
+    const space = dom.window.document.createTextNode(' ');
+    li.appendChild(space);
+  });
   const text = dom.window.document.body.textContent;
-  console.log(text)
-
   const match = text.match(DAILY_REPORT_REGEX);
 
-  const doneText = match ? match[1].trim() : '';
-  const willDoText = match ? match[2].trim() : '';
-  const impedesText = match ? match[3].trim() : '';
+  const doneToday = match ? match[1].trim() : '';
+  const willDo = match ? match[2].trim() : '';
+  const impedes = match ? match[3].trim() : '';
   const timeSpentToday = match ? match[4].trim() : '';
-  const timeSpentWeek = match ? match[5].trim() : '';
-  const timeSpentMonth = match ? match[6].trim() : '';
+  const timeSpentThisWeek = match ? match[5].trim() : '';
+  const timeSpentThisMonth = match ? match[6].trim() : '';
   const teamToday = match ? match[7].trim() : '';
+
+  const { error } = await supabaseTachio.from("daily_reports").insert([
+    {
+      subject,
+      done_today: doneToday,
+      will_do: willDo,
+      impedes,
+      time_spent_today: timeSpentToday,
+      time_spent_this_week: timeSpentThisWeek,
+      time_spent_this_month: timeSpentThisMonth,
+      team_today: teamToday,
+      content: text
+    },
+  ]);
+  if (error) throw new Error(error.message);
 }
 
 module.exports = {
