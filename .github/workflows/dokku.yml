@@ -16,20 +16,16 @@ jobs:
         run: |
           curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb && 
           sudo dpkg -i cloudflared.deb && 
-          sudo cloudflared service install ${{ secrets.CLOUDFLARE_TUNNEL }}
-
-      - name: Set up SSH
+          cloudflared --version
+          
+      - name: Set up SSH through Cloudflare Access
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/gh-action-key
           chmod 600 ~/.ssh/gh-action-key
-          echo "Host ${{ secrets.SSH_HOST }}
-            Hostname ${{ secrets.SSH_HOST }}
-            User dokku
-            IdentityFile ~/.ssh/gh-action-key
-            ProxyCommand /usr/local/bin/cloudflared access ssh --hostname %h" > ~/.ssh/config
+          echo -e "Host dokku\n\tHostName ${{ secrets.SSH_HOST }}\n\tUser dokku\n\tIdentityFile ~/.ssh/gh-action-key\n\tProxyCommand /usr/local/bin/cloudflared access ssh --hostname %h --access-client-id ${{ secrets.CF_ACCESS_CLIENT_ID }} --access-client-secret ${{ secrets.CF_ACCESS_CLIENT_SECRET }}" > ~/.ssh/config
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
       - name: Deploy to Dokku
         run: |
-          git push dokku@${{ secrets.SSH_HOST }}:main:master
+          git push dokku@${{ secrets.SSH_HOST }}:main:main
