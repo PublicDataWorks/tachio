@@ -16,17 +16,17 @@ jobs:
         run: |
           curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb && 
           sudo dpkg -i cloudflared.deb && 
-          sudo cloudflared service install CLOUDFLARE_TUNNEL
+          sudo cloudflared service install ${{ secrets.CLOUDFLARE_TUNNELT }}
 
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/gh-action-key
+          chmod 600 ~/.ssh/gh-action-key
           echo "Host ${{ secrets.SSH_HOST }}
             Hostname ${{ secrets.SSH_HOST }}
             User dokku
-            IdentityFile ~/.ssh/id_ed25519
+            IdentityFile ~/.ssh/gh-action-key
             ProxyCommand /usr/local/bin/cloudflared access ssh --hostname %h" > ~/.ssh/config
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
