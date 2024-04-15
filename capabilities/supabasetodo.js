@@ -6,26 +6,30 @@ const { supabaseTachio } = require("../src/supabaseclient");
  * Creates a new todo item in the database. This capability allows for the creation of a new todo item within a specified project. It supports optional details such as description, status, priority, due date, external URLs, and attachments, making it flexible for various use cases. The function defaults to setting the todo's status to "To Do" if not specified, ensuring a new todo is actionable immediately upon creation.
  * When to Use: Use this capability when a new task arises that needs tracking within a project's context. It's suitable for user-driven todo creation based on input or automated task generation from project activities or milestones.
  * How to Use:
- * Prepare Todo Details: Construct an object containing the details of the todo to be created, including the mandatory name fields, along with any other optional information.
+ * Prepare Todo Details: Construct an object containing the details of the todo to be created, including the mandatory projectId and name fields, along with any other optional information.
  * Call the Function: Invoke the createTodo function with the prepared object. Handle the promise returned by the function to deal with the newly created todo or to catch any errors.
  * Process Response: On successful creation, use the returned todo item for display, further processing, or confirmation to the user.
  *
+ * @param {number} projectId - The project ID of the todo item.
  * @param {string} name - The name of the todo item.
  * @param {string} description - The description of the todo item.
  * @param {string} status - The status of the todo item. The value is one of 'icebox', 'todo', 'in_progress', 'done'.
  * @param {string} priority - The priority of the todo item. The value is one of 'now', 'next', 'later'.
- * @param {array} external_urls - The external URLs (e.g., linear or github issue or pull request).
+ * @param {array} externalUrls - The external URLs (e.g., linear or github issue or pull request).
+ * @param {Date} completed_at - The timestamp when the todo was completed.
  * @returns {Promise<string>} A promise that resolves to a success message.
  */
-async function createTodo({ name, status = "todo", priority = "later", description = "", external_urls = [] }) {
+async function createTodo({ projectId, name, status = "todo", priority = "later", description = "", externalUrls = [], completed_at }) {
   if (!name) throw new Error("A name is required to create a todo");
   const { error } = await supabaseTachio.from("todos").insert([
     {
+      project_id: projectId,
       name,
       status,
       priority,
-      external_urls,
+      external_urls: externalUrls,
       description,
+      completed_at,
     },
   ]);
 
