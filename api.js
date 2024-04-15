@@ -414,10 +414,10 @@ app.post("/api/missive-daily-report", async (req, res) => {
 
   processDailyReport(req.body)
     .then(() => {
-      logger.info(`Message processed`);
+      logger.info(`Daily report message processed`);
     })
     .catch((error) => {
-      logger.error(`Error processing message: ${error.message}`);
+      logger.error(`Error processing daily report message: ${error.message}`);
     });
 });
 

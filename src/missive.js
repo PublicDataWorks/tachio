@@ -1,6 +1,6 @@
 const { JSDOM } = require("jsdom");
 const { supabaseTachio } = require("./supabaseclient");
-const DAILY_REPORT_REGEX = /Hi.*What has the team done since the last call\/email regarding this project\??(.*)What will the team do between now and the next call\/email regarding this project\??(.*)What impedes the team from performing their work as effectively as possible\??(.*)How much time have we spent today\??(.*)How much time have we spent this week\??(.*)How much time have we spent this month\??(.*)Our team today:?(.*)Regards/;
+const DAILY_REPORT_REGEX = /Hi.*What has the team done since the last call\/email regarding this project\??(.*)What will the team do between now and the next call\/email regarding this project\??(.*)What impedes the team from performing their work as effectively as possible\??(.*)How much time have we spent today\??(.*)How much time have we spent this week.*How much time have we spent this month.*Our team today:?(.*)Regards/;
 
 /*
 
@@ -433,6 +433,7 @@ async function listUsers() {
 
 async function processDailyReport(payload) {
   if (!payload.rule.description.toLowerCase().includes("daily report")) return
+
   const { id: messageId, subject } = payload.message;
   const message = await getMessage(messageId)
   const dom = new JSDOM(message.messages.body);
@@ -449,10 +450,8 @@ async function processDailyReport(payload) {
   const willDo = match ? match[2].trim() : '';
   const impedes = match ? match[3].trim() : '';
   const timeSpentToday = match ? match[4].trim() : '';
-  const timeSpentThisWeek = match ? match[5].trim() : '';
-  const timeSpentThisMonth = match ? match[6].trim() : '';
-  const teamToday = match ? match[7].trim() : '';
-
+  const teamToday = match ? match[5].trim() : '';
+  console.log(timeSpentToday)
   const { error } = await supabaseTachio.from("daily_reports").insert([
     {
       subject,
@@ -460,8 +459,6 @@ async function processDailyReport(payload) {
       will_do: willDo,
       impedes,
       time_spent_today: timeSpentToday,
-      time_spent_this_week: timeSpentThisWeek,
-      time_spent_this_month: timeSpentThisMonth,
       team_today: teamToday,
       content: text
     },
