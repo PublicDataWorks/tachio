@@ -1,7 +1,7 @@
 const { JSDOM } = require("jsdom");
 const { supabaseTachio } = require("./supabaseclient");
 const DAILY_REPORT_REGEX = /Hi.*What has the team done since the last call\/email regarding this project\??(.*)What will the team do between now and the next call\/email regarding this project\??(.*)What impedes the team from performing their work as effectively as possible\??(.*)How much time have we spent today\??(.*)How much time have we spent this week.*How much time have we spent this month.*Our team today:?(.*)Regards/;
-
+const DESIGNER_REGEX = /\[Design].*?billable (?:hour|day)\(s\)/;
 /*
 
 You must transmit your Missive user token as a Bearer token in the Authorization HTTP header.
@@ -449,16 +449,21 @@ async function processDailyReport(payload) {
   const doneToday = match ? match[1].trim() : '';
   const willDo = match ? match[2].trim() : '';
   const impedes = match ? match[3].trim() : '';
-  const timeSpentToday = match ? match[4].trim() : '';
   const teamToday = match ? match[5].trim() : '';
-  console.log(timeSpentToday)
+
+  const timeSpentToday = match ? match[4].trim() : '';
+  const designMatch = timeSpentToday.match(DESIGNER_REGEX)
+  const designerTimeSpentToday = designMatch ? designMatch[0] : '';
+  const developerTimeSpentToday = timeSpentToday.replace(designerTimeSpentToday, '')
+
   const { error } = await supabaseTachio.from("daily_reports").insert([
     {
       subject,
       done_today: doneToday,
       will_do: willDo,
       impedes,
-      time_spent_today: timeSpentToday,
+      developer_time_spent_today: developerTimeSpentToday,
+      designer_time_spent_today: designerTimeSpentToday,
       team_today: teamToday,
       content: text
     },
