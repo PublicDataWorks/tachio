@@ -40,7 +40,7 @@ function processWebhookPayload(payload) {
     organization_id: payload.organizationId,
     webhook_timestamp: new Date(payload.webhookTimestamp),
     webhook_id: payload.webhookId,
-    project_id: payload.data.project?.id,
+    linear_project_id: payload.data.project?.id,
     team_id: payload.data.team?.id,
   }
 }
