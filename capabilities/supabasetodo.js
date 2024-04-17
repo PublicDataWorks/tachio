@@ -16,10 +16,10 @@ const { supabaseTachio } = require("../src/supabaseclient");
  * @param {string} status - The status of the todo item. The value is one of 'icebox', 'todo', 'in_progress', 'done'.
  * @param {string} priority - The priority of the todo item. The value is one of 'now', 'next', 'later'.
  * @param {array} externalUrls - The external URLs (e.g., linear or github issue or pull request).
- * @param {Date} completed_at - The timestamp when the todo was completed.
+ * @param {Date} completedAt - The timestamp when the todo was completed.
  * @returns {Promise<string>} A promise that resolves to a success message.
  */
-async function createTodo({ projectId, name, status = "todo", priority = "later", description = "", externalUrls = [], completed_at }) {
+async function createTodo({ projectId, name, status = "todo", priority = "later", description = "", externalUrls = [], completedAt }) {
   if (!name) throw new Error("A name is required to create a todo");
   const { error } = await supabaseTachio.from("todos").insert([
     {
@@ -29,7 +29,7 @@ async function createTodo({ projectId, name, status = "todo", priority = "later"
       priority,
       external_urls: externalUrls,
       description,
-      completed_at,
+      completed_at: completedAt,
     },
   ]);
 

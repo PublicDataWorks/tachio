@@ -128,10 +128,7 @@ async function processMissiveRequest(body) {
     .select("id")
     .in('missive_label_id', body.conversation.shared_labels)
     .limit(1)
-  let projectId = ""
-  if (data.length > 0) {
-    projectId = `Project ID: ${data[0].id}. \n`
-  }
+  let projectId = (data.length > 0) ? `Project ID: ${data[0].id}. \n` : ""
 
   const task = body.comment.task
   let todoPrompt = ""
