@@ -12,6 +12,8 @@ const logger = require("./src/logger.js")("api");
 const { processLinearRequest } = require("./src/linear");
 const { processGithubRequest, verifyGithubSignature } = require("./src/github");
 const { anthropicThinkingRegex } = require("./helpers");
+const { supabaseTachio } = require("./src/supabaseclient");
+const { PROJECT_TABLE_NAME } = require("./capabilities/manageprojects");
 const { processDailyReport } = require("./src/missive");
 require("dotenv").config();
 
@@ -121,7 +123,23 @@ async function processMissiveRequest(body) {
 
   // Extract the conversation ID from the request body
   const conversationId = body.conversation.id;
+  const { data } = await supabaseTachio
+    .from(PROJECT_TABLE_NAME)
+    .select("id")
+    .in('missive_label_id', body.conversation.shared_labels)
+    .limit(1)
+  let projectId = (data.length > 0) ? `Project ID: ${data[0].id}. \n` : ""
 
+  const task = body.comment.task
+  let todoPrompt = ""
+  if (task) {
+    todoPrompt = "I want to record this as a todo (no further action needed beyond that). "
+    if (task.completed_at) {
+      todoPrompt = todoPrompt.concat(`This todo is already completed at ${new Date(task.completed_at * 1000)}. \n`)
+    } else {
+      todoPrompt = todoPrompt.concat(`This todo is not completed yet. \n`)
+    }
+  }
   // Process the webhook payload using the processWebhookPayload function
   const simplifiedPayload = processWebhookPayload(body);
 
@@ -230,7 +248,7 @@ async function processMissiveRequest(body) {
       ...formattedMessages,
       {
         role: "user",
-        content: `<${username}> \n ${simplifiedPayload.userMessage}`,
+        content: `${projectId} <${username}> \n ${todoPrompt} ${simplifiedPayload.userMessage}`,
       },
     ];
 
@@ -268,7 +286,6 @@ async function processMissiveRequest(body) {
         "timestamp": Math.floor(Date.now() / 1000) + 1
       })
     }
-    console.log("kyky", lastMessage)
   }
   // POST the response back to the Missive API using the conversation ID
   const responsePost = await fetch(`${apiFront}/posts/`, {
@@ -338,7 +355,7 @@ app.post("/api/webhook-prompt", async (req, res) => {
   const { getPromptsFromSupabase } = require("./helpers.js");
   const { processMessageChain } = await require('./src/chain.js');
 
-  // this is will be an authorized call from pgcron to send a request to the robot as if a user sent, but specifiying a prompt from the prompts table to use
+  // this will be an authorized call from pgcron to send a request to the robot as if a user sent, but specifiying a prompt from the prompts table to use
 
   const passphrase = process.env.MISSIVE_WEBHOOK_SECRET; // Assuming PASSPHRASE is the environment variable name
 

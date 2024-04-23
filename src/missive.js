@@ -354,7 +354,12 @@ async function createSharedLabel({ name, organization, parent, shareWithOrganiza
   };
 
   const response = await fetch(url, options);
-  return await response.json();
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`Error creating shared label. HTTP status: ${response.status}, status text: ${response.statusText}, body: ${errorBody}`);
+  } else {
+    return response.json();
+  }
 }
 
 
@@ -395,7 +400,12 @@ async function createPost({
     }),
   }
   const response = await fetch(url, options);
-  return await response.json();
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`Error creating post. HTTP status: ${response.status}, status text: ${response.statusText}, body: ${errorBody}`);
+  } else {
+    return response.json();
+  }
 }
 
 /*

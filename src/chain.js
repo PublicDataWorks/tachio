@@ -466,7 +466,12 @@ module.exports = (async () => {
    * @returns {string} - The trimmed response.
    */
   function trimResponseIfNeeded(capabilityResponse) {
-    let lines = JSON.parse(capabilityResponse)
+    let lines
+    try {
+      lines = JSON.parse(capabilityResponse)
+    } catch {
+      lines = capabilityResponse
+    }
     if (!Array.isArray(lines)) {
       lines = capabilityResponse.split("\n");
     }
