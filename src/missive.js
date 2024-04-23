@@ -1,4 +1,8 @@
-const { openai } = require("./openai");
+const { JSDOM } = require("jsdom");
+const { supabaseTachio } = require("./supabaseclient");
+const DAILY_REPORT_REGEX = /Hi.*What has the team done since the last call\/email regarding this project\??(.*)What will the team do between now and the next call\/email regarding this project\??(.*)What impedes the team from performing their work as effectively as possible\??(.*)How much time have we spent today\??(.*)How much time have we spent this week.*How much time have we spent this month.*Our team today:?(.*)Regards/;
+const DESIGN_REGEX = /\[Design].*?billable (?:hour|day)\(s\)/;
+const DONE_TODAY_DESIGN_REGEX = /(?:\[?Design]?|\[?Designer]?).*/;
 /*
 
 You must transmit your Missive user token as a Bearer token in the Authorization HTTP header.
@@ -166,8 +170,6 @@ async function listConversationMessages(emailMessageId) {
   return data;
 }
 
-const conversationId = "2939b050-496f-4128-a249-61576f897720";
-
 // const messages = listConversationMessages(conversationId).then((data) => {
 //   console.log(data);
 // });
@@ -299,8 +301,7 @@ async function getMessage(messageId) {
   };
 
   const response = await fetch(url, options);
-  const data = await response.json();
-  return data;
+  return response.json();
 }
 
 /*
@@ -331,8 +332,7 @@ async function listSharedLabels() {
   };
 
   const response = await fetch(url, options);
-  const data = await response.json();
-  return data;
+  return response.json();
 }
 
 async function createSharedLabel({ name, organization, parent, shareWithOrganization }) {
@@ -359,17 +359,17 @@ async function createSharedLabel({ name, organization, parent, shareWithOrganiza
 
 
 async function createPost({
-  conversationSubject,
-  username,
-  usernameIcon,
-  organization,
-  addSharedLabels,
-  notificationTitle,
-  notificationBody,
-  text,
-  markdown,
-  conversation
-}) {
+                            conversationSubject,
+                            username,
+                            usernameIcon,
+                            organization,
+                            addSharedLabels,
+                            notificationTitle,
+                            notificationBody,
+                            text,
+                            markdown,
+                            conversation
+                          }) {
   const url = `${apiFront}/posts`;
   const options = {
     method: "POST",
@@ -429,10 +429,59 @@ async function listUsers() {
   };
 
   const response = await fetch(url, options);
-  const data = await response.json();
-  return data;
+  return response.json();
+}
+
+async function processDailyReport(payload) {
+  if (!payload.rule.description.toLowerCase().includes("daily report")) return
+
+  const { id: messageId, subject } = payload.message;
+  const message = await getMessage(messageId)
+  const dom = new JSDOM(message.messages.body);
+  const listItems = dom.window.document.querySelectorAll('li');
+  // Append a space after each list item
+  listItems.forEach(li => {
+    const space = dom.window.document.createTextNode('. ');
+    li.appendChild(space);
+  });
+  const text = dom.window.document.body.textContent;
+  const match = text.match(DAILY_REPORT_REGEX);
+
+  const doneToday = match ? match[1].trim() : '';
+  const designerDoneTodayMatch = doneToday.match(DONE_TODAY_DESIGN_REGEX);
+  const designerDoneToday = designerDoneTodayMatch ? designerDoneTodayMatch[0] : '';
+  const otherDoneToday = doneToday.replace(designerDoneToday, '');
+
+  const willDo = match ? match[2].trim() : '';
+  const designerWillDoMatch = willDo.match(DONE_TODAY_DESIGN_REGEX);
+  const designerWillDo = designerWillDoMatch ? designerWillDoMatch[0] : '';
+  const otherWillDo = willDo.replace(designerWillDo, '');
+
+  const impedes = match ? match[3].trim() : '';
+  const teamToday = match ? match[5].trim() : '';
+
+  const timeSpentToday = match ? match[4].trim() : '';
+  const designMatch = timeSpentToday.match(DESIGN_REGEX)
+  const designerTimeSpentToday = designMatch ? designMatch[0] : '';
+  const developerTimeSpentToday = timeSpentToday.replace(designerTimeSpentToday, '')
+
+  const { error } = await supabaseTachio.from("daily_reports").insert([
+    {
+      subject,
+      developer_done_today: otherDoneToday,
+      designer_done_today: designerDoneToday,
+      developer_will_do: otherWillDo,
+      designer_will_do: designerWillDo,
+      impedes,
+      developer_time_spent_today: developerTimeSpentToday,
+      designer_time_spent_today: designerTimeSpentToday,
+      team_today: teamToday,
+      content: text
+    },
+  ]);
+  if (error) throw new Error(error.message);
 }
 
 module.exports = {
-  listConversations, listConversationMessages, getMessage, listSharedLabels, createSharedLabel, createPost, listUsers,
+  createSharedLabel, createPost, processDailyReport
 };
