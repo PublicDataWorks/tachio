@@ -26,5 +26,4 @@ dist-ssr
 public/wa-sqlite-async.mjs
 public/wa-sqlite-async.wasm
 
-src/generated/
 db/data/

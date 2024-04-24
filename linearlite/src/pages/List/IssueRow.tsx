@@ -6,11 +6,11 @@ import StatusIcon from '../../components/StatusIcon'
 import Avatar from '../../components/Avatar'
 import { memo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Issue, useElectric } from '../../electric'
+import { Issues, useElectric } from '../../electric'
 import { formatDate } from '../../utils/date'
 
 interface Props {
-  issue: Issue
+  issue: Issues
   style: CSSProperties
 }
 

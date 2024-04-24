@@ -1,7 +1,7 @@
 const { parseJSONArg } = require("../helpers");
 const { createSharedLabel, createPost } = require("../src/missive");
-const { supabaseTachio } = require("../src/supabaseclient");
 const { ORG_TABLE_NAME } = require("./manageorgs");
+const { supabase } = require('../src/supabaseclient')
 require("dotenv").config();
 
 const PROJECT_TABLE_NAME = "projects";
@@ -20,7 +20,7 @@ async function createProject({
                              }) {
   if (!orgName || !projectName) throw new Error("Missing required fields");
 
-  const { data: [org], error } = await supabaseTachio
+  const { data: [org], error } = await supabase
     .from(ORG_TABLE_NAME)
     .select("id, missive_label_id")
     .match({ name: orgName })
@@ -46,7 +46,7 @@ async function createProject({
   })
   const conversationId = newPost.posts.conversation
 
-  const { error: errAddProject } = await supabaseTachio.from(PROJECT_TABLE_NAME).insert([
+  const { error: errAddProject } = await supabase.from(PROJECT_TABLE_NAME).insert([
     {
       name: projectName,
       org_id: org.id,
@@ -77,7 +77,7 @@ async function updateProject({
                              }) {
   if (!newProjectName && !newOrgId && !newAliases && !newStatus && !newStartDate && !newEndDate) return "No changes made"
 
-  const { data: [projectBefore], error } = await supabaseTachio
+  const { data: [projectBefore], error } = await supabase
     .from(PROJECT_TABLE_NAME)
     .select('org_id, aliases, status, start_date, end_date')
     .match({ name: projectName })
@@ -91,7 +91,7 @@ async function updateProject({
     (!newEndDate || newEndDate === projectBefore.end_date)
   ) return "No changes made";
 
-  const { error: errUpdateProject } = await supabaseTachio
+  const { error: errUpdateProject } = await supabase
     .from(PROJECT_TABLE_NAME)
     .update({
       name: newProjectName,
@@ -111,7 +111,7 @@ async function updateProjectStatus({ name, shortname, alias, endDate, newStatus 
 
   let newValue = { status: newStatus }
   if (endDate) newValue.end_date = endDate
-  let query = supabaseTachio
+  let query = supabase
     .from(PROJECT_TABLE_NAME)
     .update(newValue)
   if (name) query = query.eq('name', name);

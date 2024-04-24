@@ -1,6 +1,6 @@
 import TopFilter from '../../components/TopFilter'
 import IssueBoard from './IssueBoard'
-import { Issue, useElectric } from '../../electric'
+import { Issues, useElectric } from '../../electric'
 import { useLiveQuery } from 'electric-sql/react'
 import { useFilterState, filterStateToWhere } from '../../utils/filterState'
 
@@ -15,7 +15,7 @@ function Board() {
       where: filterStateToWhere(filterState),
     })
   )
-  const issues: Issue[] = results ?? []
+  const issues: Issues[] = results ?? []
 
   return (
     <div className="flex flex-col flex-1 overflow-hidden">

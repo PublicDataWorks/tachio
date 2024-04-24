@@ -30,17 +30,8 @@ export const initElectric = async (session: Session) => {
   const { tabId } = uniqueTabId()
   dbName = `${discriminator}-${LIB_VERSION}-${tabId}.db`
   const conn = await ElectricDatabase.init(dbName)
-  if (DEBUG) {
-    console.log('initElectric')
-    console.log('dbName', dbName)
-    console.log(conn)
-    console.log(schema)
-    console.log(config)
-  }
   const electric = await electrify(conn, schema, config)
   const token = session.access_token
-  console.log(token, 'asdasd')
   await electric.connect(token)
-  console.log(electric, 'asdazzzz')
   return electric
 }

@@ -1,6 +1,6 @@
 const { parseJSONArg } = require("../helpers");
+const { supabase } = require('../src/supabaseclient')
 const logger = require("../src/logger")('capability-supabasetodo')
-const { supabaseTachio } = require("../src/supabaseclient");
 
 /**
  * Creates a new todo item in the database. This capability allows for the creation of a new todo item within a specified project. It supports optional details such as description, status, priority, due date, external URLs, and attachments, making it flexible for various use cases. The function defaults to setting the todo's status to "To Do" if not specified, ensuring a new todo is actionable immediately upon creation.
@@ -21,7 +21,7 @@ const { supabaseTachio } = require("../src/supabaseclient");
  */
 async function createTodo({ projectId, name, status = "todo", priority = "later", description = "", externalUrls = [], completedAt }) {
   if (!name) throw new Error("A name is required to create a todo");
-  const { error } = await supabaseTachio.from("todos").insert([
+  const { error } = await supabase.from("todos").insert([
     {
       project_id: projectId,
       name,
@@ -52,7 +52,7 @@ async function createTodo({ projectId, name, status = "todo", priority = "later"
  * @returns {Promise<string>} A promise that resolves to true if the deletion was successful, false otherwise.
  */
 async function deleteTodo(todoId) {
-  const { error } = await supabaseTachio
+  const { error } = await supabase
     .from("todos")
     .delete()
     .match({ id: todoId });
@@ -79,7 +79,7 @@ async function updateTodo(todoId, updates) {
   if (!updates || Object.keys(updates).length === 0) {
     throw new Error("Updates object is required and cannot be empty");
   }
-  const { error } = await supabaseTachio
+  const { error } = await supabase
     .from("todos")
     .update(updates)
     .match({ id: todoId });
@@ -113,7 +113,7 @@ Process Response: Use the updated todo item returned by the function to verify t
  *
  */
 async function listTodos() {
-  const { data, error } = await supabaseTachio.from("todos").select();
+  const { data, error } = await supabase.from("todos").select();
 
   if (error) throw new Error(error.message);
   return JSON.stringify(data);

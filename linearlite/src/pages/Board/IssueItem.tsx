@@ -5,10 +5,10 @@ import { DraggableProvided } from 'react-beautiful-dnd'
 import Avatar from '../../components/Avatar'
 import PriorityMenu from '../../components/contextmenu/PriorityMenu'
 import PriorityIcon from '../../components/PriorityIcon'
-import { Issue, useElectric } from '../../electric'
+import { Issues, useElectric } from '../../electric'
 
 interface IssueProps {
-  issue: Issue
+  issue: Issues
   index: number
   isDragging?: boolean
   provided: DraggableProvided

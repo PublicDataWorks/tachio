@@ -10,13 +10,13 @@ import {
 } from 'react-beautiful-dnd'
 import { FixedSizeList as List, areEqual } from 'react-window'
 import AutoSizer from 'react-virtualized-auto-sizer'
-import { Issue } from '../../electric'
+import { Issues } from '../../electric'
 import IssueItem, { itemHeight } from './IssueItem'
 
 interface Props {
   status: string
   title: string
-  issues: Array<Issue> | undefined
+  issues: Array<Issues> | undefined
 }
 
 const itemSpacing = 8
@@ -97,7 +97,7 @@ const Row = memo(
     index,
     style,
   }: {
-    data: Issue[]
+    data: Issues[]
     index: number
     style: any
   }) => {

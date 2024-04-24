@@ -121,7 +121,7 @@ function IssuePage() {
   }
 
   const handleDelete = () => {
-    db.comment.deleteMany({
+    db.comments.deleteMany({
       where: {
         issue_id: issue.id,
       },

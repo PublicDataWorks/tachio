@@ -33,7 +33,7 @@ services:
       DEFAULT_ORGANIZATION_NAME: ${STUDIO_DEFAULT_ORGANIZATION}
       DEFAULT_PROJECT_NAME: ${STUDIO_DEFAULT_PROJECT}
 
-      SUPABASE_URL: http://kong:8000
+      SUPABASE_URL: "${SUPABASE_URL}"
       SUPABASE_PUBLIC_URL: ${SUPABASE_PUBLIC_URL}
       SUPABASE_ANON_KEY: ${ANON_KEY}
       SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
@@ -281,7 +281,7 @@ services:
         condition: service_healthy
     environment:
       JWT_SECRET: ${JWT_SECRET}
-      SUPABASE_URL: http://kong:8000
+      SUPABASE_URL: "${SUPABASE_URL}"
       SUPABASE_ANON_KEY: ${ANON_KEY}
       SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
       SUPABASE_DB_URL: postgresql://postgres:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
@@ -413,7 +413,7 @@ services:
         condition: service_healthy
     environment:
       DATABASE_REQUIRE_SSL: false
-      DATABASE_URL: "postgresql://postgres:${POSTGRES_PASSWORD}@supabase-db/postgres"
+      DATABASE_URL: "postgresql://postgres:${POSTGRES_PASSWORD}@db/postgres"
       AUTH_JWT_KEY: "${JWT_SECRET}"
       AUTH_JWT_ALG: "HS256"
       PG_PROXY_PASSWORD: "${POSTGRES_PASSWORD}"
@@ -427,12 +427,35 @@ services:
   tachio:
     container_name: tachio
     build:
-      context: tachio
+      context: ../tachio
     depends_on:
       db:
         condition: service_healthy
     restart: unless-stopped
+    environment:
+      SUPABASE_URL: "${SUPABASE_URL}"
+      SUPABASE_API_KEY: "${SERVICE_ROLE_KEY}"
+      GITHUB_WEBHOOK_SECRET: "${GITHUB_WEBHOOK_SECRET}"
+      BOT_NAME: "${BOT_NAME}"
+      EXPRESS_PORT: "${EXPRESS_PORT}"
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PROXY_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "8080:8080"
+
+  linearlite:
+    container_name: linearlite
+    build:
+      context: ../linearlite
+    depends_on:
+      - tachio
+    restart: unless-stopped
+    environment:
+      ELECTRIC_SUPABASE_URL: "${SUPABASE_URL}"
+      ELECTRIC_SUPABASE_ANON_KEY: "${ANON_KEY}"
+      ELECTRIC_URL: http://electric:5133
+      MISSIVE_API_KEY: ${MISSIVE_API_KEY}
+    ports:
+      - "5173:80"
 volumes:
   db-config:
