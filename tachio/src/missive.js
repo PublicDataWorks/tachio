@@ -1,5 +1,5 @@
 const { JSDOM } = require("jsdom");
-const { supabaseTachio } = require("./supabaseclient");
+const { supabase } = require('./supabaseclient')
 const DAILY_REPORT_REGEX = /Hi.*What has the team done since the last call\/email regarding this project\??(.*)What will the team do between now and the next call\/email regarding this project\??(.*)What impedes the team from performing their work as effectively as possible\??(.*)How much time have we spent today\??(.*)How much time have we spent this week.*How much time have we spent this month.*Our team today:?(.*)Regards/;
 const DESIGN_REGEX = /\[Design].*?billable (?:hour|day)\(s\)/;
 const DONE_TODAY_DESIGN_REGEX = /(?:\[?Design]?|\[?Designer]?).*/;
@@ -299,7 +299,6 @@ async function getMessage(messageId) {
       Authorization: `Bearer ${apiKey}`,
     },
   };
-
   const response = await fetch(url, options);
   return response.json();
 }
@@ -475,7 +474,7 @@ async function processDailyReport(payload) {
   const designerTimeSpentToday = designMatch ? designMatch[0] : '';
   const developerTimeSpentToday = timeSpentToday.replace(designerTimeSpentToday, '')
 
-  const { error } = await supabaseTachio.from("daily_reports").insert([
+  const { error } = await supabase.from("daily_reports").insert([
     {
       subject,
       developer_done_today: otherDoneToday,

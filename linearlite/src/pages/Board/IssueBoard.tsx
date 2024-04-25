@@ -1,12 +1,12 @@
 import { DragDropContext, DropResult } from 'react-beautiful-dnd'
 import { useMemo, useState, useEffect } from 'react'
 import { generateKeyBetween } from 'fractional-indexing'
-import { Issue, useElectric } from '../../electric'
+import { Issues, useElectric } from '../../electric'
 import { Status, StatusDisplay } from '../../types/issue'
 import IssueCol from './IssueCol'
 
 export interface IssueBoardProps {
-  issues: Issue[]
+  issues: Issues[]
 }
 
 interface MovedIssues {
@@ -30,7 +30,7 @@ export default function IssueBoard({ issues }: IssueBoardProps) {
   }, [issues])
 
   const { issuesByStatus } = useMemo(() => {
-    const issuesByStatus: Record<string, Issue[]> = {}
+    const issuesByStatus: Record<string, Issues[]> = {}
     issues.forEach((issue) => {
       // If the issue has been moved, patch with new status and kanbanorder for sorting
       if (movedIssues[issue.id]) {
@@ -74,8 +74,8 @@ export default function IssueBoard({ issues }: IssueBoardProps) {
     currentIndex: number
   ) => {
     const columnIssues = issuesByStatus[column] || []
-    let prevIssue: Issue | undefined
-    let nextIssue: Issue | undefined
+    let prevIssue: Issues | undefined
+    let nextIssue: Issues | undefined
     if (sameColumn) {
       if (currentIndex < index) {
         prevIssue = columnIssues[index]
@@ -101,7 +101,7 @@ export default function IssueBoard({ issues }: IssueBoardProps) {
    * @param issueBefore The issue immediately before one that needs fixing
    * @returns The new kanbanorder that was set for the issue
    */
-  const fixKanbanOrder = (issue: Issue, issueBefore: Issue) => {
+  const fixKanbanOrder = (issue: Issues, issueBefore: Issues) => {
     // First we find the issue immediately after the issue that needs fixing.
     const issueIndex = issuesByStatus[issue.status].indexOf(issue)
     const issueAfter = issuesByStatus[issue.status][issueIndex + 1]
@@ -152,7 +152,7 @@ export default function IssueBoard({ issues }: IssueBoardProps) {
    * @param issueAfter The issue immediately after the issue being moved
    * @returns The new kanbanorder
    */
-  const getNewKanbanOrder = (issueBefore: Issue, issueAfter: Issue) => {
+  const getNewKanbanOrder = (issueBefore: Issues, issueAfter: Issues) => {
     const prevKanbanOrder = issueBefore?.kanbanorder
     let nextKanbanOrder = issueAfter?.kanbanorder
     if (nextKanbanOrder && nextKanbanOrder === prevKanbanOrder) {

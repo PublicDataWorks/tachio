@@ -1,6 +1,6 @@
 const { parseJSONArg } = require("../helpers");
 const { createSharedLabel, createPost } = require("../src/missive");
-const { supabaseTachio } = require("../src/supabaseclient");
+const { supabase } = require('../src/supabaseclient')
 require("dotenv").config();
 
 const ORG_TABLE_NAME = "orgs";
@@ -61,7 +61,7 @@ async function createOrg({
   let newlyAddedEmails = []
   if (primaryEmailAddress || emailAddresses) {
     const newEmailAddresses = [primaryEmailAddress, ...(emailAddresses || [])].map(emailAddress => ({ email_address: emailAddress }))
-    const { data, error } = await supabaseTachio
+    const { data, error } = await supabase
       .from(EMAIL_TABLE_NAME)
       .upsert(newEmailAddresses, { onConflict: 'email_address', ignoreDuplicates: false })
       .select("id, email_address");
@@ -69,7 +69,7 @@ async function createOrg({
     newlyAddedEmails = data
   }
 
-  const { data, error } = await supabaseTachio.from(ORG_TABLE_NAME).insert([
+  const { data, error } = await supabase.from(ORG_TABLE_NAME).insert([
     {
       name,
       shortname: shortname || name.replace(/\s/g, '-'),
@@ -92,7 +92,7 @@ async function createOrg({
     org_id: data[0].id,
   }))
   if (orgEmails.length > 0) {
-    const { error: orgEmailError } = await supabaseTachio.from(ORG_EMAIL_TABLE_NAME).insert(orgEmails)
+    const { error: orgEmailError } = await supabase.from(ORG_EMAIL_TABLE_NAME).insert(orgEmails)
     if (orgEmailError) throw new Error(orgEmailError.message);
   }
   return `Successfully added org: ${name}`;
@@ -114,7 +114,7 @@ async function createOrg({
 async function updateOrg({ name, newName, newAliases, newFirstContact }) {
   if (!newName && !newAliases && !newFirstContact) return "No changes made"
 
-  const { data: [orgBefore], error: errorGetOrg } = await supabaseTachio
+  const { data: [orgBefore], error: errorGetOrg } = await supabase
     .from(ORG_TABLE_NAME)
     .select('aliases, first_contact, missive_conversation_id')
     .match({ name })
@@ -125,7 +125,7 @@ async function updateOrg({ name, newName, newAliases, newFirstContact }) {
     (!newFirstContact || newFirstContact === orgBefore.first_contact)
   ) return "No changes made";
 
-  const { error } = await supabaseTachio
+  const { error } = await supabase
     .from(ORG_TABLE_NAME)
     .update({ newName, aliases: newAliases, first_contact: newFirstContact })
     .match({ name });

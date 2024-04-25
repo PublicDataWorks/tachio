@@ -1,4 +1,4 @@
-const { supabaseTachio } = require("./supabaseclient");
+const { supabase } = require("./supabaseclient");
 const { PROJECT_TABLE_NAME } = require("../capabilities/manageprojects");
 
 const WEBHOOK_TABLE_NAME = "linear_webhooks";
@@ -7,7 +7,7 @@ const LINEAR_PROJECT_TABLE_NAME = "linear_projects";
 async function processLinearRequest(payload) {
   if (payload.data.project) {
     // Linear project is equivalent to a subproject in Tachio’s db
-    const { error } = await supabaseTachio.from(LINEAR_PROJECT_TABLE_NAME).upsert({
+    const { error } = await supabase.from(LINEAR_PROJECT_TABLE_NAME).upsert({
       id: payload.data.project.id,
       name: payload.data.project.name,
       team_id: payload.data.team?.id,
@@ -16,7 +16,7 @@ async function processLinearRequest(payload) {
   }
   if (payload.data.team) {
     // Linear team is equivalent to a project in Tachio’s db
-    const { error } = await supabaseTachio
+    const { error } = await supabase
       .from(PROJECT_TABLE_NAME)
       .update({
         name: payload.data.team.name,
@@ -25,7 +25,7 @@ async function processLinearRequest(payload) {
       .eq('linear_team_id', payload.data.team.id);
     if (error) throw new Error(error.message)
   }
-  const { error } = await supabaseTachio.from(WEBHOOK_TABLE_NAME).insert(processWebhookPayload(payload));
+  const { error } = await supabase.from(WEBHOOK_TABLE_NAME).insert(processWebhookPayload(payload));
   if (error) throw new Error(error.message)
 }
 

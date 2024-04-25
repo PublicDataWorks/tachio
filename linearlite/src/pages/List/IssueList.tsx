@@ -2,10 +2,10 @@ import { FixedSizeList as List, areEqual } from 'react-window'
 import { memo, type CSSProperties } from 'react'
 import AutoSizer from 'react-virtualized-auto-sizer'
 import IssueRow from './IssueRow'
-import { Issue } from '../../electric'
+import { Issues } from '../../electric'
 
 export interface IssueListProps {
-  issues: Issue[]
+  issues: Issues[]
 }
 
 function IssueList({ issues }: IssueListProps) {
@@ -34,7 +34,7 @@ const VirtualIssueRow = memo(
     index,
     style,
   }: {
-    data: Issue[]
+    data: Issues[]
     index: number
     style: CSSProperties
   }) => {

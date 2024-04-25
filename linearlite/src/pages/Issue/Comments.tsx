@@ -2,21 +2,21 @@ import { useLiveQuery } from 'electric-sql/react'
 import { v4 as uuidv4 } from 'uuid'
 import { useState } from 'react'
 import ReactMarkdown from 'react-markdown'
-import { useElectric, type Issue } from '../../electric'
+import { useElectric, type Issues } from '../../electric'
 import Editor from '../../components/editor/Editor'
 import Avatar from '../../components/Avatar'
 import { formatDate } from '../../utils/date'
 import { showWarning } from '../../utils/notification'
 
 export interface CommentsProps {
-  issue: Issue
+  issue: Issues
 }
 
 function Comments({ issue }: CommentsProps) {
   const { db } = useElectric()!
   const [newCommentBody, setNewCommentBody] = useState<string>('')
   const { results: comments } = useLiveQuery(
-    db.comment.liveMany({
+    db.comments.liveMany({
       where: {
         issue_id: issue.id,
       },
@@ -59,7 +59,7 @@ function Comments({ issue }: CommentsProps) {
       return
     }
 
-    db.comment.create({
+    db.comments.create({
       data: {
         id: uuidv4(),
         issue_id: issue.id,

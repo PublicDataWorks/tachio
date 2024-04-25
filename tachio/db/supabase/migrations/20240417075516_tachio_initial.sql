@@ -247,34 +247,6 @@ END;
 $function$
 ;
 
-grant delete on table "public"."config" to "anon";
-
-grant insert on table "public"."config" to "anon";
-
-grant references on table "public"."config" to "anon";
-
-grant select on table "public"."config" to "anon";
-
-grant trigger on table "public"."config" to "anon";
-
-grant truncate on table "public"."config" to "anon";
-
-grant update on table "public"."config" to "anon";
-
-grant delete on table "public"."config" to "authenticated";
-
-grant insert on table "public"."config" to "authenticated";
-
-grant references on table "public"."config" to "authenticated";
-
-grant select on table "public"."config" to "authenticated";
-
-grant trigger on table "public"."config" to "authenticated";
-
-grant truncate on table "public"."config" to "authenticated";
-
-grant update on table "public"."config" to "authenticated";
-
 grant delete on table "public"."config" to "service_role";
 
 grant insert on table "public"."config" to "service_role";
@@ -288,34 +260,6 @@ grant trigger on table "public"."config" to "service_role";
 grant truncate on table "public"."config" to "service_role";
 
 grant update on table "public"."config" to "service_role";
-
-grant delete on table "public"."memories" to "anon";
-
-grant insert on table "public"."memories" to "anon";
-
-grant references on table "public"."memories" to "anon";
-
-grant select on table "public"."memories" to "anon";
-
-grant trigger on table "public"."memories" to "anon";
-
-grant truncate on table "public"."memories" to "anon";
-
-grant update on table "public"."memories" to "anon";
-
-grant delete on table "public"."memories" to "authenticated";
-
-grant insert on table "public"."memories" to "authenticated";
-
-grant references on table "public"."memories" to "authenticated";
-
-grant select on table "public"."memories" to "authenticated";
-
-grant trigger on table "public"."memories" to "authenticated";
-
-grant truncate on table "public"."memories" to "authenticated";
-
-grant update on table "public"."memories" to "authenticated";
 
 grant delete on table "public"."memories" to "service_role";
 
@@ -331,34 +275,6 @@ grant truncate on table "public"."memories" to "service_role";
 
 grant update on table "public"."memories" to "service_role";
 
-grant delete on table "public"."messages" to "anon";
-
-grant insert on table "public"."messages" to "anon";
-
-grant references on table "public"."messages" to "anon";
-
-grant select on table "public"."messages" to "anon";
-
-grant trigger on table "public"."messages" to "anon";
-
-grant truncate on table "public"."messages" to "anon";
-
-grant update on table "public"."messages" to "anon";
-
-grant delete on table "public"."messages" to "authenticated";
-
-grant insert on table "public"."messages" to "authenticated";
-
-grant references on table "public"."messages" to "authenticated";
-
-grant select on table "public"."messages" to "authenticated";
-
-grant trigger on table "public"."messages" to "authenticated";
-
-grant truncate on table "public"."messages" to "authenticated";
-
-grant update on table "public"."messages" to "authenticated";
-
 grant delete on table "public"."messages" to "service_role";
 
 grant insert on table "public"."messages" to "service_role";
@@ -372,34 +288,6 @@ grant trigger on table "public"."messages" to "service_role";
 grant truncate on table "public"."messages" to "service_role";
 
 grant update on table "public"."messages" to "service_role";
-
-grant delete on table "public"."prompts" to "anon";
-
-grant insert on table "public"."prompts" to "anon";
-
-grant references on table "public"."prompts" to "anon";
-
-grant select on table "public"."prompts" to "anon";
-
-grant trigger on table "public"."prompts" to "anon";
-
-grant truncate on table "public"."prompts" to "anon";
-
-grant update on table "public"."prompts" to "anon";
-
-grant delete on table "public"."prompts" to "authenticated";
-
-grant insert on table "public"."prompts" to "authenticated";
-
-grant references on table "public"."prompts" to "authenticated";
-
-grant select on table "public"."prompts" to "authenticated";
-
-grant trigger on table "public"."prompts" to "authenticated";
-
-grant truncate on table "public"."prompts" to "authenticated";
-
-grant update on table "public"."prompts" to "authenticated";
 
 grant delete on table "public"."prompts" to "service_role";
 
@@ -457,10 +345,13 @@ create table "public"."daily_reports" (
     "created_at" timestamp with time zone not null default now(),
     "updated_at" timestamp with time zone not null default now(),
     "subject" text not null,
-    "done_today" text,
-    "will_do" text,
+    "developer_done_today" text,
+    "designer_done_today" text,
+    "developer_will_do" text,
+    "designer_will_do" text,
     "impedes" text,
-    "time_spent_today" text,
+    "developer_time_spent_today" text,
+    "designer_time_spent_today" text,
     "team_today" text,
     "content" text not null
 );
@@ -767,34 +658,6 @@ BEGIN
 END;$function$
 ;
 
-grant delete on table "public"."emails" to "anon";
-
-grant insert on table "public"."emails" to "anon";
-
-grant references on table "public"."emails" to "anon";
-
-grant select on table "public"."emails" to "anon";
-
-grant trigger on table "public"."emails" to "anon";
-
-grant truncate on table "public"."emails" to "anon";
-
-grant update on table "public"."emails" to "anon";
-
-grant delete on table "public"."emails" to "authenticated";
-
-grant insert on table "public"."emails" to "authenticated";
-
-grant references on table "public"."emails" to "authenticated";
-
-grant select on table "public"."emails" to "authenticated";
-
-grant trigger on table "public"."emails" to "authenticated";
-
-grant truncate on table "public"."emails" to "authenticated";
-
-grant update on table "public"."emails" to "authenticated";
-
 grant delete on table "public"."emails" to "service_role";
 
 grant insert on table "public"."emails" to "service_role";
@@ -808,34 +671,6 @@ grant trigger on table "public"."emails" to "service_role";
 grant truncate on table "public"."emails" to "service_role";
 
 grant update on table "public"."emails" to "service_role";
-
-grant delete on table "public"."github_webhooks" to "anon";
-
-grant insert on table "public"."github_webhooks" to "anon";
-
-grant references on table "public"."github_webhooks" to "anon";
-
-grant select on table "public"."github_webhooks" to "anon";
-
-grant trigger on table "public"."github_webhooks" to "anon";
-
-grant truncate on table "public"."github_webhooks" to "anon";
-
-grant update on table "public"."github_webhooks" to "anon";
-
-grant delete on table "public"."github_webhooks" to "authenticated";
-
-grant insert on table "public"."github_webhooks" to "authenticated";
-
-grant references on table "public"."github_webhooks" to "authenticated";
-
-grant select on table "public"."github_webhooks" to "authenticated";
-
-grant trigger on table "public"."github_webhooks" to "authenticated";
-
-grant truncate on table "public"."github_webhooks" to "authenticated";
-
-grant update on table "public"."github_webhooks" to "authenticated";
 
 grant delete on table "public"."github_webhooks" to "service_role";
 
@@ -851,34 +686,6 @@ grant truncate on table "public"."github_webhooks" to "service_role";
 
 grant update on table "public"."github_webhooks" to "service_role";
 
-grant delete on table "public"."linear_projects" to "anon";
-
-grant insert on table "public"."linear_projects" to "anon";
-
-grant references on table "public"."linear_projects" to "anon";
-
-grant select on table "public"."linear_projects" to "anon";
-
-grant trigger on table "public"."linear_projects" to "anon";
-
-grant truncate on table "public"."linear_projects" to "anon";
-
-grant update on table "public"."linear_projects" to "anon";
-
-grant delete on table "public"."linear_projects" to "authenticated";
-
-grant insert on table "public"."linear_projects" to "authenticated";
-
-grant references on table "public"."linear_projects" to "authenticated";
-
-grant select on table "public"."linear_projects" to "authenticated";
-
-grant trigger on table "public"."linear_projects" to "authenticated";
-
-grant truncate on table "public"."linear_projects" to "authenticated";
-
-grant update on table "public"."linear_projects" to "authenticated";
-
 grant delete on table "public"."linear_projects" to "service_role";
 
 grant insert on table "public"."linear_projects" to "service_role";
@@ -892,34 +699,6 @@ grant trigger on table "public"."linear_projects" to "service_role";
 grant truncate on table "public"."linear_projects" to "service_role";
 
 grant update on table "public"."linear_projects" to "service_role";
-
-grant delete on table "public"."linear_teams" to "anon";
-
-grant insert on table "public"."linear_teams" to "anon";
-
-grant references on table "public"."linear_teams" to "anon";
-
-grant select on table "public"."linear_teams" to "anon";
-
-grant trigger on table "public"."linear_teams" to "anon";
-
-grant truncate on table "public"."linear_teams" to "anon";
-
-grant update on table "public"."linear_teams" to "anon";
-
-grant delete on table "public"."linear_teams" to "authenticated";
-
-grant insert on table "public"."linear_teams" to "authenticated";
-
-grant references on table "public"."linear_teams" to "authenticated";
-
-grant select on table "public"."linear_teams" to "authenticated";
-
-grant trigger on table "public"."linear_teams" to "authenticated";
-
-grant truncate on table "public"."linear_teams" to "authenticated";
-
-grant update on table "public"."linear_teams" to "authenticated";
 
 grant delete on table "public"."linear_teams" to "service_role";
 
@@ -935,34 +714,6 @@ grant truncate on table "public"."linear_teams" to "service_role";
 
 grant update on table "public"."linear_teams" to "service_role";
 
-grant delete on table "public"."linear_webhooks" to "anon";
-
-grant insert on table "public"."linear_webhooks" to "anon";
-
-grant references on table "public"."linear_webhooks" to "anon";
-
-grant select on table "public"."linear_webhooks" to "anon";
-
-grant trigger on table "public"."linear_webhooks" to "anon";
-
-grant truncate on table "public"."linear_webhooks" to "anon";
-
-grant update on table "public"."linear_webhooks" to "anon";
-
-grant delete on table "public"."linear_webhooks" to "authenticated";
-
-grant insert on table "public"."linear_webhooks" to "authenticated";
-
-grant references on table "public"."linear_webhooks" to "authenticated";
-
-grant select on table "public"."linear_webhooks" to "authenticated";
-
-grant trigger on table "public"."linear_webhooks" to "authenticated";
-
-grant truncate on table "public"."linear_webhooks" to "authenticated";
-
-grant update on table "public"."linear_webhooks" to "authenticated";
-
 grant delete on table "public"."linear_webhooks" to "service_role";
 
 grant insert on table "public"."linear_webhooks" to "service_role";
@@ -976,34 +727,6 @@ grant trigger on table "public"."linear_webhooks" to "service_role";
 grant truncate on table "public"."linear_webhooks" to "service_role";
 
 grant update on table "public"."linear_webhooks" to "service_role";
-
-grant delete on table "public"."org_emails" to "anon";
-
-grant insert on table "public"."org_emails" to "anon";
-
-grant references on table "public"."org_emails" to "anon";
-
-grant select on table "public"."org_emails" to "anon";
-
-grant trigger on table "public"."org_emails" to "anon";
-
-grant truncate on table "public"."org_emails" to "anon";
-
-grant update on table "public"."org_emails" to "anon";
-
-grant delete on table "public"."org_emails" to "authenticated";
-
-grant insert on table "public"."org_emails" to "authenticated";
-
-grant references on table "public"."org_emails" to "authenticated";
-
-grant select on table "public"."org_emails" to "authenticated";
-
-grant trigger on table "public"."org_emails" to "authenticated";
-
-grant truncate on table "public"."org_emails" to "authenticated";
-
-grant update on table "public"."org_emails" to "authenticated";
 
 grant delete on table "public"."org_emails" to "service_role";
 
@@ -1019,34 +742,6 @@ grant truncate on table "public"."org_emails" to "service_role";
 
 grant update on table "public"."org_emails" to "service_role";
 
-grant delete on table "public"."org_slack_channels" to "anon";
-
-grant insert on table "public"."org_slack_channels" to "anon";
-
-grant references on table "public"."org_slack_channels" to "anon";
-
-grant select on table "public"."org_slack_channels" to "anon";
-
-grant trigger on table "public"."org_slack_channels" to "anon";
-
-grant truncate on table "public"."org_slack_channels" to "anon";
-
-grant update on table "public"."org_slack_channels" to "anon";
-
-grant delete on table "public"."org_slack_channels" to "authenticated";
-
-grant insert on table "public"."org_slack_channels" to "authenticated";
-
-grant references on table "public"."org_slack_channels" to "authenticated";
-
-grant select on table "public"."org_slack_channels" to "authenticated";
-
-grant trigger on table "public"."org_slack_channels" to "authenticated";
-
-grant truncate on table "public"."org_slack_channels" to "authenticated";
-
-grant update on table "public"."org_slack_channels" to "authenticated";
-
 grant delete on table "public"."org_slack_channels" to "service_role";
 
 grant insert on table "public"."org_slack_channels" to "service_role";
@@ -1060,34 +755,6 @@ grant trigger on table "public"."org_slack_channels" to "service_role";
 grant truncate on table "public"."org_slack_channels" to "service_role";
 
 grant update on table "public"."org_slack_channels" to "service_role";
-
-grant delete on table "public"."orgs" to "anon";
-
-grant insert on table "public"."orgs" to "anon";
-
-grant references on table "public"."orgs" to "anon";
-
-grant select on table "public"."orgs" to "anon";
-
-grant trigger on table "public"."orgs" to "anon";
-
-grant truncate on table "public"."orgs" to "anon";
-
-grant update on table "public"."orgs" to "anon";
-
-grant delete on table "public"."orgs" to "authenticated";
-
-grant insert on table "public"."orgs" to "authenticated";
-
-grant references on table "public"."orgs" to "authenticated";
-
-grant select on table "public"."orgs" to "authenticated";
-
-grant trigger on table "public"."orgs" to "authenticated";
-
-grant truncate on table "public"."orgs" to "authenticated";
-
-grant update on table "public"."orgs" to "authenticated";
 
 grant delete on table "public"."orgs" to "service_role";
 
@@ -1103,34 +770,6 @@ grant truncate on table "public"."orgs" to "service_role";
 
 grant update on table "public"."orgs" to "service_role";
 
-grant delete on table "public"."pivotal_tracker_webhooks" to "anon";
-
-grant insert on table "public"."pivotal_tracker_webhooks" to "anon";
-
-grant references on table "public"."pivotal_tracker_webhooks" to "anon";
-
-grant select on table "public"."pivotal_tracker_webhooks" to "anon";
-
-grant trigger on table "public"."pivotal_tracker_webhooks" to "anon";
-
-grant truncate on table "public"."pivotal_tracker_webhooks" to "anon";
-
-grant update on table "public"."pivotal_tracker_webhooks" to "anon";
-
-grant delete on table "public"."pivotal_tracker_webhooks" to "authenticated";
-
-grant insert on table "public"."pivotal_tracker_webhooks" to "authenticated";
-
-grant references on table "public"."pivotal_tracker_webhooks" to "authenticated";
-
-grant select on table "public"."pivotal_tracker_webhooks" to "authenticated";
-
-grant trigger on table "public"."pivotal_tracker_webhooks" to "authenticated";
-
-grant truncate on table "public"."pivotal_tracker_webhooks" to "authenticated";
-
-grant update on table "public"."pivotal_tracker_webhooks" to "authenticated";
-
 grant delete on table "public"."pivotal_tracker_webhooks" to "service_role";
 
 grant insert on table "public"."pivotal_tracker_webhooks" to "service_role";
@@ -1144,34 +783,6 @@ grant trigger on table "public"."pivotal_tracker_webhooks" to "service_role";
 grant truncate on table "public"."pivotal_tracker_webhooks" to "service_role";
 
 grant update on table "public"."pivotal_tracker_webhooks" to "service_role";
-
-grant delete on table "public"."projects" to "anon";
-
-grant insert on table "public"."projects" to "anon";
-
-grant references on table "public"."projects" to "anon";
-
-grant select on table "public"."projects" to "anon";
-
-grant trigger on table "public"."projects" to "anon";
-
-grant truncate on table "public"."projects" to "anon";
-
-grant update on table "public"."projects" to "anon";
-
-grant delete on table "public"."projects" to "authenticated";
-
-grant insert on table "public"."projects" to "authenticated";
-
-grant references on table "public"."projects" to "authenticated";
-
-grant select on table "public"."projects" to "authenticated";
-
-grant trigger on table "public"."projects" to "authenticated";
-
-grant truncate on table "public"."projects" to "authenticated";
-
-grant update on table "public"."projects" to "authenticated";
 
 grant delete on table "public"."projects" to "service_role";
 
@@ -1187,34 +798,6 @@ grant truncate on table "public"."projects" to "service_role";
 
 grant update on table "public"."projects" to "service_role";
 
-grant delete on table "public"."slack_channels" to "anon";
-
-grant insert on table "public"."slack_channels" to "anon";
-
-grant references on table "public"."slack_channels" to "anon";
-
-grant select on table "public"."slack_channels" to "anon";
-
-grant trigger on table "public"."slack_channels" to "anon";
-
-grant truncate on table "public"."slack_channels" to "anon";
-
-grant update on table "public"."slack_channels" to "anon";
-
-grant delete on table "public"."slack_channels" to "authenticated";
-
-grant insert on table "public"."slack_channels" to "authenticated";
-
-grant references on table "public"."slack_channels" to "authenticated";
-
-grant select on table "public"."slack_channels" to "authenticated";
-
-grant trigger on table "public"."slack_channels" to "authenticated";
-
-grant truncate on table "public"."slack_channels" to "authenticated";
-
-grant update on table "public"."slack_channels" to "authenticated";
-
 grant delete on table "public"."slack_channels" to "service_role";
 
 grant insert on table "public"."slack_channels" to "service_role";
@@ -1228,34 +811,6 @@ grant trigger on table "public"."slack_channels" to "service_role";
 grant truncate on table "public"."slack_channels" to "service_role";
 
 grant update on table "public"."slack_channels" to "service_role";
-
-grant delete on table "public"."table_change_log" to "anon";
-
-grant insert on table "public"."table_change_log" to "anon";
-
-grant references on table "public"."table_change_log" to "anon";
-
-grant select on table "public"."table_change_log" to "anon";
-
-grant trigger on table "public"."table_change_log" to "anon";
-
-grant truncate on table "public"."table_change_log" to "anon";
-
-grant update on table "public"."table_change_log" to "anon";
-
-grant delete on table "public"."table_change_log" to "authenticated";
-
-grant insert on table "public"."table_change_log" to "authenticated";
-
-grant references on table "public"."table_change_log" to "authenticated";
-
-grant select on table "public"."table_change_log" to "authenticated";
-
-grant trigger on table "public"."table_change_log" to "authenticated";
-
-grant truncate on table "public"."table_change_log" to "authenticated";
-
-grant update on table "public"."table_change_log" to "authenticated";
 
 grant delete on table "public"."table_change_log" to "service_role";
 
@@ -1291,3 +846,17 @@ CREATE TRIGGER handle_updated_at_project BEFORE UPDATE ON public.projects FOR EA
 
 CREATE TRIGGER store_project_history BEFORE UPDATE ON public.projects FOR EACH ROW EXECUTE FUNCTION public.store_history();
 
+CREATE TABLE IF NOT EXISTS "issues" (
+    "id" UUID NOT NULL,
+    "title" TEXT NOT NULL,
+    "description" TEXT NOT NULL,
+    "priority" TEXT NOT NULL,
+    "status" TEXT NOT NULL,
+    "modified" TIMESTAMPTZ NOT NULL,
+    "created" TIMESTAMPTZ NOT NULL,
+    "kanbanorder" TEXT NOT NULL,
+    "username" TEXT NOT NULL,
+    CONSTRAINT "issue_pkey" PRIMARY KEY ("id")
+);
+
+grant update on table "public"."issues" to "postgres";

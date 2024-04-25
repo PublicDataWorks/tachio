@@ -422,7 +422,6 @@ module.exports = (async () => {
       logger.info("Last Message is an Image");
       return messages;
     }
-
     const lastUserMessage = messages
       .slice()
       .reverse()
