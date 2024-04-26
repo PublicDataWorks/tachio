@@ -55,6 +55,7 @@ function IssueModal({ isOpen, onDismiss }: Props) {
         modified: date,
         created: date,
         kanbanorder: kanbanorder,
+        external_urls: ''
       },
     })
 
@@ -151,7 +152,6 @@ function IssueModal({ isOpen, onDismiss }: Props) {
             </button>
           }
           onSelect={(val) => {
-            console.log(val)
             setPriority(val)
           }}
         />

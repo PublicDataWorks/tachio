@@ -4,7 +4,6 @@ import { uniqueTabId } from 'electric-sql/util'
 import { electrify, ElectricDatabase } from 'electric-sql/wa-sqlite'
 import { Electric, schema } from './generated/client'
 import type { Session } from '@supabase/supabase-js'
-
 export type { Issues } from './generated/client'
 
 export const { ElectricProvider, useElectric } = makeElectricContext<Electric>()
