@@ -11,3 +11,5 @@ tachio/cache/*.json
 .DS_Store
 tachio-b165984603e7.json
 google_service_account.json
+tachio/google_service_account_private_key.json
+*.env
