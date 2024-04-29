@@ -16,6 +16,8 @@ import StatusMenu from './contextmenu/StatusMenu'
 
 import { Priority, Status, PriorityDisplay } from '../types/issue'
 import { showInfo, showWarning } from '../utils/notification'
+import ProjectMenu from './contextmenu/ProjectMenu.tsx'
+import { GrProjects } from 'react-icons/gr'
 
 interface Props {
   isOpen: boolean
@@ -27,6 +29,7 @@ function IssueModal({ isOpen, onDismiss }: Props) {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState<string>()
   const [priority, setPriority] = useState(Priority.NONE)
+  const [project, setProject] = useState({ id: '', name: '' })
   const [status, setStatus] = useState(Status.BACKLOG)
   const { db } = useElectric()!
 
@@ -35,11 +38,14 @@ function IssueModal({ isOpen, onDismiss }: Props) {
       showWarning('Please enter a title before submitting', 'Title required')
       return
     }
-
+    if (project.id === '') {
+      showWarning('Please choose a project before submitting', 'Project required')
+      return
+    }
     const lastIssue = await db.issues.findFirst({
       orderBy: {
-        kanbanorder: 'desc',
-      },
+        kanbanorder: 'desc'
+      }
     })
     const kanbanorder = generateKeyBetween(lastIssue?.kanbanorder, null)
 
@@ -55,8 +61,9 @@ function IssueModal({ isOpen, onDismiss }: Props) {
         modified: date,
         created: date,
         kanbanorder: kanbanorder,
-        external_urls: ''
-      },
+        external_urls: '',
+        project_id: project.id
+      }
     })
 
     if (onDismiss) onDismiss()
@@ -75,6 +82,7 @@ function IssueModal({ isOpen, onDismiss }: Props) {
       setDescription('')
       setPriority(Priority.NONE)
       setStatus(Status.BACKLOG)
+      setProject({ id: '', name: '' })
     }, 250)
   }
 
@@ -140,21 +148,36 @@ function IssueModal({ isOpen, onDismiss }: Props) {
           />
         </div>
       </div>
-
-      {/* Issue labels & priority */}
-      <div className="flex items-center px-4 pb-3 mt-1 border-b border-gray-200">
-        <PriorityMenu
-          id="priority-menu"
-          button={
-            <button className="inline-flex items-center h-6 px-2 text-gray-500 bg-gray-200 border-none rounded hover:bg-gray-100 hover:text-gray-700">
-              <PriorityIcon priority={priority} className="mr-1" />
-              <span>{PriorityDisplay[priority]}</span>
-            </button>
-          }
-          onSelect={(val) => {
-            setPriority(val)
-          }}
-        />
+      <div className="flex flex-row">
+        {/* Project */}
+        <div className="pl-4 pb-3 mt-1 border-b border-gray-200">
+          <ProjectMenu
+            id="project-menu"
+            button={
+              <button
+                className="inline-flex items-center h-6 px-2 text-gray-500 bg-gray-200 border-none rounded hover:bg-gray-100 hover:text-gray-700 w-max">
+                <GrProjects size={13} className="mr-2" />
+                <span className="overflow-hidden">{project.name || 'Not selected'}</span>
+              </button>
+            }
+            onSelect={val => setProject(val)} />
+        </div>
+        {/* Issue labels & priority */}
+        <div className="flex items-center px-4 pb-3 mt-1 border-b border-gray-200">
+          <PriorityMenu
+            id="priority-menu"
+            button={
+              <button
+                className="inline-flex items-center h-6 px-2 text-gray-500 bg-gray-200 border-none rounded hover:bg-gray-100 hover:text-gray-700">
+                <PriorityIcon priority={priority} className="mr-1" />
+                <span>{PriorityDisplay[priority]}</span>
+              </button>
+            }
+            onSelect={(val) => {
+              setPriority(val)
+            }}
+          />
+        </div>
       </div>
       {/* Footer */}
       <div className="flex items-center flex-shrink-0 px-4 pt-3">

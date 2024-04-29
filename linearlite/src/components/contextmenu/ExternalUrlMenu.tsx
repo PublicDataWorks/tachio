@@ -1,7 +1,7 @@
 import { Transition } from '@headlessui/react'
 import { useRef } from 'react'
 import classnames from 'classnames'
-import { useClickOutside } from '../hooks/useClickOutside'
+import { useClickOutside } from '../../hooks/useClickOutside.ts'
 import {BsLink45Deg, BsTrash2Fill} from "react-icons/bs";
 
 interface Props {

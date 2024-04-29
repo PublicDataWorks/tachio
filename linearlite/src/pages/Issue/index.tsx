@@ -1,24 +1,25 @@
-import {useLiveQuery} from 'electric-sql/react'
-import {useParams, useNavigate, Link} from 'react-router-dom'
-import {useState, useRef} from 'react'
-import {BsThreeDots, BsTrash3 as DeleteIcon} from 'react-icons/bs'
-import {FaExternalLinkAlt as LinkIcon} from 'react-icons/fa'
-import {BsXLg as CloseIcon} from 'react-icons/bs'
+import { useLiveQuery } from 'electric-sql/react'
+import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useState, useRef } from 'react'
+import { BsThreeDots, BsTrash3 as DeleteIcon } from 'react-icons/bs'
+import { FaExternalLinkAlt as LinkIcon } from 'react-icons/fa'
+import { BsXLg as CloseIcon } from 'react-icons/bs'
 import PriorityMenu from '../../components/contextmenu/PriorityMenu'
 import StatusMenu from '../../components/contextmenu/StatusMenu'
 import PriorityIcon from '../../components/PriorityIcon'
 import StatusIcon from '../../components/StatusIcon'
 import Avatar from '../../components/Avatar'
-import {useElectric} from '../../electric'
-import {PriorityDisplay, StatusDisplay} from '../../types/issue'
+import { useElectric } from '../../electric'
+import { PriorityDisplay, StatusDisplay } from '../../types/issue'
 import Editor from '../../components/editor/Editor'
 import DeleteModal from './DeleteModal'
 import Comments from './Comments'
 import debounce from 'lodash.debounce'
 import ItemGroup from '../../components/ItemGroup.tsx'
-import ExternalUrlMenu from "../../components/ExternalUrlMenu.tsx";
-import IssueProjectsMenu from "../../components/IssueProjectsMenu.tsx";
-import {GrProjects} from "react-icons/gr";
+import ExternalUrlMenu from '../../components/contextmenu/ExternalUrlMenu.tsx'
+import { GrProjects } from 'react-icons/gr'
+import ProjectMenu from '../../components/contextmenu/ProjectMenu.tsx'
+import { showInfo } from '../../utils/notification.tsx'
 
 const debounceTime = 500
 
@@ -40,7 +41,6 @@ function IssuePage() {
   const descriptionIsDirty = useRef(false)
   // External URL that the user clicked on to show the ExternalUrlMenu
   const [showExternalUrlMenu, setExternalUrlMenu] = useState('')
-  const [showProjects, setShowProjects] = useState(false)
   if (issue === undefined) {
     return <div className="p-8 w-full text-center">Loading...</div>
   } else if (issue === null) {
@@ -69,7 +69,7 @@ function IssuePage() {
     })
   }
 
-   const handleProjectChange = (projectId: string) => {
+  const handleProjectChange = (projectId: string) => {
     if (issue.projects?.id === projectId) return
     db.issues.update({
       data: {
@@ -80,13 +80,14 @@ function IssuePage() {
         id: issue.id
       }
     })
+    showInfo('You changed project.', 'Project changed')
   }
 
   const handleRemoveExternalUrl = (urlToRemove: string) => {
     if (!issue?.external_urls) return
-    // `issue.external_urls` is a string that concatenates a list of URLs, with each URL separated by a semicolon.
-    // Remove the URL and an optional trailing semicolon then remove redundant leading semicolons
-    const newExternalUrls = issue.external_urls.replace(new RegExp(`${urlToRemove},?`), "").replace(/,$/g, "")
+    // `issue.external_urls` is a string that concatenates a list of URLs, with each URL separated by a new line.
+    // Remove the URL and an redundant new line
+    const newExternalUrls = issue.external_urls.replace(new RegExp(`${urlToRemove}\n?`), '').replace(/\n$/g, '')
     db.issues.update({
       data: {
         external_urls: newExternalUrls,
@@ -96,6 +97,7 @@ function IssuePage() {
         id: issue.id
       }
     })
+    showInfo('You remove an external link.', 'Link removed')
   }
   const handlePriorityChange = (priority: string) => {
     db.issues.update({
@@ -204,13 +206,13 @@ function IssuePage() {
                 className="p-2 rounded hover:bg-gray-100"
                 onClick={() => setShowDeleteModal(true)}
               >
-                <DeleteIcon size={14}/>
+                <DeleteIcon size={14} />
               </button>
               <button
                 className="ms-2 p-2 rounded hover:bg-gray-100"
                 onClick={handleClose}
               >
-                <CloseIcon size={14}/>
+                <CloseIcon size={14} />
               </button>
             </div>
           </div>
@@ -227,7 +229,7 @@ function IssuePage() {
                 <div className="flex flex-[3_0_0]">
                   <button
                     className="inline-flex items-center h-6 ps-1.5 pe-2 text-gray-500border-none rounded hover:bg-gray-100">
-                    <Avatar name={issue.username}/>
+                    <Avatar name={issue.username} />
                     <span className="ml-1">{issue.username}</span>
                   </button>
                 </div>
@@ -242,7 +244,7 @@ function IssuePage() {
                     button={
                       <button
                         className="inline-flex items-center h-6 px-2 text-gray-500border-none rounded hover:bg-gray-100">
-                        <StatusIcon status={issue.status} className="mr-1"/>
+                        <StatusIcon status={issue.status} className="mr-1" />
                         <span>{StatusDisplay[issue.status]}</span>
                       </button>
                     }
@@ -271,13 +273,20 @@ function IssuePage() {
                   />
                 </div>
               </div>
-              <div className="relative">
+              <div>
                 <span className="font-light">Projects</span>
-                <button className="flex items-center w-full h-8 mt-2 px-2 hover:bg-gray-100" onClick={() => setShowProjects(!showProjects)}>
-                  <div className='w-5 mr-2'> <GrProjects size={16}/> </div>
-                  <span className='truncate'>{issue.projects?.name} </span>
-                </button>
-                <IssueProjectsMenu isOpen={showProjects} onDismiss={() => setShowProjects(false)} onChoose={handleProjectChange} className="absolute top-8 right-64"/>
+                <div className="border-gray-200">
+                  <ProjectMenu
+                    id="project-menu"
+                    button={
+                      <button
+                        className="flex items-center w-full h-8 mt-2 px-2 hover:bg-gray-100">
+                        <GrProjects size={13} className="mr-2" />
+                        <span className="overflow-hidden">{issue?.projects?.name}</span>
+                      </button>
+                    }
+                    onSelect={project => handleProjectChange(project.id)} />
+                </div>
               </div>
             </div>
           </div>
@@ -302,7 +311,7 @@ function IssuePage() {
             />
             {issue.external_urls && (
               <ItemGroup title="Link">
-                {issue.external_urls?.split(',').map(url => (
+                {issue.external_urls?.split('\n').filter(url => url !== '').map(url => (
                   <div className="flex relative" key={url}>
                     <Link
                       className="inline-flex w-full items-center px-4 mt-2 h-10 bg-white border border-gray-300 rounded hover:bg-gray-100 justify-between"
@@ -311,9 +320,9 @@ function IssuePage() {
                     >
                       {url}
                       <div className="flex">
-                        <LinkIcon className="mr-2.5 w-3.5 h-3.5"/>
+                        <LinkIcon className="mr-2.5 w-3.5 h-3.5" />
                         <BsThreeDots onClick={(e: MouseEvent) => onClickExternalUrl(e, url)}
-                                     className="mr-2.5 w-3.5 h-3.5 hover:bg-gray-300"/>
+                                     className="mr-2.5 w-3.5 h-3.5 hover:bg-gray-300" />
                       </div>
                     </Link>
                     <ExternalUrlMenu
@@ -321,6 +330,7 @@ function IssuePage() {
                       onDismiss={() => setExternalUrlMenu('')}
                       onCopy={() => {
                         void navigator.clipboard.writeText(url)
+                        showInfo('Copied to clipboard.', 'Link copied')
                       }}
                       onRemove={() => handleRemoveExternalUrl(url)}
                       className="absolute top-10 right-1"
@@ -333,7 +343,7 @@ function IssuePage() {
 
             <div className="border-t border-gray-200 mt-3 p-3">
               <h2 className="text-md mb-3">Comments</h2>
-              <Comments issue={issue}/>
+              <Comments issue={issue} />
             </div>
           </div>
         </div>
