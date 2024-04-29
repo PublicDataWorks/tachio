@@ -1,7 +1,8 @@
 import { useLiveQuery } from 'electric-sql/react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useState, useRef } from 'react'
-import { BsTrash3 as DeleteIcon } from 'react-icons/bs'
+import { BsThreeDots, BsTrash3 as DeleteIcon } from 'react-icons/bs'
+import { FaExternalLinkAlt as LinkIcon } from 'react-icons/fa'
 import { BsXLg as CloseIcon } from 'react-icons/bs'
 import PriorityMenu from '../../components/contextmenu/PriorityMenu'
 import StatusMenu from '../../components/contextmenu/StatusMenu'
@@ -14,6 +15,11 @@ import Editor from '../../components/editor/Editor'
 import DeleteModal from './DeleteModal'
 import Comments from './Comments'
 import debounce from 'lodash.debounce'
+import ItemGroup from '../../components/ItemGroup.tsx'
+import ExternalUrlMenu from '../../components/contextmenu/ExternalUrlMenu.tsx'
+import { GrProjects } from 'react-icons/gr'
+import ProjectMenu from '../../components/contextmenu/ProjectMenu.tsx'
+import { showInfo } from '../../utils/notification.tsx'
 
 const debounceTime = 500
 
@@ -24,22 +30,22 @@ function IssuePage() {
   const { results: issue } = useLiveQuery(
     db.issues.liveUnique({
       where: { id: id },
+      include: { projects: true }
     })
   )
-
   const [showDeleteModal, setShowDeleteModal] = useState(false)
 
   const [dirtyTitle, setDirtyTitle] = useState<string | null>(null)
   const titleIsDirty = useRef(false)
   const [dirtyDescription, setDirtyDescription] = useState<string | null>(null)
   const descriptionIsDirty = useRef(false)
-
+  // External URL that the user clicked on to show the ExternalUrlMenu
+  const [showExternalUrlMenu, setExternalUrlMenu] = useState('')
   if (issue === undefined) {
     return <div className="p-8 w-full text-center">Loading...</div>
   } else if (issue === null) {
     return <div className="p-8 w-full text-center">Issue not found</div>
   }
-
   // We check if the dirty title or description is the same as the actual title or
   // description, and if so, we can switch back to the non-dirty version
   if (dirtyTitle === issue.title) {
@@ -55,23 +61,53 @@ function IssuePage() {
     db.issues.update({
       data: {
         status: status,
-        modified: new Date(),
+        modified: new Date()
       },
       where: {
-        id: issue.id,
-      },
+        id: issue.id
+      }
     })
   }
 
+  const handleProjectChange = (projectId: string) => {
+    if (issue.projects?.id === projectId) return
+    db.issues.update({
+      data: {
+        project_id: projectId,
+        modified: new Date()
+      },
+      where: {
+        id: issue.id
+      }
+    })
+    showInfo('You changed project.', 'Project changed')
+  }
+
+  const handleRemoveExternalUrl = (urlToRemove: string) => {
+    if (!issue?.external_urls) return
+    // `issue.external_urls` is a string that concatenates a list of URLs, with each URL separated by a new line.
+    // Remove the URL and an redundant new line
+    const newExternalUrls = issue.external_urls.replace(new RegExp(`${urlToRemove}\n?`), '').replace(/\n$/g, '')
+    db.issues.update({
+      data: {
+        external_urls: newExternalUrls,
+        modified: new Date()
+      },
+      where: {
+        id: issue.id
+      }
+    })
+    showInfo('You remove an external link.', 'Link removed')
+  }
   const handlePriorityChange = (priority: string) => {
     db.issues.update({
       data: {
         priority: priority,
-        modified: new Date(),
+        modified: new Date()
       },
       where: {
-        id: issue.id,
-      },
+        id: issue.id
+      }
     })
   }
 
@@ -79,11 +115,11 @@ function IssuePage() {
     await db.issues.update({
       data: {
         title: title,
-        modified: new Date(),
+        modified: new Date()
       },
       where: {
-        id: issue.id,
-      },
+        id: issue.id
+      }
     })
     // We can't set titleIsDirty.current = false here because we haven't yet received
     // the updated issue from the db
@@ -101,11 +137,11 @@ function IssuePage() {
       await db.issues.update({
         data: {
           description: description,
-          modified: new Date(),
+          modified: new Date()
         },
         where: {
-          id: issue.id,
-        },
+          id: issue.id
+        }
       })
       // We can't set descriptionIsDirty.current = false here because we haven't yet received
       // the updated issue from the db
@@ -123,13 +159,13 @@ function IssuePage() {
   const handleDelete = () => {
     db.comments.deleteMany({
       where: {
-        issue_id: issue.id,
-      },
+        issue_id: issue.id
+      }
     })
     db.issues.delete({
       where: {
-        id: issue.id,
-      },
+        id: issue.id
+      }
     })
     handleClose()
   }
@@ -149,6 +185,10 @@ function IssuePage() {
     }
   }
 
+  const onClickExternalUrl = (e: MouseEvent, url: string) => {
+    setExternalUrlMenu(url)
+    e.preventDefault()
+  }
   return (
     <>
       <div className="flex flex-col flex-1 overflow-hidden">
@@ -187,7 +227,8 @@ function IssuePage() {
                   Opened by
                 </div>
                 <div className="flex flex-[3_0_0]">
-                  <button className="inline-flex items-center h-6 ps-1.5 pe-2 text-gray-500border-none rounded hover:bg-gray-100">
+                  <button
+                    className="inline-flex items-center h-6 ps-1.5 pe-2 text-gray-500border-none rounded hover:bg-gray-100">
                     <Avatar name={issue.username} />
                     <span className="ml-1">{issue.username}</span>
                   </button>
@@ -201,7 +242,8 @@ function IssuePage() {
                   <StatusMenu
                     id={'issue-status-' + issue.id}
                     button={
-                      <button className="inline-flex items-center h-6 px-2 text-gray-500border-none rounded hover:bg-gray-100">
+                      <button
+                        className="inline-flex items-center h-6 px-2 text-gray-500border-none rounded hover:bg-gray-100">
                         <StatusIcon status={issue.status} className="mr-1" />
                         <span>{StatusDisplay[issue.status]}</span>
                       </button>
@@ -218,7 +260,8 @@ function IssuePage() {
                   <PriorityMenu
                     id={'issue-priority-' + issue.id}
                     button={
-                      <button className="inline-flex items-center h-6 px-2 text-gray-500 border-none rounded hover:bg-gray-100 hover:text-gray-700">
+                      <button
+                        className="inline-flex items-center h-6 px-2 text-gray-500 border-none rounded hover:bg-gray-100 hover:text-gray-700">
                         <PriorityIcon
                           priority={issue.priority}
                           className="mr-1"
@@ -230,9 +273,25 @@ function IssuePage() {
                   />
                 </div>
               </div>
+              <div>
+                <span className="font-light">Projects</span>
+                <div className="border-gray-200">
+                  <ProjectMenu
+                    id="project-menu"
+                    button={
+                      <button
+                        className="flex items-center w-full h-8 mt-2 px-2 hover:bg-gray-100">
+                        <GrProjects size={13} className="mr-2" />
+                        <span className="overflow-hidden">{issue?.projects?.name}</span>
+                      </button>
+                    }
+                    onSelect={project => handleProjectChange(project.id)} />
+                </div>
+              </div>
             </div>
           </div>
-          <div className="flex flex-col md:flex-[3_0_0] md:p-3 border-gray-200 md:border-r min-h-0 min-w-0 overflow-auto">
+          <div
+            className="flex flex-col md:flex-[3_0_0] md:p-3 border-gray-200 md:border-r min-h-0 min-w-0 overflow-auto">
             <input
               className="w-full px-3 py-1 text-lg font-semibold placeholder-gray-400 border-transparent rounded "
               placeholder="Issue title"
@@ -250,6 +309,38 @@ function IssuePage() {
               onChange={(val) => handleDescriptionChange(val)}
               placeholder="Add description..."
             />
+            {issue.external_urls && (
+              <ItemGroup title="Link">
+                {issue.external_urls?.split('\n').filter(url => url !== '').map(url => (
+                  <div className="flex relative" key={url}>
+                    <Link
+                      className="inline-flex w-full items-center px-4 mt-2 h-10 bg-white border border-gray-300 rounded hover:bg-gray-100 justify-between"
+                      to={url}
+                      target="_blank"
+                    >
+                      {url}
+                      <div className="flex">
+                        <LinkIcon className="mr-2.5 w-3.5 h-3.5" />
+                        <BsThreeDots onClick={(e: MouseEvent) => onClickExternalUrl(e, url)}
+                                     className="mr-2.5 w-3.5 h-3.5 hover:bg-gray-300" />
+                      </div>
+                    </Link>
+                    <ExternalUrlMenu
+                      isOpen={showExternalUrlMenu === url}
+                      onDismiss={() => setExternalUrlMenu('')}
+                      onCopy={() => {
+                        void navigator.clipboard.writeText(url)
+                        showInfo('Copied to clipboard.', 'Link copied')
+                      }}
+                      onRemove={() => handleRemoveExternalUrl(url)}
+                      className="absolute top-10 right-1"
+                    />
+                  </div>
+                ))}
+              </ItemGroup>
+            )}
+
+
             <div className="border-t border-gray-200 mt-3 p-3">
               <h2 className="text-md mb-3">Comments</h2>
               <Comments issue={issue} />

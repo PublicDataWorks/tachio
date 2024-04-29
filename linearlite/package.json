@@ -4,7 +4,7 @@
   "license": "Apache-2.0",
   "type": "module",
   "scripts": {
-    "client:generate": "npx electric-sql generate --service http://localhost:5133 --proxy postgresql://electric:${PROXY_PASSWORD}@localhost:65432/postgres",
+    "client:generate": "(source .env && npx electric-sql generate --service http://localhost:5133 --proxy postgresql://electric:${PROXY_PASSWORD}@localhost:65432/postgres)",
     "client:watch": "npx electric-sql generate --watch",
     "db:psql": "npx electric-sql psql",
     "electric:start": "npx electric-sql start",

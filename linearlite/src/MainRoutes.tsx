@@ -2,7 +2,7 @@ import {BrowserRouter, Route, Routes} from 'react-router-dom'
 import {cssTransition, ToastContainer} from 'react-toastify'
 import {createContext, useContext, useEffect, useState} from 'react'
 
-import {dbName, DEBUG, ElectricProvider, initElectric} from './electric.tsx'
+import {dbName, DEBUG, ElectricProvider, initElectric} from './electric.ts'
 import LeftMenu from './components/LeftMenu.tsx'
 import {Electric} from './generated/client'
 import List from './pages/List'
@@ -50,7 +50,16 @@ export const MainRoutes = ({onElectricLoaded}: MainRoutesProps) => {
         setElectric(client)
         const {synced} = await client.db.issues.sync({
           include: {
-            comments: true
+            projects: {
+              include: {
+                orgs: {
+                  include: {
+                    emails: true,
+                    slack_channels: true,
+                  }
+                }
+              }
+            }
           }
         })
         await synced
