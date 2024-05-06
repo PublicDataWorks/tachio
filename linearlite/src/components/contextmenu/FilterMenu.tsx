@@ -5,17 +5,19 @@ import { BsCheck2 } from 'react-icons/bs'
 import { Menu } from './menu'
 import { useFilterState } from '../../utils/filterState'
 import { PriorityOptions, StatusOptions } from '../../types/issue'
+import { Projects } from '../../generated/client'
+import { PiCubeThin } from 'react-icons/pi'
 
 interface Props {
   id: string
   button: ReactNode
-  className?: string
+  className?: string,
+  projects?: Projects[]
 }
 
-function FilterMenu({ id, button, className }: Props) {
+function FilterMenu({ id, button, className, projects }: Props) {
   const [filterState, setFilterState] = useFilterState()
   const [keyword, setKeyword] = useState('')
-
   let priorities = PriorityOptions
   if (keyword !== '') {
     const normalizedKeyword = keyword.toLowerCase().trim()
@@ -64,6 +66,25 @@ function FilterMenu({ id, button, className }: Props) {
     )
   })
 
+  const projectOptions = projects?.map((project) => {
+    return (
+      <Menu.Item
+        key={project.id}
+        onClick={() => handleProjectSelect(project.id)}
+      >
+        <PiCubeThin className="mr-3" />
+        <span>{project.name}</span>
+      </Menu.Item>
+    )
+  })
+
+  const handleProjectSelect = (projectId: string) => {
+    setKeyword('')
+    setFilterState({
+      ...filterState,
+      projectId
+    })
+  }
   const handlePrioritySelect = (priority: string) => {
     setKeyword('')
     const newPriority = filterState.priority || []
@@ -74,7 +95,7 @@ function FilterMenu({ id, button, className }: Props) {
     }
     setFilterState({
       ...filterState,
-      priority: newPriority,
+      priority: newPriority
     })
   }
 
@@ -88,7 +109,7 @@ function FilterMenu({ id, button, className }: Props) {
     }
     setFilterState({
       ...filterState,
-      status: newStatus,
+      status: newStatus
     })
   }
 
@@ -112,6 +133,8 @@ function FilterMenu({ id, button, className }: Props) {
           {priorityOptions && statusOptions && <Menu.Divider />}
           {statusOptions && <Menu.Header>Status</Menu.Header>}
           {statusOptions}
+          {projectOptions && <Menu.Header>Project</Menu.Header>}
+          {projectOptions}
         </Menu>
       </Portal>
     </>

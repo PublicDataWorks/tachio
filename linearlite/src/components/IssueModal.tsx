@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef, useState } from 'react'
+import { memo, useContext, useEffect, useRef, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { generateKeyBetween } from 'fractional-indexing'
 import { useElectric } from '../electric'
@@ -18,6 +18,7 @@ import { Priority, Status, PriorityDisplay } from '../types/issue'
 import { showInfo, showWarning } from '../utils/notification'
 import ProjectMenu from './contextmenu/ProjectMenu.tsx'
 import { GrProjects } from 'react-icons/gr'
+import { SupabaseContext } from '../SupabaseContext.ts'
 
 interface Props {
   isOpen: boolean
@@ -32,6 +33,7 @@ function IssueModal({ isOpen, onDismiss }: Props) {
   const [project, setProject] = useState({ id: '', name: '' })
   const [status, setStatus] = useState(Status.BACKLOG)
   const { db } = useElectric()!
+  const { session } = useContext(SupabaseContext)!
 
   const handleSubmit = async () => {
     if (title === '') {
@@ -54,12 +56,12 @@ function IssueModal({ isOpen, onDismiss }: Props) {
       data: {
         id: uuidv4(),
         title: title,
-        username: 'testuser',
+        username: session!.user.email!,
         priority: priority,
         status: status,
         description: description ?? '',
-        modified: date,
-        created: date,
+        updated_at: date,
+        created_at: date,
         kanbanorder: kanbanorder,
         external_urls: '',
         project_id: project.id

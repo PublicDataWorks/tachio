@@ -17,6 +17,8 @@ import IssueModal from './IssueModal'
 import ItemGroup from './ItemGroup'
 import ProfileMenu from './ProfileMenu'
 import { MenuContext } from '../MainRoutes.tsx'
+import { AiOutlineTeam } from 'react-icons/ai'
+import { SupabaseContext } from '../SupabaseContext.ts'
 
 function LeftMenu() {
   const ref = useRef<HTMLDivElement>() as RefObject<HTMLDivElement>
@@ -25,12 +27,13 @@ function LeftMenu() {
   const [showIssueModal, setShowIssueModal] = useState(false)
   const { showMenu, setShowMenu } = useContext(MenuContext)!
   const { status } = useConnectivityState()
+  const { session } = useContext(SupabaseContext)!
 
   const classes = classnames(
     'absolute z-40 lg:static inset-0 transform duration-300 lg:relative lg:translate-x-0 bg-white flex flex-col flex-shrink-0 w-56 font-sans text-sm text-gray-700 border-r border-gray-100 lg:shadow-none justify-items-start',
     {
       '-translate-x-full ease-out shadow-none': !showMenu,
-      'translate-x-0 ease-in shadow-xl': showMenu,
+      'translate-x-0 ease-in shadow-xl': showMenu
     }
   )
 
@@ -69,7 +72,7 @@ function LeftMenu() {
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
               >
                 <Avatar
-                  name="Electric"
+                  name={session!.user.email!}
                   online={status == 'connected'}
                   showOffline={true}
                 />
@@ -104,6 +107,16 @@ function LeftMenu() {
         </div>
 
         <div className="flex flex-col flex-shrink flex-grow overflow-y-auto mb-0.5 px-2">
+          <ItemGroup title="Workspace">
+            <Link
+              to="/projects"
+              className="flex items-center pl-6 rounded cursor-pointer group h-7 hover:bg-gray-100"
+            >
+              <AiOutlineTeam className="w-3.5 h-3.5 mr-2" />
+              <span>Projects</span>
+            </Link>
+          </ItemGroup>
+
           <ItemGroup title="Your Issues">
             <Link
               to="/"

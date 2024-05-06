@@ -31,8 +31,12 @@ export default function ({
 
   // We don't yet have a DAL for counts, so we use raw SQL
   const totalIssuesCount: number =
-    useLiveQuery(db.liveRaw({ sql: 'SELECT COUNT(*) FROM issue' }))
+    useLiveQuery(db.liveRaw({ sql: 'SELECT COUNT(*) FROM issues' }))
       .results?.[0]?.['COUNT(*)'] ?? 0
+  // TODO: Fetch only name and id
+  const { results: projects } = useLiveQuery(
+    db.projects.liveMany()
+  )
 
   const filteredIssuesCount = issues.length
 
@@ -91,6 +95,7 @@ export default function ({
                 Filter
               </button>
             }
+            projects={projects}
             id={'filter-menu'}
           />
         </div>
