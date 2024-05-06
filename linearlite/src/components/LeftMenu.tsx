@@ -56,12 +56,9 @@ function LeftMenu() {
               to="/"
             >
               <img
-                src="/electric-icon.png"
-                className="w-4.5 h-4.5 mr-2.5 rounded-sm"
+                src="/pdw-icon.png"
+                className="w-4.5 h-auto mr-2.5 rounded-sm"
               />
-              {/* <div className="flex text-sm items-center justify-center rounded-sm w-4.5 h-4.5 text-white bg-yellow-500 mr-2.5">
-                G
-              </div> */}
               <span className="flex text-sm font-medium">electric</span>
             </Link>
 
