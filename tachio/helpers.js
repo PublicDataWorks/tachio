@@ -32,6 +32,9 @@ const anthropic = new Anthropic();
 const capabilityRegex = /(\w+):(\w+)\(([^]*?)\)/; // captures newlines in the third argument
 const toolUseCapabilityRegex = /(toolu_[a-zA-Z0-9_-]{1,64})-(\w+)-(\w+)\(([^]*?)\)/;
 const anthropicThinkingRegex = /<thinking>(.*?)<\/thinking>\s*(?:<result>)?(.*?)(?:(?=<\/result>)|$)/s;
+
+const TODO_TABLE_NAME = 'issues'
+
 /**
  * Retrieves prompts from Supabase.
  * @returns {Promise<Object>} An object containing different prompts.
@@ -672,7 +675,7 @@ async function assembleMessagePreamble(username) {
 }
 
 async function listTodos() {
-  const { data, error } = await supabase.from("todos").select("*");
+  const { data, error } = await supabase.from(TODO_TABLE_NAME).select("*");
 
   if (error) throw new Error(error.message);
   return data;
@@ -944,7 +947,7 @@ async function addRelevantMemories(username, messages) {
       `🔧 Retrieving ${relevantMemoryCount} relevant memories for ${queryString}`
     );
 
-    if (relevantMemories.length === 0) {
+    if (relevantMemories && relevantMemories.length !== 0) {
       relevantMemories.forEach((memory) => {
         // log out the memories
         logger.info("relevant memory " + JSON.stringify(memory));
@@ -1456,5 +1459,6 @@ module.exports = {
   trimResponseByLineCount,
   capabilityRegex,
   toolUseCapabilityRegex,
-  anthropicThinkingRegex
+  anthropicThinkingRegex,
+  TODO_TABLE_NAME
 };

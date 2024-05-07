@@ -1,11 +1,11 @@
-const { parseJSONArg } = require("../helpers");
-const { createSharedLabel, createPost } = require("../src/missive");
+const { parseJSONArg } = require('../helpers')
+const { createSharedLabel, createPost } = require('../src/missive')
 const { supabase } = require('../src/supabaseclient')
-require("dotenv").config();
+require('dotenv').config()
 
-const ORG_TABLE_NAME = "orgs";
-const EMAIL_TABLE_NAME = "emails";
-const ORG_EMAIL_TABLE_NAME = "org_emails";
+const ORG_TABLE_NAME = 'orgs'
+const EMAIL_TABLE_NAME = 'emails'
+const ORG_EMAIL_TABLE_NAME = 'org_secondary_emails'
 
 /**
  * Creates a new organization, label and post
@@ -17,7 +17,7 @@ const ORG_EMAIL_TABLE_NAME = "org_emails";
  * @param {string} note - The note for the organization.
  * @param {string} firstContact - The date of the first contact with the organization. If not provided, the current date is used.
  * @param {string} primaryEmailAddress - The primary email address of the organization.
- * @param {Array} emailAddresses - The email addresses of the organization.
+ * @param {Array} secondaryEmailAddresses - The email addresses of the organization.
  * @param {string} linearId - The Linear ID of the organization.
  * @param {string} githubId - The GitHub ID of the organization.
  * @param {string} pivotalTrackerId - The Pivotal Tracker ID of the organization.
@@ -34,43 +34,67 @@ async function createOrg({
                            note,
                            firstContact,
                            primaryEmailAddress,
-                           emailAddresses,
+                           secondaryEmailAddresses,
                            linearId,
                            githubId,
-                           pivotalTrackerId,
+                           pivotalTrackerId
                          }) {
-  if (!name) throw new Error("Missing required fields");
+  if (!name) throw new Error('Missing required fields')
+  const { data: existingOrg } = await supabase
+    .from(ORG_TABLE_NAME)
+    .select('id')
+    .or(`name.eq.${name},shortname.eq.${shortname}`)
+  // ElectricSQL does not support unique constraints, so we need to do this manually
+  if (existingOrg.length > 0) throw new Error('Organization already exists')
+
   const newLabel = await createSharedLabel({
     name,
     shareWithOrganization: true,
-    organization: process.env.MISSIVE_ORGANIZATION,
-  });
+    organization: process.env.MISSIVE_ORGANIZATION
+  })
   const labelId = newLabel.shared_labels[0].id
 
   const newPost = await createPost({
     addSharedLabels: [labelId, process.env.MISSIVE_SHARED_LABEL],
     conversationSubject: name,
-    username: "Tachio",
+    username: 'Tachio',
     usernameIcon: process.env.TACHIO_ICON,
     organization: process.env.MISSIVE_ORGANIZATION,
-    notificationTitle: "New org",
+    notificationTitle: 'New org',
     notificationBody: name,
-    text: name,
+    text: name
   })
 
-  let newlyAddedEmails = []
-  if (primaryEmailAddress || emailAddresses) {
-    const newEmailAddresses = [primaryEmailAddress, ...(emailAddresses || [])].map(emailAddress => ({ email_address: emailAddress }))
+  let addedEmails = []
+  if (primaryEmailAddress || secondaryEmailAddresses) {
+    const emailAddresses = [primaryEmailAddress, ...(secondaryEmailAddresses || [])]
+    // ElectricSQL does not support unique constraints, so we need to do this manually
+    const { data: existingEmails } = await supabase
+      .from(EMAIL_TABLE_NAME)
+      .select('id, email_address')
+      .in('email_address', emailAddresses)
+
+    const newEmailAddresses = emailAddresses.filter(
+      newEmail => !existingEmails.some(existingEmail => existingEmail.email_address === newEmail)
+    ).map(emailAddress => ({ id: crypto.randomUUID(), email_address: emailAddress, created_at: new Date() }))
+
     const { data, error } = await supabase
       .from(EMAIL_TABLE_NAME)
-      .upsert(newEmailAddresses, { onConflict: 'email_address', ignoreDuplicates: false })
-      .select("id, email_address");
-    if (error) throw new Error(error.message);
-    newlyAddedEmails = data
+      .insert(newEmailAddresses)
+      .select('id, email_address')
+    if (error) throw new Error(error.message)
+    addedEmails = [...existingEmails, ...data]
   }
 
+  let primaryEmailId = addedEmails.find(email => email.email_address === primaryEmailAddress)?.id
+  if (!primaryEmailId) {
+    // If the primary email address is not in the newly added emails, it must already exist
+    const { data: primaryEmail } = await supabase.from(EMAIL_TABLE_NAME).select('id').eq('email_address', primaryEmailAddress)
+    primaryEmailId = primaryEmail[0].id
+  }
   const { data, error } = await supabase.from(ORG_TABLE_NAME).insert([
     {
+      id: crypto.randomUUID(),
       name,
       shortname: shortname || name.replace(/\s/g, '-'),
       aliases,
@@ -79,23 +103,24 @@ async function createOrg({
       missive_conversation_id: newPost.posts.conversation,
       missive_label_id: labelId,
       first_contact: firstContact || new Date(),
-      primary_email_address: primaryEmailAddress,
+      primary_email_address_id: primaryEmailId,
       linear_id: linearId,
       github_id: githubId,
       pivotal_tracker_id: pivotalTrackerId,
-    },
-  ]).select("id");
-  if (error) throw new Error(error.message);
+      created_at: new Date()
+    }
+  ]).select('id')
+  if (error) throw new Error(error.message)
 
-  const orgEmails = newlyAddedEmails.filter(email => email.email_address !== primaryEmailAddress).map(email => ({
+  const orgEmails = addedEmails.filter(email => email.email_address !== primaryEmailAddress).map(email => ({
     email_id: email.id,
-    org_id: data[0].id,
+    org_id: data[0].id
   }))
   if (orgEmails.length > 0) {
     const { error: orgEmailError } = await supabase.from(ORG_EMAIL_TABLE_NAME).insert(orgEmails)
-    if (orgEmailError) throw new Error(orgEmailError.message);
+    if (orgEmailError) throw new Error(orgEmailError.message)
   }
-  return `Successfully added org: ${name}`;
+  return `Successfully added org: ${name}`
 }
 
 
@@ -112,58 +137,58 @@ async function createOrg({
  * @throws {Error} If there is an error with the Supabase operations.
  */
 async function updateOrg({ name, newName, newAliases, newFirstContact }) {
-  if (!newName && !newAliases && !newFirstContact) return "No changes made"
+  if (!newName && !newAliases && !newFirstContact) return 'No changes made'
 
   const { data: [orgBefore], error: errorGetOrg } = await supabase
     .from(ORG_TABLE_NAME)
-    .select('aliases, first_contact, missive_conversation_id')
+    .select('name, aliases, first_contact, missive_conversation_id')
     .match({ name })
-  if (errorGetOrg) throw new Error(errorGetOrg.message);
+  if (errorGetOrg) throw new Error(errorGetOrg.message)
   if (
     (!newName || newName === name) &&
     (!newAliases || JSON.stringify(newAliases) === JSON.stringify(orgBefore.aliases)) &&
     (!newFirstContact || newFirstContact === orgBefore.first_contact)
-  ) return "No changes made";
+  ) return 'No changes made'
 
   const { error } = await supabase
     .from(ORG_TABLE_NAME)
-    .update({ newName, aliases: newAliases, first_contact: newFirstContact })
-    .match({ name });
-  if (error) throw new Error(error.message);
+    .update({ name: newName, aliases: newAliases, first_contact: newFirstContact, updated_at: new Date() })
+    .match({ name })
+  if (error) throw new Error(error.message)
 
-  const updateNotificationParts = [];
+  const updateNotificationParts = []
   if (newName) {
     name = newName
-    updateNotificationParts.push(`- Org updated: ${orgBefore.name} changed to ${newName}`);
+    updateNotificationParts.push(`- Org updated: ${orgBefore.name} changed to ${newName}`)
   }
   if (newAliases) {
-    updateNotificationParts.push(`- ${name} alias added: ${newAliases}`);
-    updateNotificationParts.push(`- ${name} alias removed: ${orgBefore.aliases}`);
+    updateNotificationParts.push(`- ${name} alias added: ${newAliases}`)
+    updateNotificationParts.push(`- ${name} alias removed: ${orgBefore.aliases}`)
   }
   if (newFirstContact) {
-    updateNotificationParts.push(`- First contact with ${name} on ${newFirstContact}`);
+    updateNotificationParts.push(`- First contact with ${name} on ${newFirstContact}`)
   }
-  const updateNotificationMarkdown = updateNotificationParts.join('\n');
+  const updateNotificationMarkdown = updateNotificationParts.join('\n')
   await createPost({
-    notificationTitle: "Update org",
-    notificationBody: "Update org",
+    notificationTitle: 'Update org',
+    notificationBody: 'Update org',
     markdown: updateNotificationMarkdown,
-    conversation: orgBefore.missive_conversation_id,
+    conversation: orgBefore.missive_conversation_id
   })
-  return updateNotificationMarkdown;
+  return updateNotificationMarkdown
 }
 
 module.exports = {
   handleCapabilityMethod: async (method, args) => {
-    console.log(`⚡️ Calling capability method: manageorgs.${method}`);
+    console.log(`⚡️ Calling capability method: manageorgs.${method}`)
     const arg = parseJSONArg(args)
-    if (method === "createOrg") {
-      return await createOrg(arg);
-    } else if (method === "updateOrg") {
-      return await updateOrg(arg);
+    if (method === 'createOrg') {
+      return await createOrg(arg)
+    } else if (method === 'updateOrg') {
+      return await updateOrg(arg)
     } else {
-      throw new Error(`Invalid method: ${method}`);
+      throw new Error(`Invalid method: ${method}`)
     }
   },
-  ORG_TABLE_NAME,
-};
+  ORG_TABLE_NAME
+}

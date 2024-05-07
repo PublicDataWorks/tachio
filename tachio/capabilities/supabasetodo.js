@@ -1,9 +1,9 @@
-const { parseJSONArg } = require("../helpers");
+const { parseJSONArg, TODO_TABLE_NAME } = require("../helpers");
 const { supabase } = require('../src/supabaseclient')
 const logger = require("../src/logger")('capability-supabasetodo')
 
 /**
- * Creates a new todo item in the database. This capability allows for the creation of a new todo item within a specified project. It supports optional details such as description, status, priority, due date, external URLs, and attachments, making it flexible for various use cases. The function defaults to setting the todo's status to "To Do" if not specified, ensuring a new todo is actionable immediately upon creation.
+ * Creates a new todo item in the database. This capability allows for the creation of a new todo item within a specified project. It supports optional details such as description, status, priority, external URLs, and attachments, making it flexible for various use cases. The function defaults to setting the todo's status to "To Do" if not specified, ensuring a new todo is actionable immediately upon creation.
  * When to Use: Use this capability when a new task arises that needs tracking within a project's context. It's suitable for user-driven todo creation based on input or automated task generation from project activities or milestones.
  * How to Use:
  * Prepare Todo Details: Construct an object containing the details of the todo to be created, including the mandatory projectId and name fields, along with any other optional information.
@@ -11,25 +11,23 @@ const logger = require("../src/logger")('capability-supabasetodo')
  * Process Response: On successful creation, use the returned todo item for display, further processing, or confirmation to the user.
  *
  * @param {number} projectId - The project ID of the todo item.
- * @param {string} name - The name of the todo item.
+ * @param {string} title - The title of the todo item.
  * @param {string} description - The description of the todo item.
  * @param {string} status - The status of the todo item. The value is one of 'icebox', 'todo', 'in_progress', 'done'.
  * @param {string} priority - The priority of the todo item. The value is one of 'now', 'next', 'later'.
- * @param {array} externalUrls - The external URLs (e.g., linear or github issue or pull request).
- * @param {Date} completedAt - The timestamp when the todo was completed.
+ * @param {string} externalUrls - A newline-delimited string to represent external URLs (e.g., linear or github issue or pull request).
  * @returns {Promise<string>} A promise that resolves to a success message.
  */
-async function createTodo({ projectId, name, status = "todo", priority = "later", description = "", externalUrls = [], completedAt }) {
-  if (!name) throw new Error("A name is required to create a todo");
-  const { error } = await supabase.from("todos").insert([
+async function createTodo({ projectId, title, status = "todo", priority = "later", description = "", externalUrls = '' }) {
+  if (!title) throw new Error("A title is required to create a todo");
+  const { error } = await supabase.from(TODO_TABLE_NAME).insert([
     {
       project_id: projectId,
-      name,
+      title,
       status,
       priority,
       external_urls: externalUrls,
       description,
-      completed_at: completedAt,
     },
   ]);
 
@@ -53,7 +51,7 @@ async function createTodo({ projectId, name, status = "todo", priority = "later"
  */
 async function deleteTodo(todoId) {
   const { error } = await supabase
-    .from("todos")
+    .from(TODO_TABLE_NAME)
     .delete()
     .match({ id: todoId });
 
@@ -80,7 +78,7 @@ async function updateTodo(todoId, updates) {
     throw new Error("Updates object is required and cannot be empty");
   }
   const { error } = await supabase
-    .from("todos")
+    .from(TODO_TABLE_NAME)
     .update(updates)
     .match({ id: todoId });
 
@@ -113,7 +111,7 @@ Process Response: Use the updated todo item returned by the function to verify t
  *
  */
 async function listTodos() {
-  const { data, error } = await supabase.from("todos").select();
+  const { data, error } = await supabase.from(TODO_TABLE_NAME).select();
 
   if (error) throw new Error(error.message);
   return JSON.stringify(data);
@@ -142,4 +140,5 @@ module.exports = {
   createTodo,
   deleteTodo,
   updateTodo,
+  TODO_TABLE_NAME
 };
