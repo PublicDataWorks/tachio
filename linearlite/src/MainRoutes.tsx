@@ -89,6 +89,7 @@ export const MainRoutes = ({onElectricLoaded}: MainRoutesProps) => {
   const router = (
     <Routes>
       <Route path="/" element={<List/>}/>
+      <Route path="/projects/:id" element={<Project/>}/>
       <Route path="/projects" element={<Project/>}/>
       <Route path="/search" element={<List showSearch={true}/>}/>
       <Route path="/board" element={<Board/>}/>

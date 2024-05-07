@@ -15,7 +15,7 @@ export interface CommentsProps {
 
 function Comments({ issue }: CommentsProps) {
   const { db } = useElectric()!
-  const { session } = useContext(SupabaseContext)!
+  const { session } = useContext(SupabaseContext)
   const [newCommentBody, setNewCommentBody] = useState<string>('')
   const { results: comments } = useLiveQuery(
     db.comments.liveMany({

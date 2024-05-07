@@ -82,6 +82,7 @@ interface FilterStateWhere {
   priority?: { in: string[] }
   title?: { contains: string },
   project_id?: string
+  username?: string
   OR?: [{ title: { contains: string } }, { description: { contains: string } }]
 }
 

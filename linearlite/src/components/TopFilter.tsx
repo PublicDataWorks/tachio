@@ -15,12 +15,14 @@ interface Props {
   hideSort?: boolean
   showSearch?: boolean
   title?: string
+  showProjects: boolean
 }
 
 export default function ({
   issues,
   hideSort,
   showSearch,
+  showProjects = true,
   title = 'All issues',
 }: Props) {
   const { db } = useElectric()!
@@ -33,10 +35,6 @@ export default function ({
   const totalIssuesCount: number =
     useLiveQuery(db.liveRaw({ sql: 'SELECT COUNT(*) FROM issues' }))
       .results?.[0]?.['COUNT(*)'] ?? 0
-  // TODO: Fetch only name and id
-  const { results: projects } = useLiveQuery(
-    db.projects.liveMany()
-  )
 
   const filteredIssuesCount = issues.length
 
@@ -81,7 +79,6 @@ export default function ({
           </button>
 
           <div className="p-1 font-semibold me-1">{title}</div>
-          {/* <span>{filteredIssuesCount}</span> */}
           <span>
             {filteredIssuesCount}
             {filteredIssuesCount !== totalIssuesCount
@@ -95,7 +92,7 @@ export default function ({
                 Filter
               </button>
             }
-            projects={projects}
+            showProjects={showProjects}
             id={'filter-menu'}
           />
         </div>

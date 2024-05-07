@@ -1,5 +1,5 @@
 import { Portal } from '../Portal'
-import { ReactNode, useState } from 'react'
+import { ReactElement, ReactNode, useState } from 'react'
 import { ContextMenuTrigger } from '@firefox-devtools/react-contextmenu'
 import { BsCheck2 } from 'react-icons/bs'
 import { Menu } from './menu'
@@ -7,17 +7,40 @@ import { useFilterState } from '../../utils/filterState'
 import { PriorityOptions, StatusOptions } from '../../types/issue'
 import { Projects } from '../../generated/client'
 import { PiCubeThin } from 'react-icons/pi'
+import { useLiveQuery } from 'electric-sql/react'
+import { useElectric } from '../../electric.ts'
 
 interface Props {
   id: string
   button: ReactNode
   className?: string,
   projects?: Projects[]
+  showProjects: boolean
 }
 
-function FilterMenu({ id, button, className, projects }: Props) {
+function FilterMenu({ id, button, className, showProjects = true }: Props) {
+  const { db } = useElectric()!
   const [filterState, setFilterState] = useFilterState()
   const [keyword, setKeyword] = useState('')
+  let projectOptions: ReactElement[] | undefined = undefined
+  if (showProjects) {
+    const { results: projects } = useLiveQuery(
+      db.projects.liveMany()
+    )
+    projectOptions = projects?.map((project) => {
+      return (
+        <Menu.Item
+          key={project.id}
+          onClick={() => handleProjectSelect(project.id)}
+        >
+          <PiCubeThin className="mr-3" />
+          <span>{project.name}</span>
+        </Menu.Item>
+      )
+    })
+  }
+  // TODO: Fetch only name and id
+
   let priorities = PriorityOptions
   if (keyword !== '') {
     const normalizedKeyword = keyword.toLowerCase().trim()
@@ -62,18 +85,6 @@ function FilterMenu({ id, button, className, projects }: Props) {
         {filterState.status?.includes(status) && (
           <BsCheck2 className="ml-auto" />
         )}
-      </Menu.Item>
-    )
-  })
-
-  const projectOptions = projects?.map((project) => {
-    return (
-      <Menu.Item
-        key={project.id}
-        onClick={() => handleProjectSelect(project.id)}
-      >
-        <PiCubeThin className="mr-3" />
-        <span>{project.name}</span>
       </Menu.Item>
     )
   })

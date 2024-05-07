@@ -70,7 +70,7 @@ function IssuePage() {
   }
 
   const handleProjectChange = (projectId: string) => {
-    if (issue.projects?.id === projectId) return
+    if (issue.project_id === projectId) return
     db.issues.update({
       data: {
         project_id: projectId,

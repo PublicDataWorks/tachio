@@ -1,6 +1,6 @@
 import { Transition } from '@headlessui/react'
 import { useClickOutside } from '../hooks/useClickOutside'
-import { useRef } from 'react'
+import React, { useRef } from 'react'
 import Select from './Select'
 import { useFilterState } from '../utils/filterState'
 

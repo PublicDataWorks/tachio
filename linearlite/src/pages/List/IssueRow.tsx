@@ -68,7 +68,7 @@ function IssueRow({ issue, style }: Props) {
         {issue.title.slice(0, 3000) || ''}
       </div>
       <div className="flex-shrink-0 hidden w-15 ml-auto font-normal text-gray-500 sm:block whitespace-nowrap">
-        {formatDate(issue.created)}
+        {formatDate(issue.created_at)}
       </div>
       <div className="flex-shrink-0 hidden ml-4 font-normal text-gray-500 sm:block w-15 md:block">
         <Avatar name={issue.username} />

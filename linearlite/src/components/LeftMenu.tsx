@@ -4,7 +4,7 @@ import { ReactComponent as ElectricIcon } from '../assets/images/icon.inverse.sv
 import { ReactComponent as BacklogIcon } from '../assets/icons/circle-dot.svg'
 import classnames from 'classnames'
 import { memo, RefObject, useRef, useState, useContext } from 'react'
-import { useConnectivityState } from 'electric-sql/react'
+import { useConnectivityState, useLiveQuery } from 'electric-sql/react'
 import { BsPencilSquare as AddIcon } from 'react-icons/bs'
 import { BsSearch as SearchIcon } from 'react-icons/bs'
 import { BsFillGrid3X3GapFill as BoardIcon } from 'react-icons/bs'
@@ -19,6 +19,7 @@ import ProfileMenu from './ProfileMenu'
 import { MenuContext } from '../MainRoutes.tsx'
 import { AiOutlineTeam } from 'react-icons/ai'
 import { SupabaseContext } from '../SupabaseContext.ts'
+import { useElectric } from '../electric.ts'
 
 function LeftMenu() {
   const ref = useRef<HTMLDivElement>() as RefObject<HTMLDivElement>
@@ -27,8 +28,15 @@ function LeftMenu() {
   const [showIssueModal, setShowIssueModal] = useState(false)
   const { showMenu, setShowMenu } = useContext(MenuContext)!
   const { status } = useConnectivityState()
-  const { session } = useContext(SupabaseContext)!
-
+  const { session } = useContext(SupabaseContext)
+  const { db } = useElectric()!
+  const { results: projects } = useLiveQuery(
+    db.projects.liveMany({
+      orderBy: {
+        created_at: 'desc'
+      }
+    })
+  )
   const classes = classnames(
     'absolute z-40 lg:static inset-0 transform duration-300 lg:relative lg:translate-x-0 bg-white flex flex-col flex-shrink-0 w-56 font-sans text-sm text-gray-700 border-r border-gray-100 lg:shadow-none justify-items-start',
     {
@@ -107,14 +115,26 @@ function LeftMenu() {
         </div>
 
         <div className="flex flex-col flex-shrink flex-grow overflow-y-auto mb-0.5 px-2">
-          <ItemGroup title="Workspace">
+          <ItemGroup title="Projects">
             <Link
               to="/projects"
               className="flex items-center pl-6 rounded cursor-pointer group h-7 hover:bg-gray-100"
             >
               <AiOutlineTeam className="w-3.5 h-3.5 mr-2" />
-              <span>Projects</span>
+              <span>All Projects</span>
             </Link>
+            {projects?.map((project) => (
+              <Link
+                key={project.id}
+                to={`/projects/${project.id}`}
+                className="flex items-center pl-6 rounded cursor-pointer h-7 hover:bg-gray-100"
+              >
+                <span className="w-3.5 h-6 mr-2 inline-block">
+                  <span className="block w-2 h-full border-r"></span>
+                </span>
+                <span>{project.name}</span>
+              </Link>
+            ))}
           </ItemGroup>
 
           <ItemGroup title="Your Issues">
