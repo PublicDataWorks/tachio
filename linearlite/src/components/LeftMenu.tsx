@@ -137,6 +137,28 @@ function LeftMenu() {
             ))}
           </ItemGroup>
 
+          <ItemGroup title="Boards">
+            <Link
+              to="/board"
+              className="flex items-center pl-6 rounded cursor-pointer group h-7 hover:bg-gray-100"
+            >
+              <BoardIcon className="w-3.5 h-3.5 mr-2" />
+              <span>All Projects</span>
+            </Link>
+            {projects?.map((project) => (
+              <Link
+                key={project.id}
+                to={`/board?projectId=${project.id}`}
+                className="flex items-center pl-6 rounded cursor-pointer h-7 hover:bg-gray-100"
+              >
+                <span className="w-3.5 h-6 mr-2 inline-block">
+                  <span className="block w-2 h-full border-r"></span>
+                </span>
+                <span>{project.name}</span>
+              </Link>
+            ))}
+          </ItemGroup>
+
           <ItemGroup title="Your Issues">
             <Link
               to="/"

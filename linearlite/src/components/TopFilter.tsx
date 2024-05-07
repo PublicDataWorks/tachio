@@ -18,12 +18,12 @@ interface Props {
   showProjects: boolean
 }
 
-export default function ({
+export default function TopFilter ({
   issues,
   hideSort,
   showSearch,
-  showProjects = true,
-  title = 'All issues',
+  showProjects,
+  title,
 }: Props) {
   const { db } = useElectric()!
   const [filterState, setFilterState] = useFilterState()
@@ -174,4 +174,9 @@ export default function ({
       />
     </>
   )
+}
+
+TopFilter.defaultProps = {
+  showProjects: true,
+  title: 'All issues'
 }
