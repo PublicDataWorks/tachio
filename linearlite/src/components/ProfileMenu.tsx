@@ -9,14 +9,12 @@ import { useElectric } from '../electric'
 interface Props {
   isOpen: boolean
   onDismiss?: () => void
-  setShowAboutModal?: (show: boolean) => void
   className?: string
 }
 export default function ProfileMenu({
   isOpen,
   className,
   onDismiss,
-  setShowAboutModal,
 }: Props) {
   const electric = useElectric()!
   const connectivityState = useConnectivityState()
@@ -60,7 +58,6 @@ export default function ProfileMenu({
         <button
           className="flex items-center h-8 px-3 hover:bg-gray-100"
           onClick={() => {
-            setShowAboutModal?.(true)
             onDismiss?.()
           }}
         >
