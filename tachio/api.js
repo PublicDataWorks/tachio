@@ -108,7 +108,7 @@ function processWebhookPayload(payload) {
   return simplifiedPayload
 }
 
-async function processMissiveRequest(body) {
+async function processMissiveRequest(body, query) {
   // Require the processMessageChain function from the chain module
   const { processMessageChain } = await require('./src/chain')
 
@@ -287,12 +287,13 @@ async function processMissiveRequest(body) {
       })
     }
   }
+  const token = (query?.token?.length === 36) ? query.token : apiKey
   // POST the response back to the Missive API using the conversation ID
   const responsePost = await fetch(`${apiFront}/posts/`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`
+      Authorization: `Bearer ${token}`
     },
     body: JSON.stringify({
       posts: {
@@ -342,7 +343,7 @@ app.post('/api/missive-reply', async (req, res) => {
 
   res.status(200).end()
 
-  processMissiveRequest(req.body)
+  processMissiveRequest(req.body, req.query)
     .then(() => {
       logger.info(`Message processed`)
     })
