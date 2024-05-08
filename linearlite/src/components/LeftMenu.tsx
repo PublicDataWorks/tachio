@@ -1,6 +1,4 @@
-import { ReactComponent as HelpIcon } from '../assets/icons/help.svg'
 import { ReactComponent as MenuIcon } from '../assets/icons/menu.svg'
-import { ReactComponent as ElectricIcon } from '../assets/images/icon.inverse.svg'
 import { ReactComponent as BacklogIcon } from '../assets/icons/circle-dot.svg'
 import classnames from 'classnames'
 import { memo, RefObject, useRef, useState, useContext } from 'react'
@@ -12,7 +10,6 @@ import { BsCollectionFill as IssuesIcon } from 'react-icons/bs'
 import { MdKeyboardArrowDown as ExpandMore } from 'react-icons/md'
 import { Link } from 'react-router-dom'
 import Avatar from './Avatar'
-import AboutModal from './AboutModal'
 import IssueModal from './IssueModal'
 import ItemGroup from './ItemGroup'
 import ProfileMenu from './ProfileMenu'
@@ -24,7 +21,6 @@ import { useElectric } from '../electric.ts'
 function LeftMenu() {
   const ref = useRef<HTMLDivElement>() as RefObject<HTMLDivElement>
   const [showProfileMenu, setShowProfileMenu] = useState(false)
-  const [showAboutModal, setShowAboutModal] = useState(false)
   const [showIssueModal, setShowIssueModal] = useState(false)
   const { showMenu, setShowMenu } = useContext(MenuContext)!
   const { status } = useConnectivityState()
@@ -64,13 +60,10 @@ function LeftMenu() {
               to="/"
             >
               <img
-                src="/electric-icon.png"
-                className="w-4.5 h-4.5 mr-2.5 rounded-sm"
+                src="/pdw-icon.png"
+                className="w-4.5 h-auto mr-2.5 rounded-sm"
               />
-              {/* <div className="flex text-sm items-center justify-center rounded-sm w-4.5 h-4.5 text-white bg-yellow-500 mr-2.5">
-                G
-              </div> */}
-              <span className="flex text-sm font-medium">electric</span>
+              <span className="flex text-sm font-medium">LinearLite</span>
             </Link>
 
             {/* User avatar  */}
@@ -89,7 +82,6 @@ function LeftMenu() {
               <ProfileMenu
                 isOpen={showProfileMenu}
                 onDismiss={() => setShowProfileMenu(false)}
-                setShowAboutModal={setShowAboutModal}
                 className="absolute top-10"
               />
             </div>
@@ -194,29 +186,9 @@ function LeftMenu() {
 
           {/* extra space */}
           <div className="flex flex-col flex-grow flex-shrink" />
-
-          {/* bottom group */}
-          <div className="flex flex-col px-2 pb-2 text-gray-500 mt-7">
-            <a className="inline-flex" href="https://electric-sql.com/">
-              <ElectricIcon className="w-3 h-3 mr-2 mt-1 scale-150" />{' '}
-              ElectricSQL
-            </a>
-            <button
-              className="inline-flex mt-1"
-              onClick={() => setShowAboutModal(true)}
-            >
-              <HelpIcon className="w-3 mr-2 mt-1" /> About
-            </button>
-          </div>
         </div>
       </div>
       {/* Modals */}
-      {
-        <AboutModal
-          isOpen={showAboutModal}
-          onDismiss={() => setShowAboutModal(false)}
-        />
-      }
       {
         <IssueModal
           isOpen={showIssueModal}
