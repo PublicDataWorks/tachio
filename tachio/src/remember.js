@@ -562,7 +562,7 @@ async function getRelevantMemories(queryString, limit = 5) {
   });
 
   if (error) {
-    logger.info("Error fetching relevant user memory:", error);
+    logger.error(`Error fetching relevant user memory: ${error.message}`);
     return null;
   }
 
@@ -589,7 +589,7 @@ async function getMemoriesByString(queryString) {
     .ilike("value", `%${queryString}%`);
 
   if (error) {
-    logger.info("Error fetching relevant user memory:", error);
+    logger.error(`Error fetching relevant user memory: ${error.message}`);
     return null;
   }
 

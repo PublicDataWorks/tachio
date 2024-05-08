@@ -5,7 +5,7 @@ const fs = require("fs");
 const convert = require("xml-js");
 const { openai } = require("./src/openai");
 dotenv.config();
-const { encode, decode } = require("@nem035/gpt-3-encoder");
+const { encode } = require("@nem035/gpt-3-encoder");
 // TODO: Swap out for getConfigFromSupabase
 const { TOKEN_LIMIT } = require("./config");
 const {
@@ -947,16 +947,14 @@ async function addRelevantMemories(username, messages) {
       `🔧 Retrieving ${relevantMemoryCount} relevant memories for ${queryString}`
     );
 
-    if (relevantMemories && relevantMemories.length !== 0) {
-      relevantMemories.forEach((memory) => {
-        // log out the memories
-        logger.info("relevant memory " + JSON.stringify(memory));
-        messages.push({
-          role: "system",
-          content: `${memory.created_at}: ${memory.value}`,
-        });
-      });
-    }
+    relevantMemories?.forEach((memory) => {
+      // log out the memories
+      logger.info('relevant memory ' + JSON.stringify(memory))
+      messages.push({
+        role: 'system',
+        content: `${memory.created_at}: ${memory.value}`
+      })
+    })
   } catch (err) {
     logger.info(err);
   }
@@ -1448,14 +1446,12 @@ module.exports = {
   splitAndSendMessage,
   createTokenLimitWarning,
   isExceedingTokenLimit,
-  lastUserMessage,
   getUniqueEmoji,
   getPromptsFromSupabase,
   getConfigFromSupabase,
   createChatCompletion,
   parseJSONArg,
   processChunks,
-  sleep,
   trimResponseByLineCount,
   capabilityRegex,
   toolUseCapabilityRegex,

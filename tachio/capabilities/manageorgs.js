@@ -12,7 +12,7 @@ const ORG_EMAIL_TABLE_NAME = 'org_secondary_emails'
  *
  * @param {string} name - The name of the organization.
  * @param {string} shortname - The short name of the organization. If not provided, the name is used and spaces are replaced with hyphens.
- * @param {Array} aliases - The aliases of the organization.
+ * @param {string} aliases - a string in JSON format of an array that represents a list of aliases for an organization.
  * @param {string} summary - The summary of the organization.
  * @param {string} note - The note for the organization.
  * @param {string} firstContact - The date of the first contact with the organization. If not provided, the current date is used.
@@ -57,7 +57,7 @@ async function createOrg({
   const newPost = await createPost({
     addSharedLabels: [labelId, process.env.MISSIVE_SHARED_LABEL],
     conversationSubject: name,
-    username: 'Tachio',
+    username: process.env.BOT_NAME,
     usernameIcon: process.env.TACHIO_ICON,
     organization: process.env.MISSIVE_ORGANIZATION,
     notificationTitle: 'New org',
@@ -74,6 +74,7 @@ async function createOrg({
       .select('id, email_address')
       .in('email_address', emailAddresses)
 
+    // Get the email addresses that are not already in the database
     const newEmailAddresses = emailAddresses.filter(
       newEmail => !existingEmails.some(existingEmail => existingEmail.email_address === newEmail)
     ).map(emailAddress => ({ id: crypto.randomUUID(), email_address: emailAddress, created_at: new Date() }))
@@ -129,7 +130,7 @@ async function createOrg({
  *
  * @param {string} name - The current name of the organization.
  * @param {string} newName - The new name of the organization.
- * @param {Array} newAliases - The new aliases of the organization.
+ * @param {string} newAliases - a string in JSON format of an array that represents a list of new aliases for the organization
  * @param {string} newFirstContact - The new date of the first contact with the organization.
  *
  * @returns {Promise<string>} A promise that resolves to a string message indicating the result of the operation.
