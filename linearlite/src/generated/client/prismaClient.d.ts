@@ -14,7 +14,7 @@ type UnwrapTuple<Tuple extends readonly unknown[]> = {
 
 /**
  * Model Comments
- *
+ * 
  */
 export type Comments = {
   /**
@@ -32,7 +32,7 @@ export type Comments = {
 
 /**
  * Model Emails
- *
+ * 
  */
 export type Emails = {
   /**
@@ -45,7 +45,7 @@ export type Emails = {
 
 /**
  * Model Issues
- *
+ * 
  */
 export type Issues = {
   /**
@@ -54,8 +54,7 @@ export type Issues = {
   id: string
   title: string
   description: string
-  modified: Date
-  created: Date
+  created_at: Date
   kanbanorder: string
   username: string
   external_urls: string | null
@@ -66,13 +65,12 @@ export type Issues = {
   /**
    * @zod.string.uuid()
    */
-  project_id: string | null,
-  projects: Projects | null
+  project_id: string | null
 }
 
 /**
  * Model Orgs
- *
+ * 
  */
 export type Orgs = {
   /**
@@ -121,7 +119,7 @@ export type Orgs = {
 
 /**
  * Model Projects
- *
+ * 
  */
 export type Projects = {
   /**
@@ -160,7 +158,7 @@ export type Projects = {
 
 /**
  * Model Slack_channels
- *
+ * 
  */
 export type Slack_channels = {
   /**
@@ -190,7 +188,7 @@ export type project_status = (typeof project_status)[keyof typeof project_status
 
 /**
  * ##  Prisma Client ʲˢ
- *
+ * 
  * Type-safe database client for TypeScript & Node.js
  * @example
  * ```
@@ -199,7 +197,7 @@ export type project_status = (typeof project_status)[keyof typeof project_status
  * const comments = await prisma.comments.findMany()
  * ```
  *
- *
+ * 
  * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client).
  */
 export class PrismaClient<
@@ -211,7 +209,7 @@ export class PrismaClient<
       > {
     /**
    * ##  Prisma Client ʲˢ
-   *
+   * 
    * Type-safe database client for TypeScript & Node.js
    * @example
    * ```
@@ -220,7 +218,7 @@ export class PrismaClient<
    * const comments = await prisma.comments.findMany()
    * ```
    *
-   *
+   * 
    * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client).
    */
 
@@ -248,7 +246,7 @@ export class PrismaClient<
    * ```
    * const result = await prisma.$executeRaw`UPDATE User SET cool = ${true} WHERE email = ${'user@email.com'};`
    * ```
-   *
+   * 
    * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access).
    */
   $executeRaw<T = unknown>(query: TemplateStringsArray | Prisma.Sql, ...values: any[]): PrismaPromise<number>;
@@ -260,7 +258,7 @@ export class PrismaClient<
    * ```
    * const result = await prisma.$executeRawUnsafe('UPDATE User SET cool = $1 WHERE email = $2 ;', true, 'user@email.com')
    * ```
-   *
+   * 
    * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access).
    */
   $executeRawUnsafe<T = unknown>(query: string, ...values: any[]): PrismaPromise<number>;
@@ -271,7 +269,7 @@ export class PrismaClient<
    * ```
    * const result = await prisma.$queryRaw`SELECT * FROM User WHERE id = ${1} OR email = ${'user@email.com'};`
    * ```
-   *
+   * 
    * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access).
    */
   $queryRaw<T = unknown>(query: TemplateStringsArray | Prisma.Sql, ...values: any[]): PrismaPromise<T>;
@@ -283,7 +281,7 @@ export class PrismaClient<
    * ```
    * const result = await prisma.$queryRawUnsafe('SELECT * FROM User WHERE id = $1 OR email = $2;', 1, 'user@email.com')
    * ```
-   *
+   * 
    * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access).
    */
   $queryRawUnsafe<T = unknown>(query: string, ...values: any[]): PrismaPromise<T>;
@@ -298,7 +296,7 @@ export class PrismaClient<
    *   prisma.user.create({ data: { name: 'Alice' } }),
    * ])
    * ```
-   *
+   * 
    * Read more in our [docs](https://www.prisma.io/docs/concepts/components/prisma-client/transactions).
    */
   $transaction<P extends PrismaPromise<any>[]>(arg: [...P], options?: { isolationLevel?: Prisma.TransactionIsolationLevel }): Promise<UnwrapTuple<P>>;
@@ -396,7 +394,7 @@ export namespace Prisma {
   export type DecimalJsLike = runtime.DecimalJsLike
 
   /**
-   * Metrics
+   * Metrics 
    */
   export type Metrics = runtime.Metrics
   export type Metric<T> = runtime.Metric<T>
@@ -412,7 +410,7 @@ export namespace Prisma {
     client: string
   }
 
-  export const prismaVersion: PrismaVersion
+  export const prismaVersion: PrismaVersion 
 
   /**
    * Utility Types
@@ -421,7 +419,7 @@ export namespace Prisma {
   /**
    * From https://github.com/sindresorhus/type-fest/
    * Matches a JSON object.
-   * This type can be useful to enforce some input to be JSON-compatible or as a super-type to be extended from.
+   * This type can be useful to enforce some input to be JSON-compatible or as a super-type to be extended from. 
    */
   export type JsonObject = {[Key in string]?: JsonValue}
 
@@ -466,15 +464,15 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
 
   /**
    * Types of the values used to represent different kinds of `null` values when working with JSON fields.
-   *
+   * 
    * @see https://www.prisma.io/docs/concepts/components/prisma-client/working-with-fields/working-with-json-fields#filtering-on-a-json-field
    */
   namespace NullTypes {
     /**
     * Type of `Prisma.DbNull`.
-    *
+    * 
     * You cannot use other instances of this class. Please use the `Prisma.DbNull` value.
-    *
+    * 
     * @see https://www.prisma.io/docs/concepts/components/prisma-client/working-with-fields/working-with-json-fields#filtering-on-a-json-field
     */
     class DbNull {
@@ -484,9 +482,9 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
 
     /**
     * Type of `Prisma.JsonNull`.
-    *
+    * 
     * You cannot use other instances of this class. Please use the `Prisma.JsonNull` value.
-    *
+    * 
     * @see https://www.prisma.io/docs/concepts/components/prisma-client/working-with-fields/working-with-json-fields#filtering-on-a-json-field
     */
     class JsonNull {
@@ -496,9 +494,9 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
 
     /**
     * Type of `Prisma.AnyNull`.
-    *
+    * 
     * You cannot use other instances of this class. Please use the `Prisma.AnyNull` value.
-    *
+    * 
     * @see https://www.prisma.io/docs/concepts/components/prisma-client/working-with-fields/working-with-json-fields#filtering-on-a-json-field
     */
     class AnyNull {
@@ -509,21 +507,21 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
 
   /**
    * Helper for filtering JSON entries that have `null` on the database (empty on the db)
-   *
+   * 
    * @see https://www.prisma.io/docs/concepts/components/prisma-client/working-with-fields/working-with-json-fields#filtering-on-a-json-field
    */
   export const DbNull: NullTypes.DbNull
 
   /**
    * Helper for filtering JSON entries that have JSON `null` values (not empty on the db)
-   *
+   * 
    * @see https://www.prisma.io/docs/concepts/components/prisma-client/working-with-fields/working-with-json-fields#filtering-on-a-json-field
    */
   export const JsonNull: NullTypes.JsonNull
 
   /**
    * Helper for filtering JSON entries that are `Prisma.DbNull` or `Prisma.JsonNull`
-   *
+   * 
    * @see https://www.prisma.io/docs/concepts/components/prisma-client/working-with-fields/working-with-json-fields#filtering-on-a-json-field
    */
   export const AnyNull: NullTypes.AnyNull
@@ -770,7 +768,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
 
   export type Keys<U extends Union> = U extends unknown ? keyof U : never
 
-  type Exact<A, W = unknown> =
+  type Exact<A, W = unknown> = 
   W extends unknown ? A extends Narrowable ? Cast<A, W> : Cast<
   {[K in keyof A]: K extends keyof W ? Exact<A[K], W[K]> : never},
   {[K in keyof W]: K extends keyof A ? Exact<A[K], W[K]> : W[K]}>
@@ -866,7 +864,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type DefaultPrismaClient = PrismaClient
   export type RejectOnNotFound = boolean | ((error: Error) => Error)
   export type RejectPerModel = { [P in ModelName]?: RejectOnNotFound }
-  export type RejectPerOperation =  { [P in "findUnique" | "findFirst"]?: RejectPerModel | RejectOnNotFound }
+  export type RejectPerOperation =  { [P in "findUnique" | "findFirst"]?: RejectPerModel | RejectOnNotFound } 
   type IsReject<T> = T extends true ? True : T extends (err: Error) => Error ? True : False
   export type HasReject<
     GlobalRejectSettings extends Prisma.PrismaClientOptions['rejectOnNotFound'],
@@ -890,7 +888,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
 
   export interface PrismaClientOptions {
     /**
-     * Configure findUnique/findFirst to throw an error if the query returns null.
+     * Configure findUnique/findFirst to throw an error if the query returns null. 
      * @deprecated since 4.0.0. Use `findUniqueOrThrow`/`findFirstOrThrow` methods instead.
      * @example
      * ```
@@ -918,7 +916,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      * ```
      * // Defaults to stdout
      * log: ['query', 'info', 'warn', 'error']
-     *
+     * 
      * // Emit as events
      * log: [
      *  { emit: 'stdout', level: 'query' },
@@ -1036,12 +1034,12 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     S extends true ? EmailsCountOutputType :
     S extends undefined ? never :
     S extends { include: any } & (EmailsCountOutputTypeArgs)
-    ? EmailsCountOutputType
+    ? EmailsCountOutputType 
     : S extends { select: any } & (EmailsCountOutputTypeArgs)
       ? {
     [P in TruthyKeys<S['select']>]:
     P extends keyof EmailsCountOutputType ? EmailsCountOutputType[P] : never
-  }
+  } 
       : EmailsCountOutputType
 
 
@@ -1055,7 +1053,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type EmailsCountOutputTypeArgs = {
     /**
      * Select specific fields to fetch from the EmailsCountOutputType
-     *
+     * 
     **/
     select?: EmailsCountOutputTypeSelect | null
   }
@@ -1080,12 +1078,12 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     S extends true ? IssuesCountOutputType :
     S extends undefined ? never :
     S extends { include: any } & (IssuesCountOutputTypeArgs)
-    ? IssuesCountOutputType
+    ? IssuesCountOutputType 
     : S extends { select: any } & (IssuesCountOutputTypeArgs)
       ? {
     [P in TruthyKeys<S['select']>]:
     P extends keyof IssuesCountOutputType ? IssuesCountOutputType[P] : never
-  }
+  } 
       : IssuesCountOutputType
 
 
@@ -1099,7 +1097,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type IssuesCountOutputTypeArgs = {
     /**
      * Select specific fields to fetch from the IssuesCountOutputType
-     *
+     * 
     **/
     select?: IssuesCountOutputTypeSelect | null
   }
@@ -1124,12 +1122,12 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     S extends true ? OrgsCountOutputType :
     S extends undefined ? never :
     S extends { include: any } & (OrgsCountOutputTypeArgs)
-    ? OrgsCountOutputType
+    ? OrgsCountOutputType 
     : S extends { select: any } & (OrgsCountOutputTypeArgs)
       ? {
     [P in TruthyKeys<S['select']>]:
     P extends keyof OrgsCountOutputType ? OrgsCountOutputType[P] : never
-  }
+  } 
       : OrgsCountOutputType
 
 
@@ -1143,7 +1141,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type OrgsCountOutputTypeArgs = {
     /**
      * Select specific fields to fetch from the OrgsCountOutputType
-     *
+     * 
     **/
     select?: OrgsCountOutputTypeSelect | null
   }
@@ -1168,12 +1166,12 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     S extends true ? ProjectsCountOutputType :
     S extends undefined ? never :
     S extends { include: any } & (ProjectsCountOutputTypeArgs)
-    ? ProjectsCountOutputType
+    ? ProjectsCountOutputType 
     : S extends { select: any } & (ProjectsCountOutputTypeArgs)
       ? {
     [P in TruthyKeys<S['select']>]:
     P extends keyof ProjectsCountOutputType ? ProjectsCountOutputType[P] : never
-  }
+  } 
       : ProjectsCountOutputType
 
 
@@ -1187,7 +1185,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type ProjectsCountOutputTypeArgs = {
     /**
      * Select specific fields to fetch from the ProjectsCountOutputType
-     *
+     * 
     **/
     select?: ProjectsCountOutputTypeSelect | null
   }
@@ -1212,12 +1210,12 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     S extends true ? Slack_channelsCountOutputType :
     S extends undefined ? never :
     S extends { include: any } & (Slack_channelsCountOutputTypeArgs)
-    ? Slack_channelsCountOutputType
+    ? Slack_channelsCountOutputType 
     : S extends { select: any } & (Slack_channelsCountOutputTypeArgs)
       ? {
     [P in TruthyKeys<S['select']>]:
     P extends keyof Slack_channelsCountOutputType ? Slack_channelsCountOutputType[P] : never
-  }
+  } 
       : Slack_channelsCountOutputType
 
 
@@ -1231,7 +1229,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type Slack_channelsCountOutputTypeArgs = {
     /**
      * Select specific fields to fetch from the Slack_channelsCountOutputType
-     *
+     * 
     **/
     select?: Slack_channelsCountOutputTypeSelect | null
   }
@@ -1307,52 +1305,52 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type CommentsAggregateArgs = {
     /**
      * Filter which Comments to aggregate.
-     *
+     * 
     **/
     where?: CommentsWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     *
+     * 
      * Determine the order of Comments to fetch.
-     *
+     * 
     **/
     orderBy?: Enumerable<CommentsOrderByWithRelationInput>
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     *
+     * 
      * Sets the start position
-     *
+     * 
     **/
     cursor?: CommentsWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Take `±n` Comments from the position of the cursor.
-     *
+     * 
     **/
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Skip the first `n` Comments.
-     *
+     * 
     **/
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     *
+     * 
      * Count returned Comments
     **/
     _count?: true | CommentsCountAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     *
+     * 
      * Select which fields to find the minimum value
     **/
     _min?: CommentsMinAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     *
+     * 
      * Select which fields to find the maximum value
     **/
     _max?: CommentsMaxAggregateInputType
@@ -1419,7 +1417,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
 
   export type CommentsInclude = {
     issues?: boolean | IssuesArgs
-  }
+  } 
 
   export type CommentsGetPayload<S extends boolean | null | undefined | CommentsArgs> =
     S extends { select: any, include: any } ? 'Please either choose `select` or `include`' :
@@ -1429,12 +1427,12 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     ? Comments  & {
     [P in TruthyKeys<S['include']>]:
         P extends 'issues' ? IssuesGetPayload<S['include'][P]> :  never
-  }
+  } 
     : S extends { select: any } & (CommentsArgs | CommentsFindManyArgs)
       ? {
     [P in TruthyKeys<S['select']>]:
         P extends 'issues' ? IssuesGetPayload<S['select'][P]> :  P extends keyof Comments ? Comments[P] : never
-  }
+  } 
       : Comments
 
 
@@ -1461,7 +1459,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     ): HasReject<GlobalRejectSettings, LocalRejectSettings, 'findUnique', 'Comments'> extends True ? Prisma__CommentsClient<CommentsGetPayload<T>> : Prisma__CommentsClient<CommentsGetPayload<T> | null, null>
 
     /**
-     * Find one Comments that matches the filter or throw an error  with `error.code='P2025'`
+     * Find one Comments that matches the filter or throw an error  with `error.code='P2025'` 
      *     if no matches were found.
      * @param {CommentsFindUniqueOrThrowArgs} args - Arguments to find a Comments
      * @example
@@ -1519,13 +1517,13 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      * @example
      * // Get all Comments
      * const comments = await prisma.comments.findMany()
-     *
+     * 
      * // Get first 10 Comments
      * const comments = await prisma.comments.findMany({ take: 10 })
-     *
+     * 
      * // Only select the `id`
      * const commentsWithIdOnly = await prisma.comments.findMany({ select: { id: true } })
-     *
+     * 
     **/
     findMany<T extends CommentsFindManyArgs>(
       args?: SelectSubset<T, CommentsFindManyArgs>
@@ -1541,7 +1539,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      *     // ... data to create a Comments
      *   }
      * })
-     *
+     * 
     **/
     create<T extends CommentsCreateArgs>(
       args: SelectSubset<T, CommentsCreateArgs>
@@ -1557,7 +1555,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      *         // ... provide data here
      *       }
      *     })
-     *
+     *     
     **/
     createMany<T extends CommentsCreateManyArgs>(
       args?: SelectSubset<T, CommentsCreateManyArgs>
@@ -1573,7 +1571,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      *     // ... filter to delete one Comments
      *   }
      * })
-     *
+     * 
     **/
     delete<T extends CommentsDeleteArgs>(
       args: SelectSubset<T, CommentsDeleteArgs>
@@ -1592,7 +1590,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      *     // ... provide data here
      *   }
      * })
-     *
+     * 
     **/
     update<T extends CommentsUpdateArgs>(
       args: SelectSubset<T, CommentsUpdateArgs>
@@ -1608,7 +1606,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      *     // ... provide filter here
      *   }
      * })
-     *
+     * 
     **/
     deleteMany<T extends CommentsDeleteManyArgs>(
       args?: SelectSubset<T, CommentsDeleteManyArgs>
@@ -1629,7 +1627,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      *     // ... provide data here
      *   }
      * })
-     *
+     * 
     **/
     updateMany<T extends CommentsUpdateManyArgs>(
       args: SelectSubset<T, CommentsUpdateManyArgs>
@@ -1721,7 +1719,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      *     _all: true
      *   },
      * })
-     *
+     * 
     **/
     groupBy<
       T extends CommentsGroupByArgs,
@@ -1842,17 +1840,17 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type CommentsFindUniqueArgsBase = {
     /**
      * Select specific fields to fetch from the Comments
-     *
+     * 
     **/
     select?: CommentsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: CommentsInclude | null
     /**
      * Filter, which Comments to fetch.
-     *
+     * 
     **/
     where: CommentsWhereUniqueInput
   }
@@ -1867,7 +1865,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     */
     rejectOnNotFound?: RejectOnNotFound
   }
-
+      
 
   /**
    * Comments findUniqueOrThrow
@@ -1875,17 +1873,17 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type CommentsFindUniqueOrThrowArgs = {
     /**
      * Select specific fields to fetch from the Comments
-     *
+     * 
     **/
     select?: CommentsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: CommentsInclude | null
     /**
      * Filter, which Comments to fetch.
-     *
+     * 
     **/
     where: CommentsWhereUniqueInput
   }
@@ -1897,52 +1895,52 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type CommentsFindFirstArgsBase = {
     /**
      * Select specific fields to fetch from the Comments
-     *
+     * 
     **/
     select?: CommentsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: CommentsInclude | null
     /**
      * Filter, which Comments to fetch.
-     *
+     * 
     **/
     where?: CommentsWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     *
+     * 
      * Determine the order of Comments to fetch.
-     *
+     * 
     **/
     orderBy?: Enumerable<CommentsOrderByWithRelationInput>
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     *
+     * 
      * Sets the position for searching for Comments.
-     *
+     * 
     **/
     cursor?: CommentsWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Take `±n` Comments from the position of the cursor.
-     *
+     * 
     **/
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Skip the first `n` Comments.
-     *
+     * 
     **/
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-     *
+     * 
      * Filter by unique combinations of Comments.
-     *
+     * 
     **/
     distinct?: Enumerable<CommentsScalarFieldEnum>
   }
@@ -1957,7 +1955,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     */
     rejectOnNotFound?: RejectOnNotFound
   }
-
+      
 
   /**
    * Comments findFirstOrThrow
@@ -1965,52 +1963,52 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type CommentsFindFirstOrThrowArgs = {
     /**
      * Select specific fields to fetch from the Comments
-     *
+     * 
     **/
     select?: CommentsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: CommentsInclude | null
     /**
      * Filter, which Comments to fetch.
-     *
+     * 
     **/
     where?: CommentsWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     *
+     * 
      * Determine the order of Comments to fetch.
-     *
+     * 
     **/
     orderBy?: Enumerable<CommentsOrderByWithRelationInput>
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     *
+     * 
      * Sets the position for searching for Comments.
-     *
+     * 
     **/
     cursor?: CommentsWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Take `±n` Comments from the position of the cursor.
-     *
+     * 
     **/
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Skip the first `n` Comments.
-     *
+     * 
     **/
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-     *
+     * 
      * Filter by unique combinations of Comments.
-     *
+     * 
     **/
     distinct?: Enumerable<CommentsScalarFieldEnum>
   }
@@ -2022,45 +2020,45 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type CommentsFindManyArgs = {
     /**
      * Select specific fields to fetch from the Comments
-     *
+     * 
     **/
     select?: CommentsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: CommentsInclude | null
     /**
      * Filter, which Comments to fetch.
-     *
+     * 
     **/
     where?: CommentsWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     *
+     * 
      * Determine the order of Comments to fetch.
-     *
+     * 
     **/
     orderBy?: Enumerable<CommentsOrderByWithRelationInput>
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     *
+     * 
      * Sets the position for listing Comments.
-     *
+     * 
     **/
     cursor?: CommentsWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Take `±n` Comments from the position of the cursor.
-     *
+     * 
     **/
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Skip the first `n` Comments.
-     *
+     * 
     **/
     skip?: number
     distinct?: Enumerable<CommentsScalarFieldEnum>
@@ -2073,17 +2071,17 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type CommentsCreateArgs = {
     /**
      * Select specific fields to fetch from the Comments
-     *
+     * 
     **/
     select?: CommentsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: CommentsInclude | null
     /**
      * The data needed to create a Comments.
-     *
+     * 
     **/
     data: XOR<CommentsCreateInput, CommentsUncheckedCreateInput>
   }
@@ -2095,7 +2093,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type CommentsCreateManyArgs = {
     /**
      * The data used to create many Comments.
-     *
+     * 
     **/
     data: Enumerable<CommentsCreateManyInput>
     skipDuplicates?: boolean
@@ -2108,22 +2106,22 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type CommentsUpdateArgs = {
     /**
      * Select specific fields to fetch from the Comments
-     *
+     * 
     **/
     select?: CommentsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: CommentsInclude | null
     /**
      * The data needed to update a Comments.
-     *
+     * 
     **/
     data: XOR<CommentsUpdateInput, CommentsUncheckedUpdateInput>
     /**
      * Choose, which Comments to update.
-     *
+     * 
     **/
     where: CommentsWhereUniqueInput
   }
@@ -2135,12 +2133,12 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type CommentsUpdateManyArgs = {
     /**
      * The data used to update Comments.
-     *
+     * 
     **/
     data: XOR<CommentsUpdateManyMutationInput, CommentsUncheckedUpdateManyInput>
     /**
      * Filter which Comments to update
-     *
+     * 
     **/
     where?: CommentsWhereInput
   }
@@ -2152,27 +2150,27 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type CommentsUpsertArgs = {
     /**
      * Select specific fields to fetch from the Comments
-     *
+     * 
     **/
     select?: CommentsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: CommentsInclude | null
     /**
      * The filter to search for the Comments to update in case it exists.
-     *
+     * 
     **/
     where: CommentsWhereUniqueInput
     /**
      * In case the Comments found by the `where` argument doesn't exist, create a new Comments with this data.
-     *
+     * 
     **/
     create: XOR<CommentsCreateInput, CommentsUncheckedCreateInput>
     /**
      * In case the Comments was found with the provided `where` argument, update it with this data.
-     *
+     * 
     **/
     update: XOR<CommentsUpdateInput, CommentsUncheckedUpdateInput>
   }
@@ -2184,17 +2182,17 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type CommentsDeleteArgs = {
     /**
      * Select specific fields to fetch from the Comments
-     *
+     * 
     **/
     select?: CommentsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: CommentsInclude | null
     /**
      * Filter which Comments to delete.
-     *
+     * 
     **/
     where: CommentsWhereUniqueInput
   }
@@ -2206,7 +2204,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type CommentsDeleteManyArgs = {
     /**
      * Filter which Comments to delete
-     *
+     * 
     **/
     where?: CommentsWhereInput
   }
@@ -2218,12 +2216,12 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type CommentsArgs = {
     /**
      * Select specific fields to fetch from the Comments
-     *
+     * 
     **/
     select?: CommentsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: CommentsInclude | null
   }
@@ -2283,52 +2281,52 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type EmailsAggregateArgs = {
     /**
      * Filter which Emails to aggregate.
-     *
+     * 
     **/
     where?: EmailsWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     *
+     * 
      * Determine the order of Emails to fetch.
-     *
+     * 
     **/
     orderBy?: Enumerable<EmailsOrderByWithRelationInput>
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     *
+     * 
      * Sets the start position
-     *
+     * 
     **/
     cursor?: EmailsWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Take `±n` Emails from the position of the cursor.
-     *
+     * 
     **/
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Skip the first `n` Emails.
-     *
+     * 
     **/
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     *
+     * 
      * Count returned Emails
     **/
     _count?: true | EmailsCountAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     *
+     * 
      * Select which fields to find the minimum value
     **/
     _min?: EmailsMinAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     *
+     * 
      * Select which fields to find the maximum value
     **/
     _max?: EmailsMaxAggregateInputType
@@ -2393,7 +2391,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type EmailsInclude = {
     orgs?: boolean | Emails$orgsArgs
     _count?: boolean | EmailsCountOutputTypeArgs
-  }
+  } 
 
   export type EmailsGetPayload<S extends boolean | null | undefined | EmailsArgs> =
     S extends { select: any, include: any } ? 'Please either choose `select` or `include`' :
@@ -2404,13 +2402,13 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     [P in TruthyKeys<S['include']>]:
         P extends 'orgs' ? Array < OrgsGetPayload<S['include'][P]>>  :
         P extends '_count' ? EmailsCountOutputTypeGetPayload<S['include'][P]> :  never
-  }
+  } 
     : S extends { select: any } & (EmailsArgs | EmailsFindManyArgs)
       ? {
     [P in TruthyKeys<S['select']>]:
         P extends 'orgs' ? Array < OrgsGetPayload<S['select'][P]>>  :
         P extends '_count' ? EmailsCountOutputTypeGetPayload<S['select'][P]> :  P extends keyof Emails ? Emails[P] : never
-  }
+  } 
       : Emails
 
 
@@ -2437,7 +2435,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     ): HasReject<GlobalRejectSettings, LocalRejectSettings, 'findUnique', 'Emails'> extends True ? Prisma__EmailsClient<EmailsGetPayload<T>> : Prisma__EmailsClient<EmailsGetPayload<T> | null, null>
 
     /**
-     * Find one Emails that matches the filter or throw an error  with `error.code='P2025'`
+     * Find one Emails that matches the filter or throw an error  with `error.code='P2025'` 
      *     if no matches were found.
      * @param {EmailsFindUniqueOrThrowArgs} args - Arguments to find a Emails
      * @example
@@ -2495,13 +2493,13 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      * @example
      * // Get all Emails
      * const emails = await prisma.emails.findMany()
-     *
+     * 
      * // Get first 10 Emails
      * const emails = await prisma.emails.findMany({ take: 10 })
-     *
+     * 
      * // Only select the `id`
      * const emailsWithIdOnly = await prisma.emails.findMany({ select: { id: true } })
-     *
+     * 
     **/
     findMany<T extends EmailsFindManyArgs>(
       args?: SelectSubset<T, EmailsFindManyArgs>
@@ -2517,7 +2515,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      *     // ... data to create a Emails
      *   }
      * })
-     *
+     * 
     **/
     create<T extends EmailsCreateArgs>(
       args: SelectSubset<T, EmailsCreateArgs>
@@ -2533,7 +2531,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      *         // ... provide data here
      *       }
      *     })
-     *
+     *     
     **/
     createMany<T extends EmailsCreateManyArgs>(
       args?: SelectSubset<T, EmailsCreateManyArgs>
@@ -2549,7 +2547,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      *     // ... filter to delete one Emails
      *   }
      * })
-     *
+     * 
     **/
     delete<T extends EmailsDeleteArgs>(
       args: SelectSubset<T, EmailsDeleteArgs>
@@ -2568,7 +2566,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      *     // ... provide data here
      *   }
      * })
-     *
+     * 
     **/
     update<T extends EmailsUpdateArgs>(
       args: SelectSubset<T, EmailsUpdateArgs>
@@ -2584,7 +2582,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      *     // ... provide filter here
      *   }
      * })
-     *
+     * 
     **/
     deleteMany<T extends EmailsDeleteManyArgs>(
       args?: SelectSubset<T, EmailsDeleteManyArgs>
@@ -2605,7 +2603,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      *     // ... provide data here
      *   }
      * })
-     *
+     * 
     **/
     updateMany<T extends EmailsUpdateManyArgs>(
       args: SelectSubset<T, EmailsUpdateManyArgs>
@@ -2697,7 +2695,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      *     _all: true
      *   },
      * })
-     *
+     * 
     **/
     groupBy<
       T extends EmailsGroupByArgs,
@@ -2818,17 +2816,17 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type EmailsFindUniqueArgsBase = {
     /**
      * Select specific fields to fetch from the Emails
-     *
+     * 
     **/
     select?: EmailsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: EmailsInclude | null
     /**
      * Filter, which Emails to fetch.
-     *
+     * 
     **/
     where: EmailsWhereUniqueInput
   }
@@ -2843,7 +2841,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     */
     rejectOnNotFound?: RejectOnNotFound
   }
-
+      
 
   /**
    * Emails findUniqueOrThrow
@@ -2851,17 +2849,17 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type EmailsFindUniqueOrThrowArgs = {
     /**
      * Select specific fields to fetch from the Emails
-     *
+     * 
     **/
     select?: EmailsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: EmailsInclude | null
     /**
      * Filter, which Emails to fetch.
-     *
+     * 
     **/
     where: EmailsWhereUniqueInput
   }
@@ -2873,52 +2871,52 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type EmailsFindFirstArgsBase = {
     /**
      * Select specific fields to fetch from the Emails
-     *
+     * 
     **/
     select?: EmailsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: EmailsInclude | null
     /**
      * Filter, which Emails to fetch.
-     *
+     * 
     **/
     where?: EmailsWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     *
+     * 
      * Determine the order of Emails to fetch.
-     *
+     * 
     **/
     orderBy?: Enumerable<EmailsOrderByWithRelationInput>
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     *
+     * 
      * Sets the position for searching for Emails.
-     *
+     * 
     **/
     cursor?: EmailsWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Take `±n` Emails from the position of the cursor.
-     *
+     * 
     **/
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Skip the first `n` Emails.
-     *
+     * 
     **/
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-     *
+     * 
      * Filter by unique combinations of Emails.
-     *
+     * 
     **/
     distinct?: Enumerable<EmailsScalarFieldEnum>
   }
@@ -2933,7 +2931,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     */
     rejectOnNotFound?: RejectOnNotFound
   }
-
+      
 
   /**
    * Emails findFirstOrThrow
@@ -2941,52 +2939,52 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type EmailsFindFirstOrThrowArgs = {
     /**
      * Select specific fields to fetch from the Emails
-     *
+     * 
     **/
     select?: EmailsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: EmailsInclude | null
     /**
      * Filter, which Emails to fetch.
-     *
+     * 
     **/
     where?: EmailsWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     *
+     * 
      * Determine the order of Emails to fetch.
-     *
+     * 
     **/
     orderBy?: Enumerable<EmailsOrderByWithRelationInput>
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     *
+     * 
      * Sets the position for searching for Emails.
-     *
+     * 
     **/
     cursor?: EmailsWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Take `±n` Emails from the position of the cursor.
-     *
+     * 
     **/
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Skip the first `n` Emails.
-     *
+     * 
     **/
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-     *
+     * 
      * Filter by unique combinations of Emails.
-     *
+     * 
     **/
     distinct?: Enumerable<EmailsScalarFieldEnum>
   }
@@ -2998,45 +2996,45 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type EmailsFindManyArgs = {
     /**
      * Select specific fields to fetch from the Emails
-     *
+     * 
     **/
     select?: EmailsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: EmailsInclude | null
     /**
      * Filter, which Emails to fetch.
-     *
+     * 
     **/
     where?: EmailsWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     *
+     * 
      * Determine the order of Emails to fetch.
-     *
+     * 
     **/
     orderBy?: Enumerable<EmailsOrderByWithRelationInput>
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     *
+     * 
      * Sets the position for listing Emails.
-     *
+     * 
     **/
     cursor?: EmailsWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Take `±n` Emails from the position of the cursor.
-     *
+     * 
     **/
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Skip the first `n` Emails.
-     *
+     * 
     **/
     skip?: number
     distinct?: Enumerable<EmailsScalarFieldEnum>
@@ -3049,17 +3047,17 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type EmailsCreateArgs = {
     /**
      * Select specific fields to fetch from the Emails
-     *
+     * 
     **/
     select?: EmailsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: EmailsInclude | null
     /**
      * The data needed to create a Emails.
-     *
+     * 
     **/
     data: XOR<EmailsCreateInput, EmailsUncheckedCreateInput>
   }
@@ -3071,7 +3069,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type EmailsCreateManyArgs = {
     /**
      * The data used to create many Emails.
-     *
+     * 
     **/
     data: Enumerable<EmailsCreateManyInput>
     skipDuplicates?: boolean
@@ -3084,22 +3082,22 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type EmailsUpdateArgs = {
     /**
      * Select specific fields to fetch from the Emails
-     *
+     * 
     **/
     select?: EmailsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: EmailsInclude | null
     /**
      * The data needed to update a Emails.
-     *
+     * 
     **/
     data: XOR<EmailsUpdateInput, EmailsUncheckedUpdateInput>
     /**
      * Choose, which Emails to update.
-     *
+     * 
     **/
     where: EmailsWhereUniqueInput
   }
@@ -3111,12 +3109,12 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type EmailsUpdateManyArgs = {
     /**
      * The data used to update Emails.
-     *
+     * 
     **/
     data: XOR<EmailsUpdateManyMutationInput, EmailsUncheckedUpdateManyInput>
     /**
      * Filter which Emails to update
-     *
+     * 
     **/
     where?: EmailsWhereInput
   }
@@ -3128,27 +3126,27 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type EmailsUpsertArgs = {
     /**
      * Select specific fields to fetch from the Emails
-     *
+     * 
     **/
     select?: EmailsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: EmailsInclude | null
     /**
      * The filter to search for the Emails to update in case it exists.
-     *
+     * 
     **/
     where: EmailsWhereUniqueInput
     /**
      * In case the Emails found by the `where` argument doesn't exist, create a new Emails with this data.
-     *
+     * 
     **/
     create: XOR<EmailsCreateInput, EmailsUncheckedCreateInput>
     /**
      * In case the Emails was found with the provided `where` argument, update it with this data.
-     *
+     * 
     **/
     update: XOR<EmailsUpdateInput, EmailsUncheckedUpdateInput>
   }
@@ -3160,17 +3158,17 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type EmailsDeleteArgs = {
     /**
      * Select specific fields to fetch from the Emails
-     *
+     * 
     **/
     select?: EmailsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: EmailsInclude | null
     /**
      * Filter which Emails to delete.
-     *
+     * 
     **/
     where: EmailsWhereUniqueInput
   }
@@ -3182,7 +3180,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type EmailsDeleteManyArgs = {
     /**
      * Filter which Emails to delete
-     *
+     * 
     **/
     where?: EmailsWhereInput
   }
@@ -3194,12 +3192,12 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type Emails$orgsArgs = {
     /**
      * Select specific fields to fetch from the Orgs
-     *
+     * 
     **/
     select?: OrgsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: OrgsInclude | null
     where?: OrgsWhereInput
@@ -3217,12 +3215,12 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type EmailsArgs = {
     /**
      * Select specific fields to fetch from the Emails
-     *
+     * 
     **/
     select?: EmailsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: EmailsInclude | null
   }
@@ -3244,8 +3242,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     id: string | null
     title: string | null
     description: string | null
-    modified: Date | null
-    created: Date | null
+    created_at: Date | null
     kanbanorder: string | null
     username: string | null
     external_urls: string | null
@@ -3260,8 +3257,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     id: string | null
     title: string | null
     description: string | null
-    modified: Date | null
-    created: Date | null
+    created_at: Date | null
     kanbanorder: string | null
     username: string | null
     external_urls: string | null
@@ -3276,8 +3272,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     id: number
     title: number
     description: number
-    modified: number
-    created: number
+    created_at: number
     kanbanorder: number
     username: number
     external_urls: number
@@ -3294,8 +3289,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     id?: true
     title?: true
     description?: true
-    modified?: true
-    created?: true
+    created_at?: true
     kanbanorder?: true
     username?: true
     external_urls?: true
@@ -3310,8 +3304,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     id?: true
     title?: true
     description?: true
-    modified?: true
-    created?: true
+    created_at?: true
     kanbanorder?: true
     username?: true
     external_urls?: true
@@ -3326,8 +3319,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     id?: true
     title?: true
     description?: true
-    modified?: true
-    created?: true
+    created_at?: true
     kanbanorder?: true
     username?: true
     external_urls?: true
@@ -3342,52 +3334,52 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type IssuesAggregateArgs = {
     /**
      * Filter which Issues to aggregate.
-     *
+     * 
     **/
     where?: IssuesWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     *
+     * 
      * Determine the order of Issues to fetch.
-     *
+     * 
     **/
     orderBy?: Enumerable<IssuesOrderByWithRelationInput>
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     *
+     * 
      * Sets the start position
-     *
+     * 
     **/
     cursor?: IssuesWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Take `±n` Issues from the position of the cursor.
-     *
+     * 
     **/
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Skip the first `n` Issues.
-     *
+     * 
     **/
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     *
+     * 
      * Count returned Issues
     **/
     _count?: true | IssuesCountAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     *
+     * 
      * Select which fields to find the minimum value
     **/
     _min?: IssuesMinAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     *
+     * 
      * Select which fields to find the maximum value
     **/
     _max?: IssuesMaxAggregateInputType
@@ -3421,8 +3413,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     id: string
     title: string
     description: string
-    modified: Date
-    created: Date
+    created_at: Date
     kanbanorder: string
     username: string
     external_urls: string | null
@@ -3454,8 +3445,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     id?: boolean
     title?: boolean
     description?: boolean
-    modified?: boolean
-    created?: boolean
+    created_at?: boolean
     kanbanorder?: boolean
     username?: boolean
     external_urls?: boolean
@@ -3474,7 +3464,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     comments?: boolean | Issues$commentsArgs
     projects?: boolean | ProjectsArgs
     _count?: boolean | IssuesCountOutputTypeArgs
-  }
+  } 
 
   export type IssuesGetPayload<S extends boolean | null | undefined | IssuesArgs> =
     S extends { select: any, include: any } ? 'Please either choose `select` or `include`' :
@@ -3486,14 +3476,14 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
         P extends 'comments' ? Array < CommentsGetPayload<S['include'][P]>>  :
         P extends 'projects' ? ProjectsGetPayload<S['include'][P]> | null :
         P extends '_count' ? IssuesCountOutputTypeGetPayload<S['include'][P]> :  never
-  }
+  } 
     : S extends { select: any } & (IssuesArgs | IssuesFindManyArgs)
       ? {
     [P in TruthyKeys<S['select']>]:
         P extends 'comments' ? Array < CommentsGetPayload<S['select'][P]>>  :
         P extends 'projects' ? ProjectsGetPayload<S['select'][P]> | null :
         P extends '_count' ? IssuesCountOutputTypeGetPayload<S['select'][P]> :  P extends keyof Issues ? Issues[P] : never
-  }
+  } 
       : Issues
 
 
@@ -3520,7 +3510,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     ): HasReject<GlobalRejectSettings, LocalRejectSettings, 'findUnique', 'Issues'> extends True ? Prisma__IssuesClient<IssuesGetPayload<T>> : Prisma__IssuesClient<IssuesGetPayload<T> | null, null>
 
     /**
-     * Find one Issues that matches the filter or throw an error  with `error.code='P2025'`
+     * Find one Issues that matches the filter or throw an error  with `error.code='P2025'` 
      *     if no matches were found.
      * @param {IssuesFindUniqueOrThrowArgs} args - Arguments to find a Issues
      * @example
@@ -3578,13 +3568,13 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      * @example
      * // Get all Issues
      * const issues = await prisma.issues.findMany()
-     *
+     * 
      * // Get first 10 Issues
      * const issues = await prisma.issues.findMany({ take: 10 })
-     *
+     * 
      * // Only select the `id`
      * const issuesWithIdOnly = await prisma.issues.findMany({ select: { id: true } })
-     *
+     * 
     **/
     findMany<T extends IssuesFindManyArgs>(
       args?: SelectSubset<T, IssuesFindManyArgs>
@@ -3600,7 +3590,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      *     // ... data to create a Issues
      *   }
      * })
-     *
+     * 
     **/
     create<T extends IssuesCreateArgs>(
       args: SelectSubset<T, IssuesCreateArgs>
@@ -3616,7 +3606,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      *         // ... provide data here
      *       }
      *     })
-     *
+     *     
     **/
     createMany<T extends IssuesCreateManyArgs>(
       args?: SelectSubset<T, IssuesCreateManyArgs>
@@ -3632,7 +3622,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      *     // ... filter to delete one Issues
      *   }
      * })
-     *
+     * 
     **/
     delete<T extends IssuesDeleteArgs>(
       args: SelectSubset<T, IssuesDeleteArgs>
@@ -3651,7 +3641,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      *     // ... provide data here
      *   }
      * })
-     *
+     * 
     **/
     update<T extends IssuesUpdateArgs>(
       args: SelectSubset<T, IssuesUpdateArgs>
@@ -3667,7 +3657,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      *     // ... provide filter here
      *   }
      * })
-     *
+     * 
     **/
     deleteMany<T extends IssuesDeleteManyArgs>(
       args?: SelectSubset<T, IssuesDeleteManyArgs>
@@ -3688,7 +3678,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      *     // ... provide data here
      *   }
      * })
-     *
+     * 
     **/
     updateMany<T extends IssuesUpdateManyArgs>(
       args: SelectSubset<T, IssuesUpdateManyArgs>
@@ -3780,7 +3770,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      *     _all: true
      *   },
      * })
-     *
+     * 
     **/
     groupBy<
       T extends IssuesGroupByArgs,
@@ -3903,17 +3893,17 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type IssuesFindUniqueArgsBase = {
     /**
      * Select specific fields to fetch from the Issues
-     *
+     * 
     **/
     select?: IssuesSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: IssuesInclude | null
     /**
      * Filter, which Issues to fetch.
-     *
+     * 
     **/
     where: IssuesWhereUniqueInput
   }
@@ -3928,7 +3918,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     */
     rejectOnNotFound?: RejectOnNotFound
   }
-
+      
 
   /**
    * Issues findUniqueOrThrow
@@ -3936,17 +3926,17 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type IssuesFindUniqueOrThrowArgs = {
     /**
      * Select specific fields to fetch from the Issues
-     *
+     * 
     **/
     select?: IssuesSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: IssuesInclude | null
     /**
      * Filter, which Issues to fetch.
-     *
+     * 
     **/
     where: IssuesWhereUniqueInput
   }
@@ -3958,52 +3948,52 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type IssuesFindFirstArgsBase = {
     /**
      * Select specific fields to fetch from the Issues
-     *
+     * 
     **/
     select?: IssuesSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: IssuesInclude | null
     /**
      * Filter, which Issues to fetch.
-     *
+     * 
     **/
     where?: IssuesWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     *
+     * 
      * Determine the order of Issues to fetch.
-     *
+     * 
     **/
     orderBy?: Enumerable<IssuesOrderByWithRelationInput>
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     *
+     * 
      * Sets the position for searching for Issues.
-     *
+     * 
     **/
     cursor?: IssuesWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Take `±n` Issues from the position of the cursor.
-     *
+     * 
     **/
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Skip the first `n` Issues.
-     *
+     * 
     **/
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-     *
+     * 
      * Filter by unique combinations of Issues.
-     *
+     * 
     **/
     distinct?: Enumerable<IssuesScalarFieldEnum>
   }
@@ -4018,7 +4008,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     */
     rejectOnNotFound?: RejectOnNotFound
   }
-
+      
 
   /**
    * Issues findFirstOrThrow
@@ -4026,52 +4016,52 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type IssuesFindFirstOrThrowArgs = {
     /**
      * Select specific fields to fetch from the Issues
-     *
+     * 
     **/
     select?: IssuesSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: IssuesInclude | null
     /**
      * Filter, which Issues to fetch.
-     *
+     * 
     **/
     where?: IssuesWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     *
+     * 
      * Determine the order of Issues to fetch.
-     *
+     * 
     **/
     orderBy?: Enumerable<IssuesOrderByWithRelationInput>
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     *
+     * 
      * Sets the position for searching for Issues.
-     *
+     * 
     **/
     cursor?: IssuesWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Take `±n` Issues from the position of the cursor.
-     *
+     * 
     **/
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Skip the first `n` Issues.
-     *
+     * 
     **/
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-     *
+     * 
      * Filter by unique combinations of Issues.
-     *
+     * 
     **/
     distinct?: Enumerable<IssuesScalarFieldEnum>
   }
@@ -4083,45 +4073,45 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type IssuesFindManyArgs = {
     /**
      * Select specific fields to fetch from the Issues
-     *
+     * 
     **/
     select?: IssuesSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: IssuesInclude | null
     /**
      * Filter, which Issues to fetch.
-     *
+     * 
     **/
     where?: IssuesWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     *
+     * 
      * Determine the order of Issues to fetch.
-     *
+     * 
     **/
     orderBy?: Enumerable<IssuesOrderByWithRelationInput>
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     *
+     * 
      * Sets the position for listing Issues.
-     *
+     * 
     **/
     cursor?: IssuesWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Take `±n` Issues from the position of the cursor.
-     *
+     * 
     **/
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Skip the first `n` Issues.
-     *
+     * 
     **/
     skip?: number
     distinct?: Enumerable<IssuesScalarFieldEnum>
@@ -4134,17 +4124,17 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type IssuesCreateArgs = {
     /**
      * Select specific fields to fetch from the Issues
-     *
+     * 
     **/
     select?: IssuesSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: IssuesInclude | null
     /**
      * The data needed to create a Issues.
-     *
+     * 
     **/
     data: XOR<IssuesCreateInput, IssuesUncheckedCreateInput>
   }
@@ -4156,7 +4146,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type IssuesCreateManyArgs = {
     /**
      * The data used to create many Issues.
-     *
+     * 
     **/
     data: Enumerable<IssuesCreateManyInput>
     skipDuplicates?: boolean
@@ -4169,22 +4159,22 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type IssuesUpdateArgs = {
     /**
      * Select specific fields to fetch from the Issues
-     *
+     * 
     **/
     select?: IssuesSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: IssuesInclude | null
     /**
      * The data needed to update a Issues.
-     *
+     * 
     **/
     data: XOR<IssuesUpdateInput, IssuesUncheckedUpdateInput>
     /**
      * Choose, which Issues to update.
-     *
+     * 
     **/
     where: IssuesWhereUniqueInput
   }
@@ -4196,12 +4186,12 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type IssuesUpdateManyArgs = {
     /**
      * The data used to update Issues.
-     *
+     * 
     **/
     data: XOR<IssuesUpdateManyMutationInput, IssuesUncheckedUpdateManyInput>
     /**
      * Filter which Issues to update
-     *
+     * 
     **/
     where?: IssuesWhereInput
   }
@@ -4213,27 +4203,27 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type IssuesUpsertArgs = {
     /**
      * Select specific fields to fetch from the Issues
-     *
+     * 
     **/
     select?: IssuesSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: IssuesInclude | null
     /**
      * The filter to search for the Issues to update in case it exists.
-     *
+     * 
     **/
     where: IssuesWhereUniqueInput
     /**
      * In case the Issues found by the `where` argument doesn't exist, create a new Issues with this data.
-     *
+     * 
     **/
     create: XOR<IssuesCreateInput, IssuesUncheckedCreateInput>
     /**
      * In case the Issues was found with the provided `where` argument, update it with this data.
-     *
+     * 
     **/
     update: XOR<IssuesUpdateInput, IssuesUncheckedUpdateInput>
   }
@@ -4245,17 +4235,17 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type IssuesDeleteArgs = {
     /**
      * Select specific fields to fetch from the Issues
-     *
+     * 
     **/
     select?: IssuesSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: IssuesInclude | null
     /**
      * Filter which Issues to delete.
-     *
+     * 
     **/
     where: IssuesWhereUniqueInput
   }
@@ -4267,7 +4257,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type IssuesDeleteManyArgs = {
     /**
      * Filter which Issues to delete
-     *
+     * 
     **/
     where?: IssuesWhereInput
   }
@@ -4279,12 +4269,12 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type Issues$commentsArgs = {
     /**
      * Select specific fields to fetch from the Comments
-     *
+     * 
     **/
     select?: CommentsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: CommentsInclude | null
     where?: CommentsWhereInput
@@ -4302,12 +4292,12 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type IssuesArgs = {
     /**
      * Select specific fields to fetch from the Issues
-     *
+     * 
     **/
     select?: IssuesSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: IssuesInclude | null
   }
@@ -4453,52 +4443,52 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type OrgsAggregateArgs = {
     /**
      * Filter which Orgs to aggregate.
-     *
+     * 
     **/
     where?: OrgsWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     *
+     * 
      * Determine the order of Orgs to fetch.
-     *
+     * 
     **/
     orderBy?: Enumerable<OrgsOrderByWithRelationInput>
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     *
+     * 
      * Sets the start position
-     *
+     * 
     **/
     cursor?: OrgsWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Take `±n` Orgs from the position of the cursor.
-     *
+     * 
     **/
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Skip the first `n` Orgs.
-     *
+     * 
     **/
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     *
+     * 
      * Count returned Orgs
     **/
     _count?: true | OrgsCountAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     *
+     * 
      * Select which fields to find the minimum value
     **/
     _min?: OrgsMinAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     *
+     * 
      * Select which fields to find the maximum value
     **/
     _max?: OrgsMaxAggregateInputType
@@ -4597,7 +4587,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     slack_channels?: boolean | Slack_channelsArgs
     projects?: boolean | Orgs$projectsArgs
     _count?: boolean | OrgsCountOutputTypeArgs
-  }
+  } 
 
   export type OrgsGetPayload<S extends boolean | null | undefined | OrgsArgs> =
     S extends { select: any, include: any } ? 'Please either choose `select` or `include`' :
@@ -4610,7 +4600,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
         P extends 'slack_channels' ? Slack_channelsGetPayload<S['include'][P]> | null :
         P extends 'projects' ? Array < ProjectsGetPayload<S['include'][P]>>  :
         P extends '_count' ? OrgsCountOutputTypeGetPayload<S['include'][P]> :  never
-  }
+  } 
     : S extends { select: any } & (OrgsArgs | OrgsFindManyArgs)
       ? {
     [P in TruthyKeys<S['select']>]:
@@ -4618,7 +4608,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
         P extends 'slack_channels' ? Slack_channelsGetPayload<S['select'][P]> | null :
         P extends 'projects' ? Array < ProjectsGetPayload<S['select'][P]>>  :
         P extends '_count' ? OrgsCountOutputTypeGetPayload<S['select'][P]> :  P extends keyof Orgs ? Orgs[P] : never
-  }
+  } 
       : Orgs
 
 
@@ -4645,7 +4635,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     ): HasReject<GlobalRejectSettings, LocalRejectSettings, 'findUnique', 'Orgs'> extends True ? Prisma__OrgsClient<OrgsGetPayload<T>> : Prisma__OrgsClient<OrgsGetPayload<T> | null, null>
 
     /**
-     * Find one Orgs that matches the filter or throw an error  with `error.code='P2025'`
+     * Find one Orgs that matches the filter or throw an error  with `error.code='P2025'` 
      *     if no matches were found.
      * @param {OrgsFindUniqueOrThrowArgs} args - Arguments to find a Orgs
      * @example
@@ -4703,13 +4693,13 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      * @example
      * // Get all Orgs
      * const orgs = await prisma.orgs.findMany()
-     *
+     * 
      * // Get first 10 Orgs
      * const orgs = await prisma.orgs.findMany({ take: 10 })
-     *
+     * 
      * // Only select the `id`
      * const orgsWithIdOnly = await prisma.orgs.findMany({ select: { id: true } })
-     *
+     * 
     **/
     findMany<T extends OrgsFindManyArgs>(
       args?: SelectSubset<T, OrgsFindManyArgs>
@@ -4725,7 +4715,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      *     // ... data to create a Orgs
      *   }
      * })
-     *
+     * 
     **/
     create<T extends OrgsCreateArgs>(
       args: SelectSubset<T, OrgsCreateArgs>
@@ -4741,7 +4731,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      *         // ... provide data here
      *       }
      *     })
-     *
+     *     
     **/
     createMany<T extends OrgsCreateManyArgs>(
       args?: SelectSubset<T, OrgsCreateManyArgs>
@@ -4757,7 +4747,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      *     // ... filter to delete one Orgs
      *   }
      * })
-     *
+     * 
     **/
     delete<T extends OrgsDeleteArgs>(
       args: SelectSubset<T, OrgsDeleteArgs>
@@ -4776,7 +4766,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      *     // ... provide data here
      *   }
      * })
-     *
+     * 
     **/
     update<T extends OrgsUpdateArgs>(
       args: SelectSubset<T, OrgsUpdateArgs>
@@ -4792,7 +4782,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      *     // ... provide filter here
      *   }
      * })
-     *
+     * 
     **/
     deleteMany<T extends OrgsDeleteManyArgs>(
       args?: SelectSubset<T, OrgsDeleteManyArgs>
@@ -4813,7 +4803,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      *     // ... provide data here
      *   }
      * })
-     *
+     * 
     **/
     updateMany<T extends OrgsUpdateManyArgs>(
       args: SelectSubset<T, OrgsUpdateManyArgs>
@@ -4905,7 +4895,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      *     _all: true
      *   },
      * })
-     *
+     * 
     **/
     groupBy<
       T extends OrgsGroupByArgs,
@@ -5030,17 +5020,17 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type OrgsFindUniqueArgsBase = {
     /**
      * Select specific fields to fetch from the Orgs
-     *
+     * 
     **/
     select?: OrgsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: OrgsInclude | null
     /**
      * Filter, which Orgs to fetch.
-     *
+     * 
     **/
     where: OrgsWhereUniqueInput
   }
@@ -5055,7 +5045,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     */
     rejectOnNotFound?: RejectOnNotFound
   }
-
+      
 
   /**
    * Orgs findUniqueOrThrow
@@ -5063,17 +5053,17 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type OrgsFindUniqueOrThrowArgs = {
     /**
      * Select specific fields to fetch from the Orgs
-     *
+     * 
     **/
     select?: OrgsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: OrgsInclude | null
     /**
      * Filter, which Orgs to fetch.
-     *
+     * 
     **/
     where: OrgsWhereUniqueInput
   }
@@ -5085,52 +5075,52 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type OrgsFindFirstArgsBase = {
     /**
      * Select specific fields to fetch from the Orgs
-     *
+     * 
     **/
     select?: OrgsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: OrgsInclude | null
     /**
      * Filter, which Orgs to fetch.
-     *
+     * 
     **/
     where?: OrgsWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     *
+     * 
      * Determine the order of Orgs to fetch.
-     *
+     * 
     **/
     orderBy?: Enumerable<OrgsOrderByWithRelationInput>
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     *
+     * 
      * Sets the position for searching for Orgs.
-     *
+     * 
     **/
     cursor?: OrgsWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Take `±n` Orgs from the position of the cursor.
-     *
+     * 
     **/
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Skip the first `n` Orgs.
-     *
+     * 
     **/
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-     *
+     * 
      * Filter by unique combinations of Orgs.
-     *
+     * 
     **/
     distinct?: Enumerable<OrgsScalarFieldEnum>
   }
@@ -5145,7 +5135,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     */
     rejectOnNotFound?: RejectOnNotFound
   }
-
+      
 
   /**
    * Orgs findFirstOrThrow
@@ -5153,52 +5143,52 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type OrgsFindFirstOrThrowArgs = {
     /**
      * Select specific fields to fetch from the Orgs
-     *
+     * 
     **/
     select?: OrgsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: OrgsInclude | null
     /**
      * Filter, which Orgs to fetch.
-     *
+     * 
     **/
     where?: OrgsWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     *
+     * 
      * Determine the order of Orgs to fetch.
-     *
+     * 
     **/
     orderBy?: Enumerable<OrgsOrderByWithRelationInput>
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     *
+     * 
      * Sets the position for searching for Orgs.
-     *
+     * 
     **/
     cursor?: OrgsWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Take `±n` Orgs from the position of the cursor.
-     *
+     * 
     **/
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Skip the first `n` Orgs.
-     *
+     * 
     **/
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-     *
+     * 
      * Filter by unique combinations of Orgs.
-     *
+     * 
     **/
     distinct?: Enumerable<OrgsScalarFieldEnum>
   }
@@ -5210,45 +5200,45 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type OrgsFindManyArgs = {
     /**
      * Select specific fields to fetch from the Orgs
-     *
+     * 
     **/
     select?: OrgsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: OrgsInclude | null
     /**
      * Filter, which Orgs to fetch.
-     *
+     * 
     **/
     where?: OrgsWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     *
+     * 
      * Determine the order of Orgs to fetch.
-     *
+     * 
     **/
     orderBy?: Enumerable<OrgsOrderByWithRelationInput>
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     *
+     * 
      * Sets the position for listing Orgs.
-     *
+     * 
     **/
     cursor?: OrgsWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Take `±n` Orgs from the position of the cursor.
-     *
+     * 
     **/
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Skip the first `n` Orgs.
-     *
+     * 
     **/
     skip?: number
     distinct?: Enumerable<OrgsScalarFieldEnum>
@@ -5261,17 +5251,17 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type OrgsCreateArgs = {
     /**
      * Select specific fields to fetch from the Orgs
-     *
+     * 
     **/
     select?: OrgsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: OrgsInclude | null
     /**
      * The data needed to create a Orgs.
-     *
+     * 
     **/
     data: XOR<OrgsCreateInput, OrgsUncheckedCreateInput>
   }
@@ -5283,7 +5273,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type OrgsCreateManyArgs = {
     /**
      * The data used to create many Orgs.
-     *
+     * 
     **/
     data: Enumerable<OrgsCreateManyInput>
     skipDuplicates?: boolean
@@ -5296,22 +5286,22 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type OrgsUpdateArgs = {
     /**
      * Select specific fields to fetch from the Orgs
-     *
+     * 
     **/
     select?: OrgsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: OrgsInclude | null
     /**
      * The data needed to update a Orgs.
-     *
+     * 
     **/
     data: XOR<OrgsUpdateInput, OrgsUncheckedUpdateInput>
     /**
      * Choose, which Orgs to update.
-     *
+     * 
     **/
     where: OrgsWhereUniqueInput
   }
@@ -5323,12 +5313,12 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type OrgsUpdateManyArgs = {
     /**
      * The data used to update Orgs.
-     *
+     * 
     **/
     data: XOR<OrgsUpdateManyMutationInput, OrgsUncheckedUpdateManyInput>
     /**
      * Filter which Orgs to update
-     *
+     * 
     **/
     where?: OrgsWhereInput
   }
@@ -5340,27 +5330,27 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type OrgsUpsertArgs = {
     /**
      * Select specific fields to fetch from the Orgs
-     *
+     * 
     **/
     select?: OrgsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: OrgsInclude | null
     /**
      * The filter to search for the Orgs to update in case it exists.
-     *
+     * 
     **/
     where: OrgsWhereUniqueInput
     /**
      * In case the Orgs found by the `where` argument doesn't exist, create a new Orgs with this data.
-     *
+     * 
     **/
     create: XOR<OrgsCreateInput, OrgsUncheckedCreateInput>
     /**
      * In case the Orgs was found with the provided `where` argument, update it with this data.
-     *
+     * 
     **/
     update: XOR<OrgsUpdateInput, OrgsUncheckedUpdateInput>
   }
@@ -5372,17 +5362,17 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type OrgsDeleteArgs = {
     /**
      * Select specific fields to fetch from the Orgs
-     *
+     * 
     **/
     select?: OrgsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: OrgsInclude | null
     /**
      * Filter which Orgs to delete.
-     *
+     * 
     **/
     where: OrgsWhereUniqueInput
   }
@@ -5394,7 +5384,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type OrgsDeleteManyArgs = {
     /**
      * Filter which Orgs to delete
-     *
+     * 
     **/
     where?: OrgsWhereInput
   }
@@ -5406,12 +5396,12 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type Orgs$projectsArgs = {
     /**
      * Select specific fields to fetch from the Projects
-     *
+     * 
     **/
     select?: ProjectsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: ProjectsInclude | null
     where?: ProjectsWhereInput
@@ -5429,12 +5419,12 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type OrgsArgs = {
     /**
      * Select specific fields to fetch from the Orgs
-     *
+     * 
     **/
     select?: OrgsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: OrgsInclude | null
   }
@@ -5592,64 +5582,64 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type ProjectsAggregateArgs = {
     /**
      * Filter which Projects to aggregate.
-     *
+     * 
     **/
     where?: ProjectsWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     *
+     * 
      * Determine the order of Projects to fetch.
-     *
+     * 
     **/
     orderBy?: Enumerable<ProjectsOrderByWithRelationInput>
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     *
+     * 
      * Sets the start position
-     *
+     * 
     **/
     cursor?: ProjectsWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Take `±n` Projects from the position of the cursor.
-     *
+     * 
     **/
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Skip the first `n` Projects.
-     *
+     * 
     **/
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     *
+     * 
      * Count returned Projects
     **/
     _count?: true | ProjectsCountAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     *
+     * 
      * Select which fields to average
     **/
     _avg?: ProjectsAvgAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     *
+     * 
      * Select which fields to sum
     **/
     _sum?: ProjectsSumAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     *
+     * 
      * Select which fields to find the minimum value
     **/
     _min?: ProjectsMinAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     *
+     * 
      * Select which fields to find the maximum value
     **/
     _max?: ProjectsMaxAggregateInputType
@@ -5748,7 +5738,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     issues?: boolean | Projects$issuesArgs
     orgs?: boolean | OrgsArgs
     _count?: boolean | ProjectsCountOutputTypeArgs
-  }
+  } 
 
   export type ProjectsGetPayload<S extends boolean | null | undefined | ProjectsArgs> =
     S extends { select: any, include: any } ? 'Please either choose `select` or `include`' :
@@ -5760,14 +5750,14 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
         P extends 'issues' ? Array < IssuesGetPayload<S['include'][P]>>  :
         P extends 'orgs' ? OrgsGetPayload<S['include'][P]> :
         P extends '_count' ? ProjectsCountOutputTypeGetPayload<S['include'][P]> :  never
-  }
+  } 
     : S extends { select: any } & (ProjectsArgs | ProjectsFindManyArgs)
       ? {
     [P in TruthyKeys<S['select']>]:
         P extends 'issues' ? Array < IssuesGetPayload<S['select'][P]>>  :
         P extends 'orgs' ? OrgsGetPayload<S['select'][P]> :
         P extends '_count' ? ProjectsCountOutputTypeGetPayload<S['select'][P]> :  P extends keyof Projects ? Projects[P] : never
-  }
+  } 
       : Projects
 
 
@@ -5794,7 +5784,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     ): HasReject<GlobalRejectSettings, LocalRejectSettings, 'findUnique', 'Projects'> extends True ? Prisma__ProjectsClient<ProjectsGetPayload<T>> : Prisma__ProjectsClient<ProjectsGetPayload<T> | null, null>
 
     /**
-     * Find one Projects that matches the filter or throw an error  with `error.code='P2025'`
+     * Find one Projects that matches the filter or throw an error  with `error.code='P2025'` 
      *     if no matches were found.
      * @param {ProjectsFindUniqueOrThrowArgs} args - Arguments to find a Projects
      * @example
@@ -5852,13 +5842,13 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      * @example
      * // Get all Projects
      * const projects = await prisma.projects.findMany()
-     *
+     * 
      * // Get first 10 Projects
      * const projects = await prisma.projects.findMany({ take: 10 })
-     *
+     * 
      * // Only select the `id`
      * const projectsWithIdOnly = await prisma.projects.findMany({ select: { id: true } })
-     *
+     * 
     **/
     findMany<T extends ProjectsFindManyArgs>(
       args?: SelectSubset<T, ProjectsFindManyArgs>
@@ -5874,7 +5864,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      *     // ... data to create a Projects
      *   }
      * })
-     *
+     * 
     **/
     create<T extends ProjectsCreateArgs>(
       args: SelectSubset<T, ProjectsCreateArgs>
@@ -5890,7 +5880,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      *         // ... provide data here
      *       }
      *     })
-     *
+     *     
     **/
     createMany<T extends ProjectsCreateManyArgs>(
       args?: SelectSubset<T, ProjectsCreateManyArgs>
@@ -5906,7 +5896,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      *     // ... filter to delete one Projects
      *   }
      * })
-     *
+     * 
     **/
     delete<T extends ProjectsDeleteArgs>(
       args: SelectSubset<T, ProjectsDeleteArgs>
@@ -5925,7 +5915,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      *     // ... provide data here
      *   }
      * })
-     *
+     * 
     **/
     update<T extends ProjectsUpdateArgs>(
       args: SelectSubset<T, ProjectsUpdateArgs>
@@ -5941,7 +5931,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      *     // ... provide filter here
      *   }
      * })
-     *
+     * 
     **/
     deleteMany<T extends ProjectsDeleteManyArgs>(
       args?: SelectSubset<T, ProjectsDeleteManyArgs>
@@ -5962,7 +5952,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      *     // ... provide data here
      *   }
      * })
-     *
+     * 
     **/
     updateMany<T extends ProjectsUpdateManyArgs>(
       args: SelectSubset<T, ProjectsUpdateManyArgs>
@@ -6054,7 +6044,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      *     _all: true
      *   },
      * })
-     *
+     * 
     **/
     groupBy<
       T extends ProjectsGroupByArgs,
@@ -6177,17 +6167,17 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type ProjectsFindUniqueArgsBase = {
     /**
      * Select specific fields to fetch from the Projects
-     *
+     * 
     **/
     select?: ProjectsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: ProjectsInclude | null
     /**
      * Filter, which Projects to fetch.
-     *
+     * 
     **/
     where: ProjectsWhereUniqueInput
   }
@@ -6202,7 +6192,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     */
     rejectOnNotFound?: RejectOnNotFound
   }
-
+      
 
   /**
    * Projects findUniqueOrThrow
@@ -6210,17 +6200,17 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type ProjectsFindUniqueOrThrowArgs = {
     /**
      * Select specific fields to fetch from the Projects
-     *
+     * 
     **/
     select?: ProjectsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: ProjectsInclude | null
     /**
      * Filter, which Projects to fetch.
-     *
+     * 
     **/
     where: ProjectsWhereUniqueInput
   }
@@ -6232,52 +6222,52 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type ProjectsFindFirstArgsBase = {
     /**
      * Select specific fields to fetch from the Projects
-     *
+     * 
     **/
     select?: ProjectsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: ProjectsInclude | null
     /**
      * Filter, which Projects to fetch.
-     *
+     * 
     **/
     where?: ProjectsWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     *
+     * 
      * Determine the order of Projects to fetch.
-     *
+     * 
     **/
     orderBy?: Enumerable<ProjectsOrderByWithRelationInput>
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     *
+     * 
      * Sets the position for searching for Projects.
-     *
+     * 
     **/
     cursor?: ProjectsWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Take `±n` Projects from the position of the cursor.
-     *
+     * 
     **/
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Skip the first `n` Projects.
-     *
+     * 
     **/
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-     *
+     * 
      * Filter by unique combinations of Projects.
-     *
+     * 
     **/
     distinct?: Enumerable<ProjectsScalarFieldEnum>
   }
@@ -6292,7 +6282,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     */
     rejectOnNotFound?: RejectOnNotFound
   }
-
+      
 
   /**
    * Projects findFirstOrThrow
@@ -6300,52 +6290,52 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type ProjectsFindFirstOrThrowArgs = {
     /**
      * Select specific fields to fetch from the Projects
-     *
+     * 
     **/
     select?: ProjectsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: ProjectsInclude | null
     /**
      * Filter, which Projects to fetch.
-     *
+     * 
     **/
     where?: ProjectsWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     *
+     * 
      * Determine the order of Projects to fetch.
-     *
+     * 
     **/
     orderBy?: Enumerable<ProjectsOrderByWithRelationInput>
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     *
+     * 
      * Sets the position for searching for Projects.
-     *
+     * 
     **/
     cursor?: ProjectsWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Take `±n` Projects from the position of the cursor.
-     *
+     * 
     **/
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Skip the first `n` Projects.
-     *
+     * 
     **/
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-     *
+     * 
      * Filter by unique combinations of Projects.
-     *
+     * 
     **/
     distinct?: Enumerable<ProjectsScalarFieldEnum>
   }
@@ -6357,45 +6347,45 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type ProjectsFindManyArgs = {
     /**
      * Select specific fields to fetch from the Projects
-     *
+     * 
     **/
     select?: ProjectsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: ProjectsInclude | null
     /**
      * Filter, which Projects to fetch.
-     *
+     * 
     **/
     where?: ProjectsWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     *
+     * 
      * Determine the order of Projects to fetch.
-     *
+     * 
     **/
     orderBy?: Enumerable<ProjectsOrderByWithRelationInput>
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     *
+     * 
      * Sets the position for listing Projects.
-     *
+     * 
     **/
     cursor?: ProjectsWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Take `±n` Projects from the position of the cursor.
-     *
+     * 
     **/
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Skip the first `n` Projects.
-     *
+     * 
     **/
     skip?: number
     distinct?: Enumerable<ProjectsScalarFieldEnum>
@@ -6408,17 +6398,17 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type ProjectsCreateArgs = {
     /**
      * Select specific fields to fetch from the Projects
-     *
+     * 
     **/
     select?: ProjectsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: ProjectsInclude | null
     /**
      * The data needed to create a Projects.
-     *
+     * 
     **/
     data: XOR<ProjectsCreateInput, ProjectsUncheckedCreateInput>
   }
@@ -6430,7 +6420,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type ProjectsCreateManyArgs = {
     /**
      * The data used to create many Projects.
-     *
+     * 
     **/
     data: Enumerable<ProjectsCreateManyInput>
     skipDuplicates?: boolean
@@ -6443,22 +6433,22 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type ProjectsUpdateArgs = {
     /**
      * Select specific fields to fetch from the Projects
-     *
+     * 
     **/
     select?: ProjectsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: ProjectsInclude | null
     /**
      * The data needed to update a Projects.
-     *
+     * 
     **/
     data: XOR<ProjectsUpdateInput, ProjectsUncheckedUpdateInput>
     /**
      * Choose, which Projects to update.
-     *
+     * 
     **/
     where: ProjectsWhereUniqueInput
   }
@@ -6470,12 +6460,12 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type ProjectsUpdateManyArgs = {
     /**
      * The data used to update Projects.
-     *
+     * 
     **/
     data: XOR<ProjectsUpdateManyMutationInput, ProjectsUncheckedUpdateManyInput>
     /**
      * Filter which Projects to update
-     *
+     * 
     **/
     where?: ProjectsWhereInput
   }
@@ -6487,27 +6477,27 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type ProjectsUpsertArgs = {
     /**
      * Select specific fields to fetch from the Projects
-     *
+     * 
     **/
     select?: ProjectsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: ProjectsInclude | null
     /**
      * The filter to search for the Projects to update in case it exists.
-     *
+     * 
     **/
     where: ProjectsWhereUniqueInput
     /**
      * In case the Projects found by the `where` argument doesn't exist, create a new Projects with this data.
-     *
+     * 
     **/
     create: XOR<ProjectsCreateInput, ProjectsUncheckedCreateInput>
     /**
      * In case the Projects was found with the provided `where` argument, update it with this data.
-     *
+     * 
     **/
     update: XOR<ProjectsUpdateInput, ProjectsUncheckedUpdateInput>
   }
@@ -6519,17 +6509,17 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type ProjectsDeleteArgs = {
     /**
      * Select specific fields to fetch from the Projects
-     *
+     * 
     **/
     select?: ProjectsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: ProjectsInclude | null
     /**
      * Filter which Projects to delete.
-     *
+     * 
     **/
     where: ProjectsWhereUniqueInput
   }
@@ -6541,7 +6531,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type ProjectsDeleteManyArgs = {
     /**
      * Filter which Projects to delete
-     *
+     * 
     **/
     where?: ProjectsWhereInput
   }
@@ -6553,12 +6543,12 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type Projects$issuesArgs = {
     /**
      * Select specific fields to fetch from the Issues
-     *
+     * 
     **/
     select?: IssuesSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: IssuesInclude | null
     where?: IssuesWhereInput
@@ -6576,12 +6566,12 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type ProjectsArgs = {
     /**
      * Select specific fields to fetch from the Projects
-     *
+     * 
     **/
     select?: ProjectsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: ProjectsInclude | null
   }
@@ -6635,52 +6625,52 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type Slack_channelsAggregateArgs = {
     /**
      * Filter which Slack_channels to aggregate.
-     *
+     * 
     **/
     where?: Slack_channelsWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     *
+     * 
      * Determine the order of Slack_channels to fetch.
-     *
+     * 
     **/
     orderBy?: Enumerable<Slack_channelsOrderByWithRelationInput>
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     *
+     * 
      * Sets the start position
-     *
+     * 
     **/
     cursor?: Slack_channelsWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Take `±n` Slack_channels from the position of the cursor.
-     *
+     * 
     **/
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Skip the first `n` Slack_channels.
-     *
+     * 
     **/
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     *
+     * 
      * Count returned Slack_channels
     **/
     _count?: true | Slack_channelsCountAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     *
+     * 
      * Select which fields to find the minimum value
     **/
     _min?: Slack_channelsMinAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     *
+     * 
      * Select which fields to find the maximum value
     **/
     _max?: Slack_channelsMaxAggregateInputType
@@ -6743,7 +6733,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type Slack_channelsInclude = {
     orgs?: boolean | Slack_channels$orgsArgs
     _count?: boolean | Slack_channelsCountOutputTypeArgs
-  }
+  } 
 
   export type Slack_channelsGetPayload<S extends boolean | null | undefined | Slack_channelsArgs> =
     S extends { select: any, include: any } ? 'Please either choose `select` or `include`' :
@@ -6754,13 +6744,13 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     [P in TruthyKeys<S['include']>]:
         P extends 'orgs' ? Array < OrgsGetPayload<S['include'][P]>>  :
         P extends '_count' ? Slack_channelsCountOutputTypeGetPayload<S['include'][P]> :  never
-  }
+  } 
     : S extends { select: any } & (Slack_channelsArgs | Slack_channelsFindManyArgs)
       ? {
     [P in TruthyKeys<S['select']>]:
         P extends 'orgs' ? Array < OrgsGetPayload<S['select'][P]>>  :
         P extends '_count' ? Slack_channelsCountOutputTypeGetPayload<S['select'][P]> :  P extends keyof Slack_channels ? Slack_channels[P] : never
-  }
+  } 
       : Slack_channels
 
 
@@ -6787,7 +6777,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     ): HasReject<GlobalRejectSettings, LocalRejectSettings, 'findUnique', 'Slack_channels'> extends True ? Prisma__Slack_channelsClient<Slack_channelsGetPayload<T>> : Prisma__Slack_channelsClient<Slack_channelsGetPayload<T> | null, null>
 
     /**
-     * Find one Slack_channels that matches the filter or throw an error  with `error.code='P2025'`
+     * Find one Slack_channels that matches the filter or throw an error  with `error.code='P2025'` 
      *     if no matches were found.
      * @param {Slack_channelsFindUniqueOrThrowArgs} args - Arguments to find a Slack_channels
      * @example
@@ -6845,13 +6835,13 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      * @example
      * // Get all Slack_channels
      * const slack_channels = await prisma.slack_channels.findMany()
-     *
+     * 
      * // Get first 10 Slack_channels
      * const slack_channels = await prisma.slack_channels.findMany({ take: 10 })
-     *
+     * 
      * // Only select the `id`
      * const slack_channelsWithIdOnly = await prisma.slack_channels.findMany({ select: { id: true } })
-     *
+     * 
     **/
     findMany<T extends Slack_channelsFindManyArgs>(
       args?: SelectSubset<T, Slack_channelsFindManyArgs>
@@ -6867,7 +6857,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      *     // ... data to create a Slack_channels
      *   }
      * })
-     *
+     * 
     **/
     create<T extends Slack_channelsCreateArgs>(
       args: SelectSubset<T, Slack_channelsCreateArgs>
@@ -6883,7 +6873,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      *         // ... provide data here
      *       }
      *     })
-     *
+     *     
     **/
     createMany<T extends Slack_channelsCreateManyArgs>(
       args?: SelectSubset<T, Slack_channelsCreateManyArgs>
@@ -6899,7 +6889,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      *     // ... filter to delete one Slack_channels
      *   }
      * })
-     *
+     * 
     **/
     delete<T extends Slack_channelsDeleteArgs>(
       args: SelectSubset<T, Slack_channelsDeleteArgs>
@@ -6918,7 +6908,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      *     // ... provide data here
      *   }
      * })
-     *
+     * 
     **/
     update<T extends Slack_channelsUpdateArgs>(
       args: SelectSubset<T, Slack_channelsUpdateArgs>
@@ -6934,7 +6924,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      *     // ... provide filter here
      *   }
      * })
-     *
+     * 
     **/
     deleteMany<T extends Slack_channelsDeleteManyArgs>(
       args?: SelectSubset<T, Slack_channelsDeleteManyArgs>
@@ -6955,7 +6945,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      *     // ... provide data here
      *   }
      * })
-     *
+     * 
     **/
     updateMany<T extends Slack_channelsUpdateManyArgs>(
       args: SelectSubset<T, Slack_channelsUpdateManyArgs>
@@ -7047,7 +7037,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
      *     _all: true
      *   },
      * })
-     *
+     * 
     **/
     groupBy<
       T extends Slack_channelsGroupByArgs,
@@ -7168,17 +7158,17 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type Slack_channelsFindUniqueArgsBase = {
     /**
      * Select specific fields to fetch from the Slack_channels
-     *
+     * 
     **/
     select?: Slack_channelsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: Slack_channelsInclude | null
     /**
      * Filter, which Slack_channels to fetch.
-     *
+     * 
     **/
     where: Slack_channelsWhereUniqueInput
   }
@@ -7193,7 +7183,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     */
     rejectOnNotFound?: RejectOnNotFound
   }
-
+      
 
   /**
    * Slack_channels findUniqueOrThrow
@@ -7201,17 +7191,17 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type Slack_channelsFindUniqueOrThrowArgs = {
     /**
      * Select specific fields to fetch from the Slack_channels
-     *
+     * 
     **/
     select?: Slack_channelsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: Slack_channelsInclude | null
     /**
      * Filter, which Slack_channels to fetch.
-     *
+     * 
     **/
     where: Slack_channelsWhereUniqueInput
   }
@@ -7223,52 +7213,52 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type Slack_channelsFindFirstArgsBase = {
     /**
      * Select specific fields to fetch from the Slack_channels
-     *
+     * 
     **/
     select?: Slack_channelsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: Slack_channelsInclude | null
     /**
      * Filter, which Slack_channels to fetch.
-     *
+     * 
     **/
     where?: Slack_channelsWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     *
+     * 
      * Determine the order of Slack_channels to fetch.
-     *
+     * 
     **/
     orderBy?: Enumerable<Slack_channelsOrderByWithRelationInput>
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     *
+     * 
      * Sets the position for searching for Slack_channels.
-     *
+     * 
     **/
     cursor?: Slack_channelsWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Take `±n` Slack_channels from the position of the cursor.
-     *
+     * 
     **/
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Skip the first `n` Slack_channels.
-     *
+     * 
     **/
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-     *
+     * 
      * Filter by unique combinations of Slack_channels.
-     *
+     * 
     **/
     distinct?: Enumerable<Slack_channelsScalarFieldEnum>
   }
@@ -7283,7 +7273,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     */
     rejectOnNotFound?: RejectOnNotFound
   }
-
+      
 
   /**
    * Slack_channels findFirstOrThrow
@@ -7291,52 +7281,52 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type Slack_channelsFindFirstOrThrowArgs = {
     /**
      * Select specific fields to fetch from the Slack_channels
-     *
+     * 
     **/
     select?: Slack_channelsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: Slack_channelsInclude | null
     /**
      * Filter, which Slack_channels to fetch.
-     *
+     * 
     **/
     where?: Slack_channelsWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     *
+     * 
      * Determine the order of Slack_channels to fetch.
-     *
+     * 
     **/
     orderBy?: Enumerable<Slack_channelsOrderByWithRelationInput>
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     *
+     * 
      * Sets the position for searching for Slack_channels.
-     *
+     * 
     **/
     cursor?: Slack_channelsWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Take `±n` Slack_channels from the position of the cursor.
-     *
+     * 
     **/
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Skip the first `n` Slack_channels.
-     *
+     * 
     **/
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-     *
+     * 
      * Filter by unique combinations of Slack_channels.
-     *
+     * 
     **/
     distinct?: Enumerable<Slack_channelsScalarFieldEnum>
   }
@@ -7348,45 +7338,45 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type Slack_channelsFindManyArgs = {
     /**
      * Select specific fields to fetch from the Slack_channels
-     *
+     * 
     **/
     select?: Slack_channelsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: Slack_channelsInclude | null
     /**
      * Filter, which Slack_channels to fetch.
-     *
+     * 
     **/
     where?: Slack_channelsWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     *
+     * 
      * Determine the order of Slack_channels to fetch.
-     *
+     * 
     **/
     orderBy?: Enumerable<Slack_channelsOrderByWithRelationInput>
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     *
+     * 
      * Sets the position for listing Slack_channels.
-     *
+     * 
     **/
     cursor?: Slack_channelsWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Take `±n` Slack_channels from the position of the cursor.
-     *
+     * 
     **/
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     *
+     * 
      * Skip the first `n` Slack_channels.
-     *
+     * 
     **/
     skip?: number
     distinct?: Enumerable<Slack_channelsScalarFieldEnum>
@@ -7399,17 +7389,17 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type Slack_channelsCreateArgs = {
     /**
      * Select specific fields to fetch from the Slack_channels
-     *
+     * 
     **/
     select?: Slack_channelsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: Slack_channelsInclude | null
     /**
      * The data needed to create a Slack_channels.
-     *
+     * 
     **/
     data: XOR<Slack_channelsCreateInput, Slack_channelsUncheckedCreateInput>
   }
@@ -7421,7 +7411,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type Slack_channelsCreateManyArgs = {
     /**
      * The data used to create many Slack_channels.
-     *
+     * 
     **/
     data: Enumerable<Slack_channelsCreateManyInput>
     skipDuplicates?: boolean
@@ -7434,22 +7424,22 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type Slack_channelsUpdateArgs = {
     /**
      * Select specific fields to fetch from the Slack_channels
-     *
+     * 
     **/
     select?: Slack_channelsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: Slack_channelsInclude | null
     /**
      * The data needed to update a Slack_channels.
-     *
+     * 
     **/
     data: XOR<Slack_channelsUpdateInput, Slack_channelsUncheckedUpdateInput>
     /**
      * Choose, which Slack_channels to update.
-     *
+     * 
     **/
     where: Slack_channelsWhereUniqueInput
   }
@@ -7461,12 +7451,12 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type Slack_channelsUpdateManyArgs = {
     /**
      * The data used to update Slack_channels.
-     *
+     * 
     **/
     data: XOR<Slack_channelsUpdateManyMutationInput, Slack_channelsUncheckedUpdateManyInput>
     /**
      * Filter which Slack_channels to update
-     *
+     * 
     **/
     where?: Slack_channelsWhereInput
   }
@@ -7478,27 +7468,27 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type Slack_channelsUpsertArgs = {
     /**
      * Select specific fields to fetch from the Slack_channels
-     *
+     * 
     **/
     select?: Slack_channelsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: Slack_channelsInclude | null
     /**
      * The filter to search for the Slack_channels to update in case it exists.
-     *
+     * 
     **/
     where: Slack_channelsWhereUniqueInput
     /**
      * In case the Slack_channels found by the `where` argument doesn't exist, create a new Slack_channels with this data.
-     *
+     * 
     **/
     create: XOR<Slack_channelsCreateInput, Slack_channelsUncheckedCreateInput>
     /**
      * In case the Slack_channels was found with the provided `where` argument, update it with this data.
-     *
+     * 
     **/
     update: XOR<Slack_channelsUpdateInput, Slack_channelsUncheckedUpdateInput>
   }
@@ -7510,17 +7500,17 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type Slack_channelsDeleteArgs = {
     /**
      * Select specific fields to fetch from the Slack_channels
-     *
+     * 
     **/
     select?: Slack_channelsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: Slack_channelsInclude | null
     /**
      * Filter which Slack_channels to delete.
-     *
+     * 
     **/
     where: Slack_channelsWhereUniqueInput
   }
@@ -7532,7 +7522,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type Slack_channelsDeleteManyArgs = {
     /**
      * Filter which Slack_channels to delete
-     *
+     * 
     **/
     where?: Slack_channelsWhereInput
   }
@@ -7544,12 +7534,12 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type Slack_channels$orgsArgs = {
     /**
      * Select specific fields to fetch from the Orgs
-     *
+     * 
     **/
     select?: OrgsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: OrgsInclude | null
     where?: OrgsWhereInput
@@ -7567,12 +7557,12 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
   export type Slack_channelsArgs = {
     /**
      * Select specific fields to fetch from the Slack_channels
-     *
+     * 
     **/
     select?: Slack_channelsSelect | null
     /**
      * Choose, which related nodes to fetch as well.
-     *
+     * 
     **/
     include?: Slack_channelsInclude | null
   }
@@ -7610,8 +7600,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     id: 'id',
     title: 'title',
     description: 'description',
-    modified: 'modified',
-    created: 'created',
+    created_at: 'created_at',
     kanbanorder: 'kanbanorder',
     username: 'username',
     external_urls: 'external_urls',
@@ -7821,8 +7810,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     id?: UuidFilter | string
     title?: StringFilter | string
     description?: StringFilter | string
-    modified?: DateTimeFilter | Date | string
-    created?: DateTimeFilter | Date | string
+    created_at?: DateTimeFilter | Date | string
     kanbanorder?: StringFilter | string
     username?: StringFilter | string
     external_urls?: StringNullableFilter | string | null
@@ -7839,8 +7827,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     id?: SortOrder
     title?: SortOrder
     description?: SortOrder
-    modified?: SortOrder
-    created?: SortOrder
+    created_at?: SortOrder
     kanbanorder?: SortOrder
     username?: SortOrder
     external_urls?: SortOrder
@@ -7861,8 +7848,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     id?: SortOrder
     title?: SortOrder
     description?: SortOrder
-    modified?: SortOrder
-    created?: SortOrder
+    created_at?: SortOrder
     kanbanorder?: SortOrder
     username?: SortOrder
     external_urls?: SortOrder
@@ -7883,8 +7869,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     id?: UuidWithAggregatesFilter | string
     title?: StringWithAggregatesFilter | string
     description?: StringWithAggregatesFilter | string
-    modified?: DateTimeWithAggregatesFilter | Date | string
-    created?: DateTimeWithAggregatesFilter | Date | string
+    created_at?: DateTimeWithAggregatesFilter | Date | string
     kanbanorder?: StringWithAggregatesFilter | string
     username?: StringWithAggregatesFilter | string
     external_urls?: StringNullableWithAggregatesFilter | string | null
@@ -8237,8 +8222,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     id: string
     title: string
     description: string
-    modified: Date | string
-    created: Date | string
+    created_at: Date | string
     kanbanorder: string
     username: string
     external_urls?: string | null
@@ -8254,8 +8238,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     id: string
     title: string
     description: string
-    modified: Date | string
-    created: Date | string
+    created_at: Date | string
     kanbanorder: string
     username: string
     external_urls?: string | null
@@ -8271,8 +8254,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     id?: StringFieldUpdateOperationsInput | string
     title?: StringFieldUpdateOperationsInput | string
     description?: StringFieldUpdateOperationsInput | string
-    modified?: DateTimeFieldUpdateOperationsInput | Date | string
-    created?: DateTimeFieldUpdateOperationsInput | Date | string
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     kanbanorder?: StringFieldUpdateOperationsInput | string
     username?: StringFieldUpdateOperationsInput | string
     external_urls?: NullableStringFieldUpdateOperationsInput | string | null
@@ -8288,8 +8270,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     id?: StringFieldUpdateOperationsInput | string
     title?: StringFieldUpdateOperationsInput | string
     description?: StringFieldUpdateOperationsInput | string
-    modified?: DateTimeFieldUpdateOperationsInput | Date | string
-    created?: DateTimeFieldUpdateOperationsInput | Date | string
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     kanbanorder?: StringFieldUpdateOperationsInput | string
     username?: StringFieldUpdateOperationsInput | string
     external_urls?: NullableStringFieldUpdateOperationsInput | string | null
@@ -8305,8 +8286,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     id: string
     title: string
     description: string
-    modified: Date | string
-    created: Date | string
+    created_at: Date | string
     kanbanorder: string
     username: string
     external_urls?: string | null
@@ -8321,8 +8301,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     id?: StringFieldUpdateOperationsInput | string
     title?: StringFieldUpdateOperationsInput | string
     description?: StringFieldUpdateOperationsInput | string
-    modified?: DateTimeFieldUpdateOperationsInput | Date | string
-    created?: DateTimeFieldUpdateOperationsInput | Date | string
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     kanbanorder?: StringFieldUpdateOperationsInput | string
     username?: StringFieldUpdateOperationsInput | string
     external_urls?: NullableStringFieldUpdateOperationsInput | string | null
@@ -8336,8 +8315,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     id?: StringFieldUpdateOperationsInput | string
     title?: StringFieldUpdateOperationsInput | string
     description?: StringFieldUpdateOperationsInput | string
-    modified?: DateTimeFieldUpdateOperationsInput | Date | string
-    created?: DateTimeFieldUpdateOperationsInput | Date | string
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     kanbanorder?: StringFieldUpdateOperationsInput | string
     username?: StringFieldUpdateOperationsInput | string
     external_urls?: NullableStringFieldUpdateOperationsInput | string | null
@@ -8878,8 +8856,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     id?: SortOrder
     title?: SortOrder
     description?: SortOrder
-    modified?: SortOrder
-    created?: SortOrder
+    created_at?: SortOrder
     kanbanorder?: SortOrder
     username?: SortOrder
     external_urls?: SortOrder
@@ -8894,8 +8871,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     id?: SortOrder
     title?: SortOrder
     description?: SortOrder
-    modified?: SortOrder
-    created?: SortOrder
+    created_at?: SortOrder
     kanbanorder?: SortOrder
     username?: SortOrder
     external_urls?: SortOrder
@@ -8910,8 +8886,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     id?: SortOrder
     title?: SortOrder
     description?: SortOrder
-    modified?: SortOrder
-    created?: SortOrder
+    created_at?: SortOrder
     kanbanorder?: SortOrder
     username?: SortOrder
     external_urls?: SortOrder
@@ -8968,7 +8943,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     _min?: NestedStringNullableFilter
     _max?: NestedStringNullableFilter
   }
-  export type JsonNullableFilter =
+  export type JsonNullableFilter = 
     | PatchUndefined<
         Either<Required<JsonNullableFilterBase>, Exclude<keyof Required<JsonNullableFilterBase>, 'path'>>,
         Required<JsonNullableFilterBase>
@@ -9071,7 +9046,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     linear_id?: SortOrder
     pivotal_tracker_id?: SortOrder
   }
-  export type JsonNullableWithAggregatesFilter =
+  export type JsonNullableWithAggregatesFilter = 
     | PatchUndefined<
         Either<Required<JsonNullableWithAggregatesFilterBase>, Exclude<keyof Required<JsonNullableWithAggregatesFilterBase>, 'path'>>,
         Required<JsonNullableWithAggregatesFilterBase>
@@ -9734,7 +9709,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     _min?: NestedStringNullableFilter
     _max?: NestedStringNullableFilter
   }
-  export type NestedJsonNullableFilter =
+  export type NestedJsonNullableFilter = 
     | PatchUndefined<
         Either<Required<NestedJsonNullableFilterBase>, Exclude<keyof Required<NestedJsonNullableFilterBase>, 'path'>>,
         Required<NestedJsonNullableFilterBase>
@@ -9816,8 +9791,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     id: string
     title: string
     description: string
-    modified: Date | string
-    created: Date | string
+    created_at: Date | string
     kanbanorder: string
     username: string
     external_urls?: string | null
@@ -9832,8 +9806,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     id: string
     title: string
     description: string
-    modified: Date | string
-    created: Date | string
+    created_at: Date | string
     kanbanorder: string
     username: string
     external_urls?: string | null
@@ -9858,8 +9831,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     id?: StringFieldUpdateOperationsInput | string
     title?: StringFieldUpdateOperationsInput | string
     description?: StringFieldUpdateOperationsInput | string
-    modified?: DateTimeFieldUpdateOperationsInput | Date | string
-    created?: DateTimeFieldUpdateOperationsInput | Date | string
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     kanbanorder?: StringFieldUpdateOperationsInput | string
     username?: StringFieldUpdateOperationsInput | string
     external_urls?: NullableStringFieldUpdateOperationsInput | string | null
@@ -9874,8 +9846,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     id?: StringFieldUpdateOperationsInput | string
     title?: StringFieldUpdateOperationsInput | string
     description?: StringFieldUpdateOperationsInput | string
-    modified?: DateTimeFieldUpdateOperationsInput | Date | string
-    created?: DateTimeFieldUpdateOperationsInput | Date | string
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     kanbanorder?: StringFieldUpdateOperationsInput | string
     username?: StringFieldUpdateOperationsInput | string
     external_urls?: NullableStringFieldUpdateOperationsInput | string | null
@@ -10276,8 +10247,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     id: string
     title: string
     description: string
-    modified: Date | string
-    created: Date | string
+    created_at: Date | string
     kanbanorder: string
     username: string
     external_urls?: string | null
@@ -10292,8 +10262,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     id: string
     title: string
     description: string
-    modified: Date | string
-    created: Date | string
+    created_at: Date | string
     kanbanorder: string
     username: string
     external_urls?: string | null
@@ -10384,8 +10353,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     id?: UuidFilter | string
     title?: StringFilter | string
     description?: StringFilter | string
-    modified?: DateTimeFilter | Date | string
-    created?: DateTimeFilter | Date | string
+    created_at?: DateTimeFilter | Date | string
     kanbanorder?: StringFilter | string
     username?: StringFilter | string
     external_urls?: StringNullableFilter | string | null
@@ -10703,8 +10671,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     id: string
     title: string
     description: string
-    modified: Date | string
-    created: Date | string
+    created_at: Date | string
     kanbanorder: string
     username: string
     external_urls?: string | null
@@ -10718,8 +10685,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     id?: StringFieldUpdateOperationsInput | string
     title?: StringFieldUpdateOperationsInput | string
     description?: StringFieldUpdateOperationsInput | string
-    modified?: DateTimeFieldUpdateOperationsInput | Date | string
-    created?: DateTimeFieldUpdateOperationsInput | Date | string
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     kanbanorder?: StringFieldUpdateOperationsInput | string
     username?: StringFieldUpdateOperationsInput | string
     external_urls?: NullableStringFieldUpdateOperationsInput | string | null
@@ -10734,8 +10700,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     id?: StringFieldUpdateOperationsInput | string
     title?: StringFieldUpdateOperationsInput | string
     description?: StringFieldUpdateOperationsInput | string
-    modified?: DateTimeFieldUpdateOperationsInput | Date | string
-    created?: DateTimeFieldUpdateOperationsInput | Date | string
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     kanbanorder?: StringFieldUpdateOperationsInput | string
     username?: StringFieldUpdateOperationsInput | string
     external_urls?: NullableStringFieldUpdateOperationsInput | string | null
@@ -10750,8 +10715,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     id?: StringFieldUpdateOperationsInput | string
     title?: StringFieldUpdateOperationsInput | string
     description?: StringFieldUpdateOperationsInput | string
-    modified?: DateTimeFieldUpdateOperationsInput | Date | string
-    created?: DateTimeFieldUpdateOperationsInput | Date | string
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     kanbanorder?: StringFieldUpdateOperationsInput | string
     username?: StringFieldUpdateOperationsInput | string
     external_urls?: NullableStringFieldUpdateOperationsInput | string | null

@@ -9,6 +9,7 @@ import List from './pages/List'
 import Board from './pages/Board'
 import Issue from './pages/Issue'
 import {SupabaseContext} from './SupabaseContext.ts'
+import Project from './pages/Project'
 
 interface MenuContextInterface {
   showMenu: boolean
@@ -88,6 +89,8 @@ export const MainRoutes = ({onElectricLoaded}: MainRoutesProps) => {
   const router = (
     <Routes>
       <Route path="/" element={<List/>}/>
+      <Route path="/projects/:id" element={<Project/>}/>
+      <Route path="/projects" element={<Project/>}/>
       <Route path="/search" element={<List showSearch={true}/>}/>
       <Route path="/board" element={<Board/>}/>
       <Route path="/issue/:id" element={<Issue/>}/>

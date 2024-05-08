@@ -3,6 +3,7 @@ import IssueBoard from './IssueBoard'
 import { Issues, useElectric } from '../../electric'
 import { useLiveQuery } from 'electric-sql/react'
 import { useFilterState, filterStateToWhere } from '../../utils/filterState'
+import { useSearchParams } from 'react-router-dom'
 
 function Board() {
   const [filterState] = useFilterState()
@@ -19,7 +20,7 @@ function Board() {
 
   return (
     <div className="flex flex-col flex-1 overflow-hidden">
-      <TopFilter title="Board" issues={issues} hideSort={true} />
+      <TopFilter title="Board" issues={issues} hideSort={true} showProjects={false}/>
       <IssueBoard issues={issues} />
     </div>
   )

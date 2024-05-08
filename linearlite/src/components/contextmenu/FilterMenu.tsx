@@ -1,20 +1,45 @@
 import { Portal } from '../Portal'
-import { ReactNode, useState } from 'react'
+import { ReactElement, ReactNode, useState } from 'react'
 import { ContextMenuTrigger } from '@firefox-devtools/react-contextmenu'
 import { BsCheck2 } from 'react-icons/bs'
 import { Menu } from './menu'
 import { useFilterState } from '../../utils/filterState'
 import { PriorityOptions, StatusOptions } from '../../types/issue'
+import { Projects } from '../../generated/client'
+import { PiCubeThin } from 'react-icons/pi'
+import { useLiveQuery } from 'electric-sql/react'
+import { useElectric } from '../../electric.ts'
 
 interface Props {
   id: string
   button: ReactNode
-  className?: string
+  className?: string,
+  projects?: Projects[]
+  showProjects: boolean
 }
 
-function FilterMenu({ id, button, className }: Props) {
+function FilterMenu({ id, button, className, showProjects = true }: Props) {
+  const { db } = useElectric()!
   const [filterState, setFilterState] = useFilterState()
   const [keyword, setKeyword] = useState('')
+  let projectOptions: ReactElement[] | undefined = undefined
+  if (showProjects) {
+    const { results: projects } = useLiveQuery(
+      db.projects.liveMany()
+    )
+    projectOptions = projects?.map((project) => {
+      return (
+        <Menu.Item
+          key={project.id}
+          onClick={() => handleProjectSelect(project.id)}
+        >
+          <PiCubeThin className="mr-3" />
+          <span>{project.name}</span>
+        </Menu.Item>
+      )
+    })
+  }
+  // TODO: Fetch only name and id
 
   let priorities = PriorityOptions
   if (keyword !== '') {
@@ -64,6 +89,13 @@ function FilterMenu({ id, button, className }: Props) {
     )
   })
 
+  const handleProjectSelect = (projectId: string) => {
+    setKeyword('')
+    setFilterState({
+      ...filterState,
+      projectId
+    })
+  }
   const handlePrioritySelect = (priority: string) => {
     setKeyword('')
     const newPriority = filterState.priority || []
@@ -74,7 +106,7 @@ function FilterMenu({ id, button, className }: Props) {
     }
     setFilterState({
       ...filterState,
-      priority: newPriority,
+      priority: newPriority
     })
   }
 
@@ -88,7 +120,7 @@ function FilterMenu({ id, button, className }: Props) {
     }
     setFilterState({
       ...filterState,
-      status: newStatus,
+      status: newStatus
     })
   }
 
@@ -112,6 +144,8 @@ function FilterMenu({ id, button, className }: Props) {
           {priorityOptions && statusOptions && <Menu.Divider />}
           {statusOptions && <Menu.Header>Status</Menu.Header>}
           {statusOptions}
+          {projectOptions && <Menu.Header>Project</Menu.Header>}
+          {projectOptions}
         </Menu>
       </Portal>
     </>

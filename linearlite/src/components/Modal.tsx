@@ -22,6 +22,7 @@ interface Props {
   children?: React.ReactNode
   size: keyof typeof sizeClasses
 }
+
 const sizeClasses = {
   large: 'w-175',
   normal: 'w-140',

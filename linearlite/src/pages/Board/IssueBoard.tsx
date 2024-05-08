@@ -178,13 +178,13 @@ export default function IssueBoard({ issues }: IssueBoardProps) {
       const kanbanorder = getNewKanbanOrder(prevIssue, nextIssue)
       // Keep track of moved issues so we can override the status and kanbanorder when
       // sorting issues into columns.
-      const modified = new Date()
+      const updatedAt = new Date()
       setMovedIssues((prev) => ({
         ...prev,
         [draggableId]: {
           status: destination.droppableId,
           kanbanorder,
-          modified,
+          updated_at: updatedAt,
         },
       }))
       // Update the issue in the database
@@ -192,7 +192,7 @@ export default function IssueBoard({ issues }: IssueBoardProps) {
         data: {
           status: destination.droppableId,
           kanbanorder,
-          modified,
+          updated_at: updatedAt,
         },
         where: {
           id: draggableId,

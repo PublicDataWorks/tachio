@@ -15,13 +15,15 @@ interface Props {
   hideSort?: boolean
   showSearch?: boolean
   title?: string
+  showProjects: boolean
 }
 
-export default function ({
+export default function TopFilter ({
   issues,
   hideSort,
   showSearch,
-  title = 'All issues',
+  showProjects,
+  title,
 }: Props) {
   const { db } = useElectric()!
   const [filterState, setFilterState] = useFilterState()
@@ -31,7 +33,7 @@ export default function ({
 
   // We don't yet have a DAL for counts, so we use raw SQL
   const totalIssuesCount: number =
-    useLiveQuery(db.liveRaw({ sql: 'SELECT COUNT(*) FROM issue' }))
+    useLiveQuery(db.liveRaw({ sql: 'SELECT COUNT(*) FROM issues' }))
       .results?.[0]?.['COUNT(*)'] ?? 0
 
   const filteredIssuesCount = issues.length
@@ -77,7 +79,6 @@ export default function ({
           </button>
 
           <div className="p-1 font-semibold me-1">{title}</div>
-          {/* <span>{filteredIssuesCount}</span> */}
           <span>
             {filteredIssuesCount}
             {filteredIssuesCount !== totalIssuesCount
@@ -91,6 +92,7 @@ export default function ({
                 Filter
               </button>
             }
+            showProjects={showProjects}
             id={'filter-menu'}
           />
         </div>
@@ -172,4 +174,9 @@ export default function ({
       />
     </>
   )
+}
+
+TopFilter.defaultProps = {
+  showProjects: true,
+  title: 'All issues'
 }

@@ -1,12 +1,13 @@
 import { useLiveQuery } from 'electric-sql/react'
 import { v4 as uuidv4 } from 'uuid'
-import { useState } from 'react'
+import { useContext, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { useElectric, type Issues } from '../../electric'
 import Editor from '../../components/editor/Editor'
 import Avatar from '../../components/Avatar'
 import { formatDate } from '../../utils/date'
 import { showWarning } from '../../utils/notification'
+import { SupabaseContext } from '../../SupabaseContext.ts'
 
 export interface CommentsProps {
   issue: Issues
@@ -14,6 +15,7 @@ export interface CommentsProps {
 
 function Comments({ issue }: CommentsProps) {
   const { db } = useElectric()!
+  const { session } = useContext(SupabaseContext)
   const [newCommentBody, setNewCommentBody] = useState<string>('')
   const { results: comments } = useLiveQuery(
     db.comments.liveMany({
@@ -65,7 +67,7 @@ function Comments({ issue }: CommentsProps) {
         issue_id: issue.id,
         body: newCommentBody,
         created_at: new Date(),
-        username: 'testuser',
+        username: session!.user.email!,
       },
     })
     setNewCommentBody('')

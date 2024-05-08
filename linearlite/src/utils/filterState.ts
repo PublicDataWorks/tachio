@@ -6,6 +6,7 @@ interface FilterState {
   status?: string[]
   priority?: string[]
   query?: string
+  projectId?: string
 }
 
 export function useFilterState(): [
@@ -13,7 +14,7 @@ export function useFilterState(): [
   (state: Partial<FilterState>) => void
 ] {
   const [searchParams, setSearchParams] = useSearchParams()
-  const orderBy = searchParams.get('orderBy') ?? 'created'
+  const orderBy = searchParams.get('orderBy') ?? 'created_at'
   const orderDirection =
     (searchParams.get('orderDirection') as 'asc' | 'desc') ?? 'desc'
   const status = searchParams
@@ -25,17 +26,19 @@ export function useFilterState(): [
     .map((status) => status.toLocaleLowerCase().split(','))
     .flat()
   const query = searchParams.get('query')
+  const projectId = searchParams.get('projectId') ?? undefined
 
   const state = {
     orderBy,
     orderDirection,
     status,
     priority,
+    projectId,
     query: query || undefined,
   }
 
   const setState = (state: Partial<FilterState>) => {
-    const { orderBy, orderDirection, status, priority, query } = state
+    const { orderBy, orderDirection, status, priority, projectId, query } = state
     setSearchParams((searchParams) => {
       if (orderBy) {
         searchParams.set('orderBy', orderBy)
@@ -57,6 +60,11 @@ export function useFilterState(): [
       } else {
         searchParams.delete('priority')
       }
+      if (projectId) {
+        searchParams.set('projectId', projectId)
+      } else {
+        searchParams.delete('projectId')
+      }
       if (query) {
         searchParams.set('query', query)
       } else {
@@ -72,18 +80,23 @@ export function useFilterState(): [
 interface FilterStateWhere {
   status?: { in: string[] }
   priority?: { in: string[] }
-  title?: { contains: string }
+  title?: { contains: string },
+  project_id?: string
+  username?: string
   OR?: [{ title: { contains: string } }, { description: { contains: string } }]
 }
 
 export function filterStateToWhere(filterState: FilterState) {
-  const { status, priority, query } = filterState
+  const { status, priority, projectId, query } = filterState
   const where: FilterStateWhere = {}
   if (status && status.length > 0) {
     where.status = { in: status }
   }
   if (priority && priority.length > 0) {
     where.priority = { in: priority }
+  }
+  if (projectId) {
+    where.project_id = projectId
   }
   if (query) {
     where.OR = [

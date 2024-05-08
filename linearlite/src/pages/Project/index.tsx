@@ -1,17 +1,21 @@
 import TopFilter from '../../components/TopFilter'
-import IssueList from './IssueList'
 import { Issues, useElectric } from '../../electric'
 import { useLiveQuery } from 'electric-sql/react'
 import { useFilterState, filterStateToWhere } from '../../utils/filterState'
-import { useContext } from 'react'
-import { SupabaseContext } from '../../SupabaseContext.ts'
+import IssueList from '../List/IssueList.tsx'
+import { useParams } from 'react-router-dom'
 
-function List({ showSearch = true }) {
+interface ProjectProps {
+  showSearch?: boolean
+  projectId?: string
+}
+
+function Project({ showSearch }: ProjectProps) {
   const [filterState] = useFilterState()
   const { db } = useElectric()!
-  const { session } = useContext(SupabaseContext)
+  const { id } = useParams()
   const where = filterStateToWhere(filterState)
-  where.username = session?.user ? session.user.email : undefined
+  where.project_id = id
   const { results } = useLiveQuery(
     db.issues.liveMany({
       orderBy: { [filterState.orderBy]: filterState.orderDirection },
@@ -22,10 +26,14 @@ function List({ showSearch = true }) {
 
   return (
     <div className="flex flex-col flex-grow">
-      <TopFilter issues={issues} showSearch={showSearch} />
+      <TopFilter issues={issues} showSearch={showSearch} showProjects={false} />
       <IssueList issues={issues} />
     </div>
   )
 }
 
-export default List
+Project.defaultProps = {
+  showSearch: true,
+}
+
+export default Project

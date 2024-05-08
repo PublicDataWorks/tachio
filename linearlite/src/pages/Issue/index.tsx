@@ -61,7 +61,7 @@ function IssuePage() {
     db.issues.update({
       data: {
         status: status,
-        modified: new Date()
+        updated_at: new Date()
       },
       where: {
         id: issue.id
@@ -70,11 +70,11 @@ function IssuePage() {
   }
 
   const handleProjectChange = (projectId: string) => {
-    if (issue.projects?.id === projectId) return
+    if (issue.project_id === projectId) return
     db.issues.update({
       data: {
         project_id: projectId,
-        modified: new Date()
+        updated_at: new Date()
       },
       where: {
         id: issue.id
@@ -91,7 +91,7 @@ function IssuePage() {
     db.issues.update({
       data: {
         external_urls: newExternalUrls,
-        modified: new Date()
+        updated_at: new Date()
       },
       where: {
         id: issue.id
@@ -103,7 +103,7 @@ function IssuePage() {
     db.issues.update({
       data: {
         priority: priority,
-        modified: new Date()
+        updated_at: new Date()
       },
       where: {
         id: issue.id
@@ -115,7 +115,7 @@ function IssuePage() {
     await db.issues.update({
       data: {
         title: title,
-        modified: new Date()
+        updated_at: new Date()
       },
       where: {
         id: issue.id
@@ -137,7 +137,7 @@ function IssuePage() {
       await db.issues.update({
         data: {
           description: description,
-          modified: new Date()
+          updated_at: new Date()
         },
         where: {
           id: issue.id

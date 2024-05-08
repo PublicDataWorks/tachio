@@ -56,10 +56,9 @@ export default function ({ isOpen, onDismiss }: Props) {
                 value={filterState.orderBy}
                 onChange={handleOrderByChange}
               >
-                <option value="priority">Priority</option>
-                <option value="status">Status</option>
-                <option value="created_at">Created</option>
-                <option value="updated_at">Updated</option>
+                <option value="name">Name</option>
+                <option value="updated_at">Last updated</option>
+                <option value="created_at">Last created</option>
               </Select>
             </div>
             <div className="flex ml-1">
