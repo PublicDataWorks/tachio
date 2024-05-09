@@ -86,7 +86,7 @@ function IssuePage() {
   const handleRemoveExternalUrl = (urlToRemove: string) => {
     if (!issue?.external_urls) return
     // `issue.external_urls` is a string that concatenates a list of URLs, with each URL separated by a new line.
-    // Remove the URL and an redundant new line
+    // Remove the URL and redundant new line
     const newExternalUrls = issue.external_urls.replace(new RegExp(`${urlToRemove}\n?`), '').replace(/\n$/g, '')
     db.issues.update({
       data: {
@@ -282,7 +282,7 @@ function IssuePage() {
                       <button
                         className="flex items-center w-full h-8 mt-2 px-2 hover:bg-gray-100">
                         <GrProjects size={13} className="mr-2" />
-                        <span className="overflow-hidden">{issue?.projects?.name}</span>
+                        <span className="overflow-hidden">{'projects' in issue ? issue.projects?.name : ''}</span>
                       </button>
                     }
                     onSelect={project => handleProjectChange(project.id)} />
