@@ -9,17 +9,7 @@ const {
   removeMentionFromMessage,
   isBreakingMessageChain,
   processChunks,
-  assembleMessagePreamble,
   addCurrentDateTime,
-  addHexagramPrompt,
-  // addSystemPrompt,
-  addCapabilityPromptIntro,
-  addCapabilityManifestMessage,
-  addTodosToMessages,
-  addUserMessages,
-  addUserMemories,
-  addRelevantMemories,
-  addGeneralMemories
 } = require("./helpers.js");
 
 // Mocking the dependent functions

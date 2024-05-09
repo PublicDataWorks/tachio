@@ -504,7 +504,7 @@ function setTypingInterval(message) {
  * Generates an AI completion based on the given prompt, username, messages, and config.
  * @param {string} prompt - The prompt for the AI completion.
  * @param {string} username - The username associated with the AI completion.
- * @param {Array<Object>} messages - The array of messages.
+ * @param {Array} messages - The array of messages.
  * @param {Object} config - The configuration object containing temperature and presence_penalty.
  * @returns {Object} - An object containing the updated messages array and the AI response.
  */
@@ -518,9 +518,7 @@ async function generateAiCompletion(prompt, username, messages, config) {
 
   logger.info(`🤖 Generating AI completion for <${username}> ${prompt}`);
   logger.info(`${messages.length} messages`);
-
-  messages = await addPreambleToMessages(username, prompt, messages);
-
+  messages = await addPreambleToMessages(username, messages);
   let completion = null;
 
   // remove any messages that do not have values
@@ -638,13 +636,11 @@ async function createClaudeCompletion(messages, config) {
 /**
  * Adds a preamble to an array of messages.
  * @param {string} username - The username.
- * @param {string} prompt - The prompt.
  * @param {Array<Array<string>>} messages - The array of messages.
- * @returns {Array<string>} - The array of messages with the preamble added.
+ * @returns {Promise<Array<string>>} - The array of messages with the preamble added.
  */
-async function addPreambleToMessages(username, prompt, messages) {
-  // logger.info(`🔧 Adding preamble to messages for <${username}> ${prompt}`);
-  const preamble = await assembleMessagePreamble(username, prompt);
+async function addPreambleToMessages(username, messages) {
+  const preamble = await assembleMessagePreamble(username);
   return [...preamble, ...messages.flat()];
 }
 

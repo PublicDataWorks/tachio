@@ -207,18 +207,14 @@ async function processMissiveRequest(body, query) {
 
   // Fetch the context messages for the conversation from the database
   const contextMessages = await getChannelMessageHistory(conversationId)
-
   // Add the context messages to the formatted messages array
   formattedMessages.push(
-    ...contextMessages.map((m) => {
-      const obj = {
+    ...contextMessages.map((m) => ({
         role: 'user',
-        content: `#### Contextual message in conversation:\n${m.content}`
-      }
-      return obj
-    })
+        content: `#### Contextual message in conversation:\n${m.value}`
+      })
+    )
   )
-
   // Add the webhook description to the formatted messages array as a system message
   formattedMessages.push({
     role: 'system',
