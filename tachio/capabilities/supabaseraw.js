@@ -10,8 +10,8 @@ const logger = require("../src/logger.js")("capabilities");
  * @param {array} columns - An array of column names to include in the result.
  * @param {object} where - An object representing the conditions to filter the result.
  * @returns {Promise<any>} - A promise that resolves to the result of the SELECT query.
- * @example supabaseraw:select("todos", "*", { id: 1 })
- * @example supabaseraw:select("todos", ["id", "title"], { completed: false })
+ * @example supabaseraw:select("issues", "*", { id: 1 })
+ * @example supabaseraw:select("issues", ["id", "title"], { completed: false })
  * @example supabaseraw:select("config", "*", { CONFIG_KEY: "CHAT_MODEL" })
  */
 async function select(table, columns, where) {
@@ -31,7 +31,7 @@ async function select(table, columns, where) {
  * @param {string} table - The name of the table to insert into.
  * @param {object} values - An object representing the values to insert.
  * @returns {Promise<any>} - A promise that resolves to the result of the INSERT query.
- * @example supabaseraw:insert("todos", { value: "Buy groceries", completed: false })
+ * @example supabaseraw:insert("issues", { value: "Buy groceries", completed: false })
  */
 async function insert(table, values) {
   const { data, error } = await supabase
@@ -51,7 +51,7 @@ async function insert(table, values) {
  * @param {object} values - An object representing the values to update.
  * @param {object} where - An object representing the conditions to filter the update.
  * @returns {Promise<any>} - A promise that resolves to the result of the UPDATE query.
- * @example supabaseraw:update("todos", { completed: true }, { id: 1 })
+ * @example supabaseraw:update("issues", { completed: true }, { id: 1 })
  * Say you want to update a prompt in the prompt table, you can do:
  * @example supabaseraw:update("prompts", "new prompt text", { prompt_name: "PROMPT_SYSTEM" })
  */
@@ -72,7 +72,7 @@ async function update(table, values, where) {
  * @param {string} table - The name of the table to delete from.
  * @param {object} where - An object representing the conditions to filter the delete.
  * @returns {Promise<any>} - A promise that resolves to the result of the DELETE query.
- * @example supabaseraw:delete("todos", { id: 1 })
+ * @example supabaseraw:delete("issues", { id: 1 })
  */
 async function del(table, where) {
   return 'Delete not implemented yet.'

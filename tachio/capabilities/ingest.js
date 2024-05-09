@@ -83,13 +83,13 @@ async function deepDocumentIngest(url) {
         "capability-deepdocumentingest",
         url,
       );
-      
+
     }
 
     const messages = [
       {
         role: "user",
-        content: `Can you please write an extremely long and thorough reiteration of the following document: 
+        content: `Can you please write an extremely long and thorough reiteration of the following document:
 ${JSON.stringify(document, null, 2)}
 
 ${PROMPT_DEEP_INGEST}
@@ -110,7 +110,7 @@ Make separate sections of facts for each section of the document, using \`\`\`--
       await storeUserMemory(
         { username: "capability-deepdocumentingest", guild: "" },
         factAsMemory,
-        "capability",
+        "capability-deepdocumentingest",
         url,
       );
     });
@@ -118,7 +118,7 @@ Make separate sections of facts for each section of the document, using \`\`\`--
     const metaSummaryMessages = [
       {
         role: "user",
-        content: `Can you please provide a high-level summary of the most important facts in this document: 
+        content: `Can you please provide a high-level summary of the most important facts in this document:
   ${JSON.stringify(document, null, 2)}`
       }
     ];

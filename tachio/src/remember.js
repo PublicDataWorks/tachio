@@ -3,7 +3,6 @@ const dotenv = require("dotenv");
 const { openai } = require("./openai");
 const { CohereClient } = require("cohere-ai");
 const logger = require("../src/logger.js")("remember");
-const { differenceInHours } = require("date-fns");
 const axios = require("axios");
 const cohere = new CohereClient({
   token: process.env.COHERE_API_KEY,
@@ -13,7 +12,6 @@ dotenv.config();
 
 const { MEMORIES_TABLE_NAME, MESSAGES_TABLE_NAME } = require("../config");
 const { supabase } = require("./supabaseclient.js");
-const { encode } = require("@nem035/gpt-3-encoder");
 
 /**
  * Retrieves user memories from the database.
@@ -337,7 +335,7 @@ async function deleteMemoriesOfResource(resourceId) {
  * @param {string} value - The content of the message.
  * @param {string} channelId - The ID of the channel where the message was sent.
  * @param {string} guildId - The ID of the guild where the message was sent.
- * @returns {Promise<object>} - A promise that resolves to the stored message data.
+ * @returns {Promise<string>} - A promise that resolves to the stored message data.
  */
 async function storeUserMessage({ username, channel, guild, conversation_id }, value) {
   const { supabase } = require("./supabaseclient.js");

@@ -143,7 +143,7 @@ module.exports = (async () => {
         );
       } catch (error) {
         logger.info(
-          `${chainId} - Process message chain: error processing message: ${error}`,
+          `${chainId} - Process message chain: error processing message: ${error} ${error.stack}`,
         );
         messages.push({
           role: "assistant",
@@ -375,10 +375,7 @@ module.exports = (async () => {
   }
 
   // TODO: Remove this function to simplify
-  async function processCapability(messages, lastMessage, options) {
-    let capabilityMatch = lastMessage.match(capabilityRegex) || lastMessage.match(toolUseCapabilityRegex);
-    if (!capabilityMatch) return messages
-
+  async function processCapability(messages, capabilityMatch) {
     try {
       return await processAndLogCapabilityResponse(messages, capabilityMatch);
     } catch (error) {
@@ -411,12 +408,13 @@ module.exports = (async () => {
 
     logger.info(`Processing Message in chain.js`);
 
-    messages = await processCapability(messages, lastMessage, {
-      username,
-      channel,
-      guild,
-      related_message_id,
-    });
+    let capabilityMatch = lastMessage.match(capabilityRegex) || lastMessage.match(toolUseCapabilityRegex);
+    let capabilityName
+    if (capabilityMatch) {
+      messages = await processCapability(messages, capabilityMatch);
+      if (capabilityMatch.length === 4) [_, capabilityName] = capabilityMatch
+      else [_, _, capabilityName] = capabilityMatch
+    }
 
     if (messages[messages.length - 1].image) {
       logger.info("Last Message is an Image");
@@ -450,11 +448,15 @@ module.exports = (async () => {
       role: "assistant",
       content: aiResponse,
     });
-    logInteraction(
+
+    // TODO: I'm not sure if omitting await here is appropriate
+    void logInteraction(
       prompt,
-      aiResponse,
+      aiResponse || '',
       { username, channel, guild, related_message_id: storedMessageId },
-      messages
+      messages,
+      !!capabilityName,
+      capabilityName || "",
     );
     return messages;
   }
