@@ -127,7 +127,7 @@ module.exports = (async () => {
         ...conversationHistory,
         {
           role: "system",
-          content: `You previously ran the capability: ${capabilityName} and got the response: ${capabilityResponse}`,
+          content: (capabilityName ? 'You previously made a request to LLM' : `You previously ran the capability: ${capabilityName}`) + ` and got the response: ${capabilityResponse}`,
         },
         {
           role: "user",
@@ -152,6 +152,7 @@ module.exports = (async () => {
     // if remember text length is 0 or less, we don't wanna store it
     if (rememberText.length <= 0) return rememberText;
 
+    let memoryType = capabilityName ? `capability-${capabilityName}` : "user";
     await storeUserMemory(
       {
         username,
@@ -159,7 +160,9 @@ module.exports = (async () => {
         conversation_id: channel,
         related_message_id
       },
-      rememberText);
+      rememberText,
+      memoryType
+    );
   }
 
   return {
