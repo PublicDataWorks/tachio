@@ -166,7 +166,7 @@ async function processMissiveRequest(body, query) {
         // Use the Missive conversationId as the channel
         // Store the attachment description as a memory in the database
         await storeUserMemory(
-          { username, channel: conversationId, guild: 'missive' },
+          { username, conversationId, guild: 'missive' },
           `Attachment ${body.comment.attachment.filename}: ${attachmentDescription}`,
           'attachment',
           resourceId
@@ -256,10 +256,7 @@ async function processMissiveRequest(body, query) {
     })
   } catch (error) {
     // Log any errors that occur during message chain processing
-    logger.error(`Error processing message chain: ${error.message}`)
-    res
-      .status(500)
-      .json({ error: `Error processing message chain: ${error.message}` })
+    logger.error(`Error processing message chain: ${error.message}, ${error.stack}`)
   }
 
   // Extract the last message from the processed message chain
@@ -344,7 +341,7 @@ app.post('/api/missive-reply', async (req, res) => {
       logger.info(`Message processed`)
     })
     .catch((error) => {
-      logger.error(`Error processing message: ${error.message}`)
+      logger.error(`Error processing message: ${error.message} ${error.stack}`)
     })
 })
 

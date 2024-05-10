@@ -1,13 +1,7 @@
 const dotenv = require("dotenv");
 
 const { openai } = require("./openai");
-const { CohereClient } = require("cohere-ai");
 const logger = require("../src/logger.js")("remember");
-const axios = require("axios");
-const cohere = new CohereClient({
-  token: process.env.COHERE_API_KEY,
-});
-const port = process.env.EXPRESS_PORT;
 dotenv.config();
 
 const { MEMORIES_TABLE_NAME, MESSAGES_TABLE_NAME } = require("../config");
@@ -43,40 +37,40 @@ async function getUserMemory(userId, limit = 5) {
   return data;
 }
 
-/**
- * Retrieves memories between two dates.
- * @param {Date} startDate - The start date.
- * @param {Date} endDate - The end date.
- * @returns {Promise<Array<Object>>} - A promise that resolves to an array of memory objects.
- */
-async function getMemoriesBetweenDates(startDate, endDate) {
-  if (!(startDate instanceof Date) || !(endDate instanceof Date)) {
-    logger.info("Invalid dates provided to getMemoriesBetweenDates");
-    return [];
-  }
-
-  logger.info(`Looking for memories between ${startDate} and ${endDate}`);
-  logger.info(
-    `Looking for memories between ${startDate.toISOString()} and ${endDate.toISOString()}`,
-  );
-
-  const { supabase } = require("./supabaseclient.js");
-  const response = await supabase
-    .from(MEMORIES_TABLE_NAME)
-    .select("*")
-    .gte("created_at", startDate.toISOString())
-    .lte("created_at", endDate.toISOString())
-    .order("created_at", { ascending: true });
-
-  const { data, error } = response;
-
-  if (error) {
-    logger.info("Error fetching memories between dates:", error);
-    return [];
-  }
-
-  return data;
-}
+// /**
+//  * Retrieves memories between two dates.
+//  * @param {Date} startDate - The start date.
+//  * @param {Date} endDate - The end date.
+//  * @returns {Promise<Array<Object>>} - A promise that resolves to an array of memory objects.
+//  */
+// async function getMemoriesBetweenDates(startDate, endDate) {
+//   if (!(startDate instanceof Date) || !(endDate instanceof Date)) {
+//     logger.info("Invalid dates provided to getMemoriesBetweenDates");
+//     return [];
+//   }
+//
+//   logger.info(`Looking for memories between ${startDate} and ${endDate}`);
+//   logger.info(
+//     `Looking for memories between ${startDate.toISOString()} and ${endDate.toISOString()}`,
+//   );
+//
+//   const { supabase } = require("./supabaseclient.js");
+//   const response = await supabase
+//     .from(MEMORIES_TABLE_NAME)
+//     .select("*")
+//     .gte("created_at", startDate.toISOString())
+//     .lte("created_at", endDate.toISOString())
+//     .order("created_at", { ascending: true });
+//
+//   const { data, error } = response;
+//
+//   if (error) {
+//     logger.info("Error fetching memories between dates:", error);
+//     return [];
+//   }
+//
+//   return data;
+// }
 
 /**
  * Retrieves a specified number of memories from the database.
@@ -106,11 +100,11 @@ async function getAllMemories(limit = 5) {
  * @param {string} userId
  * @param {string} value
  * @param {string} memoryType
- * @param {string} resourceId
+ * @param {string | null} resourceId
  * @returns {Promise<void>}
  */
 async function storeUserMemory(
-  { username, channel, guild, related_message_id },
+  { username, guild, conversationId, relatedMessageId },
   value,
   memoryType = "user",
   resourceId = null,
@@ -130,16 +124,16 @@ async function storeUserMemory(
     logger.info("value provided to storeUserMemory is not a string");
   }
 
-  if(!channel) {
-    logger.info("No channel provided to storeUserMemory");
+  if(!conversationId) {
+    logger.info("No conversationId provided to storeUserMemory");
   }
 
   if(!guild) {
     logger.info("No guild provided to storeUserMemory");
   }
 
-  if(!related_message_id) {
-    logger.info("No related_message_id provided to storeUserMemory");
+  if(!relatedMessageId) {
+    logger.info("No relatedMessageId provided to storeUserMemory");
   }
 
   if(!memoryType) {
@@ -186,8 +180,8 @@ async function storeUserMemory(
   }
 
   let validatedRelatedMessageId = null;
-  if (related_message_id && !isNaN(parseInt(related_message_id))) {
-    validatedRelatedMessageId = parseInt(related_message_id);
+  if (relatedMessageId && !isNaN(parseInt(relatedMessageId))) {
+    validatedRelatedMessageId = parseInt(relatedMessageId);
   }
 
   const { supabase } = require("./supabaseclient.js");
@@ -202,7 +196,7 @@ async function storeUserMemory(
       // embedding3: embedding3 || null,
       memory_type: memoryType,
       resource_id: resourceId,
-      conversation_id: channel,
+      conversation_id: conversationId,
       related_message_id: validatedRelatedMessageId,
     });
 
@@ -264,48 +258,48 @@ async function hasMemoryOfResource(resourceId) {
   return data.length > 0;
 }
 
-/**
- * Checks if there is a recent memory of the file based on its resource ID, where "recent" is defined by the caller.
- *
- * @param {string} resourceId - The ID of the resource (file) to check.
- * @param {number} recencyHours - The number of hours to consider a memory recent.
- * @returns {Promise<boolean>} - True if there is a recent memory of the file, false otherwise.
- */
-async function hasRecentMemoryOfResource(resourceId, recencyHours = 24) {
-  const hasMemory = await hasMemoryOfResource(resourceId);
-
-  if (!hasMemory) {
-    return false;
-  }
-
-  const { supabase } = require("./supabaseclient.js");
-
-  const { data, error } = await supabase
-    .from(MEMORIES_TABLE_NAME)
-    .select("created_at")
-    .eq("resource_id", resourceId)
-    .order("created_at", { ascending: false })
-    .limit(1);
-
-  if (error) {
-    logger.error("Error fetching the most recent memory of the file:", error);
-    return false; // Consider the absence of data as no recent memory exists.
-  }
-
-  // const hoursSinceLastMemory = differenceInHours(
-  //   new Date(),
-  //   new Date(data[0].created_at)
-  // );
-  // we need to remove the date-fns dependency
-  // and do this with plain ol' date objects
-  const hoursSinceLastMemory =
-    (new Date().getTime() - new Date(data[0].created_at).getTime()) /
-    1000 /
-    60 /
-    60;
-
-  return hoursSinceLastMemory <= recencyHours;
-}
+// /**
+//  * Checks if there is a recent memory of the file based on its resource ID, where "recent" is defined by the caller.
+//  *
+//  * @param {string} resourceId - The ID of the resource (file) to check.
+//  * @param {number} recencyHours - The number of hours to consider a memory recent.
+//  * @returns {Promise<boolean>} - True if there is a recent memory of the file, false otherwise.
+//  */
+// async function hasRecentMemoryOfResource(resourceId, recencyHours = 24) {
+//   const hasMemory = await hasMemoryOfResource(resourceId);
+//
+//   if (!hasMemory) {
+//     return false;
+//   }
+//
+//   const { supabase } = require("./supabaseclient.js");
+//
+//   const { data, error } = await supabase
+//     .from(MEMORIES_TABLE_NAME)
+//     .select("created_at")
+//     .eq("resource_id", resourceId)
+//     .order("created_at", { ascending: false })
+//     .limit(1);
+//
+//   if (error) {
+//     logger.error("Error fetching the most recent memory of the file:", error);
+//     return false; // Consider the absence of data as no recent memory exists.
+//   }
+//
+//   // const hoursSinceLastMemory = differenceInHours(
+//   //   new Date(),
+//   //   new Date(data[0].created_at)
+//   // );
+//   // we need to remove the date-fns dependency
+//   // and do this with plain ol' date objects
+//   const hoursSinceLastMemory =
+//     (new Date().getTime() - new Date(data[0].created_at).getTime()) /
+//     1000 /
+//     60 /
+//     60;
+//
+//   return hoursSinceLastMemory <= recencyHours;
+// }
 
 /**
  * Deletes memories associated with a specific resource ID.
@@ -315,7 +309,7 @@ async function hasRecentMemoryOfResource(resourceId, recencyHours = 24) {
  **/
 async function deleteMemoriesOfResource(resourceId) {
   const { supabase } = require("./supabaseclient.js");
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from(MEMORIES_TABLE_NAME)
     .delete()
     .eq("resource_id", resourceId);
@@ -325,7 +319,7 @@ async function deleteMemoriesOfResource(resourceId) {
     return `Error deleting memories of resource: ${error.message}`;
   }
 
-  return `Deleted ${data.length} memories of resource ${resourceId}`;
+  return `Deleted memories of resource ${resourceId}`;
 }
 
 /**
@@ -333,20 +327,19 @@ async function deleteMemoriesOfResource(resourceId) {
  *
  * @param {string} username - The ID of the user who sent the message.
  * @param {string} value - The content of the message.
- * @param {string} channelId - The ID of the channel where the message was sent.
- * @param {string} guildId - The ID of the guild where the message was sent.
+ * @param {string} conversationId - The ID of the conversation where the message was sent.
+ * @param {string} guild - The ID of the guild where the message was sent.
  * @returns {Promise<string>} - A promise that resolves to the stored message data.
  */
-async function storeUserMessage({ username, channel, guild, conversation_id }, value) {
+async function storeUserMessage({ username, guild, conversationId }, value) {
   const { supabase } = require("./supabaseclient.js");
   const {data, error } = await supabase
     // .from("messages")
     .from(MESSAGES_TABLE_NAME)
     .insert({
       user_id: username,
-      channel_id: channel,
       guild_id: guild,
-      conversation_id: conversation_id,
+      conversation_id: conversationId,
       value,
     })
     .select()
@@ -398,123 +391,123 @@ async function getChannelMessageHistory(channelId, limit = 5) {
 
   if (error) {
     logger.info("Error fetching channel message:", error);
-    return null;
+    return [];
   }
 
   return data;
 }
 
-/**
- * Embeds a string using the Voyage AI API.
- * @param {string} string - The input string to embed.
- * @param {string} [model="voyage-large-2"] - The model to use for embedding (default: "voyage-large-2").
- * @returns {Promise<object>} - A promise that resolves to the response data from the API.
- */
-async function voyageEmbedding(string, model = "voyage-large-2") {
-  const response = await axios.post(
-    "https://api.voyageai.com/v1/embeddings",
-    {
-      input: string,
-      model,
-    },
-    {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.VOYAGE_API_KEY}`,
-      },
-    },
-  );
-  return response.data;
-}
+// /**
+//  * Embeds a string using the Voyage AI API.
+//  * @param {string} string - The input string to embed.
+//  * @param {string} [model="voyage-large-2"] - The model to use for embedding (default: "voyage-large-2").
+//  * @returns {Promise<object>} - A promise that resolves to the response data from the API.
+//  */
+// async function voyageEmbedding(string, model = "voyage-large-2") {
+//   const response = await axios.post(
+//     "https://api.voyageai.com/v1/embeddings",
+//     {
+//       input: string,
+//       model,
+//     },
+//     {
+//       headers: {
+//         "Content-Type": "application/json",
+//         Authorization: `Bearer ${process.env.VOYAGE_API_KEY}`,
+//       },
+//     },
+//   );
+//   return response.data;
+// }
 
-/**
- * Converts a string into three different embeddings using different models.
- * @param {string} string - The input string to convert into embeddings.
- * @returns {Promise<object>} - A promise that resolves to an object containing the three embeddings: embedding1, embedding2, and embedding3.
- * @throws {Error} If there is an error generating any of the embeddings.
- */
-async function stringToEmbedding(string) {
-  const openAiEmbeddingResponse = await openai.embeddings.create({
-    model: "text-embedding-ada-002",
-    input: string,
-  });
+// /**
+//  * Converts a string into three different embeddings using different models.
+//  * @param {string} string - The input string to convert into embeddings.
+//  * @returns {Promise<object>} - A promise that resolves to an object containing the three embeddings: embedding1, embedding2, and embedding3.
+//  * @throws {Error} If there is an error generating any of the embeddings.
+//  */
+// async function stringToEmbedding(string) {
+//   const openAiEmbeddingResponse = await openai.embeddings.create({
+//     model: "text-embedding-ada-002",
+//     input: string,
+//   });
+//
+//   const [{ embedding: embedding1 }] = openAiEmbeddingResponse.data.data;
+//   if (embedding1) logger.info(`Embedding 1 length: ${embedding1.length}`);
+//
+//   let embedding2 = null;
+//   try {
+//     if (process.env.COHERE_API_KEY) {
+//       const embed = await cohere.embed({
+//         texts: [string],
+//         model: "embed-english-v3.0",
+//         inputType: "search_document",
+//       });
+//       embedding2 = embed.embeddings ? embed.embeddings[0] : null;
+//       logger.info(`Embedding 2 length: ${embedding2.length}`);
+//     }
+//   } catch (error) {
+//     console.error("Error generating embedding2:", error);
+//   }
+//
+//   let embedding3 = null;
+//   try {
+//     if (process.env.VOYAGE_API_KEY) {
+//       const embed = await voyageEmbedding(string, "voyage-large-2");
+//       embedding3 = embed.embedding ? embed.embedding : null;
+//       logger.info(`Embedding 3 length: ${embedding3.length}`);
+//     }
+//   } catch (error) {
+//     console.error("Error generating embedding3:", error);
+//     return {
+//       embedding1: embedding1 || null,
+//       embedding2: embedding2 || null,
+//       embedding3: embedding3 || null,
+//     };
+//   }
+//
+//   const openAiLargeEmbeddingResponse = await openai.embeddings.create({
+//     model: "text-embedding-large",
+//     input: string,
+//   });
+//   const [{ embedding }] = openAiLargeEmbeddingResponse.data.data;
+//   const embedding4 = embedding || null;
+//   if (embedding4) logger.info(`Embedding 4 length: ${embedding4.length}`);
+//
+//   return {
+//     embedding1: embedding1 || null,
+//     embedding2: embedding2 || null,
+//     embedding3: embedding3 || null,
+//     embedding4: embedding4 || null,
+//   };
+// }
 
-  const [{ embedding: embedding1 }] = openAiEmbeddingResponse.data.data;
-  if (embedding1) logger.info(`Embedding 1 length: ${embedding1.length}`);
-
-  let embedding2 = null;
-  try {
-    if (process.env.COHERE_API_KEY) {
-      const embed = await cohere.embed({
-        texts: [string],
-        model: "embed-english-v3.0",
-        inputType: "search_document",
-      });
-      embedding2 = embed.embeddings ? embed.embeddings[0] : null;
-      logger.info(`Embedding 2 length: ${embedding2.length}`);
-    }
-  } catch (error) {
-    console.error("Error generating embedding2:", error);
-  }
-
-  let embedding3 = null;
-  try {
-    if (process.env.VOYAGE_API_KEY) {
-      const embed = await voyageEmbedding(string, "voyage-large-2");
-      embedding3 = embed.embedding ? embed.embedding : null;
-      logger.info(`Embedding 3 length: ${embedding3.length}`);
-    }
-  } catch (error) {
-    console.error("Error generating embedding3:", error);
-    return {
-      embedding1: embedding1 || null,
-      embedding2: embedding2 || null,
-      embedding3: embedding3 || null,
-    };
-  }
-
-  const openAiLargeEmbeddingResponse = await openai.embeddings.create({
-    model: "text-embedding-large",
-    input: string,
-  });
-  const [{ embedding }] = openAiLargeEmbeddingResponse.data.data;
-  const embedding4 = embedding || null;
-  if (embedding4) logger.info(`Embedding 4 length: ${embedding4.length}`);
-
-  return {
-    embedding1: embedding1 || null,
-    embedding2: embedding2 || null,
-    embedding3: embedding3 || null,
-    embedding4: embedding4 || null,
-  };
-}
-
-/**
- * Converts a memory into an embedding using OpenAI's text-embedding-ada-002 model.
- * @param {string} memory - The memory to convert into an embedding.
- * @returns {Promise<number[]>} - The embedding representing the memory.
- */
-async function memoryToEmbedding(memory) {
-  if (!memory) {
-    return logger.info("No memory provided to memoryToEmbedding");
-  }
-
-  // const embeddingResponse = await openai.embeddings.create({
-  //   model: "text-embedding-ada-002",
-  //   input: memory,
-  // });
-
-  // const [{ embedding }] = embeddingResponse.data.data;
-
-  const {
-    embedding1: embedding,
-    embedding2,
-    embedding3,
-    embedding4,
-  } = await stringToEmbedding(memory);
-
-  return { embedding, embedding2, embedding3, embedding4 };
-}
+// /**
+//  * Converts a memory into an embedding using OpenAI's text-embedding-ada-002 model.
+//  * @param {string} memory - The memory to convert into an embedding.
+//  * @returns {Promise<number[]>} - The embedding representing the memory.
+//  */
+// async function memoryToEmbedding(memory) {
+//   if (!memory) {
+//     return logger.info("No memory provided to memoryToEmbedding");
+//   }
+//
+//   // const embeddingResponse = await openai.embeddings.create({
+//   //   model: "text-embedding-ada-002",
+//   //   input: memory,
+//   // });
+//
+//   // const [{ embedding }] = embeddingResponse.data.data;
+//
+//   const {
+//     embedding1: embedding,
+//     embedding2,
+//     embedding3,
+//     embedding4,
+//   } = await stringToEmbedding(memory);
+//
+//   return { embedding, embedding2, embedding3, embedding4 };
+// }
 
 /**
  * Retrieves relevant memories based on a query string.
@@ -526,7 +519,8 @@ async function getRelevantMemories(queryString, limit = 5) {
   const { supabase } = require("./supabaseclient.js");
   // make sure queryString is a string
   if (typeof queryString !== "string") {
-    return logger.info("No query string provided to getRelevantMemories");
+    logger.info("No query string provided to getRelevantMemories");
+    return []
   }
   // queryStrings look like: <@1086489885269037128> What you do remember about to-do lists?
   // we need to clean the query string so that it's not too long
@@ -572,27 +566,27 @@ async function getRelevantMemories(queryString, limit = 5) {
   return data;
 }
 
-/**
- * A plain old string search across memories
- * @param {string} queryString - The query string to search for relevant memories.
- */
-async function getMemoriesByString(queryString) {
-  const { supabase } = require("./supabaseclient.js");
-  if (typeof queryString !== "string") {
-    return logger.info("No query string provided to getRelevantMemories");
-  }
-  const { data, error } = await supabase
-    .from(MEMORIES_TABLE_NAME)
-    .select("*")
-    .ilike("value", `%${queryString}%`);
-
-  if (error) {
-    logger.error(`Error fetching relevant user memory: ${error.message}`);
-    return null;
-  }
-
-  return data;
-}
+// /**
+//  * A plain old string search across memories
+//  * @param {string} queryString - The query string to search for relevant memories.
+//  */
+// async function getMemoriesByString(queryString) {
+//   const { supabase } = require("./supabaseclient.js");
+//   if (typeof queryString !== "string") {
+//     return logger.info("No query string provided to getRelevantMemories");
+//   }
+//   const { data, error } = await supabase
+//     .from(MEMORIES_TABLE_NAME)
+//     .select("*")
+//     .ilike("value", `%${queryString}%`);
+//
+//   if (error) {
+//     logger.error(`Error fetching relevant user memory: ${error.message}`);
+//     return null;
+//   }
+//
+//   return data;
+// }
 
 module.exports = {
   getUserMemory,
@@ -604,8 +598,5 @@ module.exports = {
   getChannelMessageHistory,
   getResourceMemories,
   hasMemoryOfResource,
-  hasRecentMemoryOfResource,
-  getMemoriesBetweenDates,
-  getMemoriesByString,
   deleteMemoriesOfResource
 };
