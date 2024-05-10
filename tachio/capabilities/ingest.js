@@ -3,7 +3,7 @@ const cheerio = require("cheerio");
 const dotenv = require("dotenv");
 dotenv.config();
 const { webPageToText, webpageToHTML } = require("./web.js"); // Adjust the path as necessary
-const { destructureArgs, createChatCompletion, getPromptsFromSupabase } = require("../helpers");
+const { destructureArgs, createChatCompletion, getPromptsFromSupabase, getConfigFromSupabase } = require("../helpers");
 const { storeUserMemory, hasMemoryOfResource, deleteMemoriesOfResource, getResourceMemories } = require("../src/remember");
 const logger = require("../src/logger.js")("ingest-capability");
 const { convert } = require("html-to-text");
@@ -30,14 +30,14 @@ async function handleCapabilityMethod(method, args) {
  * @async
  * @function deepDocumentIngest
  * @param {string} url - The arguments object that contains the URL or the text of the document to be ingested
- * @returns {string} - The meta-summary of the document
+ * @returns {Promise<string>} - The meta-summary of the document
  *
  */
 async function deepDocumentIngest(url) {
   // For testing:
   // node capability-player.js --runCapability="ingest:deepDocumentIngest(https://docs.pdw.co/tachio-overview)"
-
   const { PROMPT_DEEP_INGEST } = await getPromptsFromSupabase();
+  const { TOKEN_LIMIT } = await getConfigFromSupabase();
 
   // Generate a hash for the URL to use as a cache identifier
   const urlHash = crypto.createHash("md5").update(url).digest("hex");
@@ -55,10 +55,9 @@ async function deepDocumentIngest(url) {
 
   try {
     const { html } = await webpageToHTML(url);
-    const document = convert(html, {
+    const document = convert(html.substring(0, TOKEN_LIMIT), {
       wordwrap: 130,
     });
-
     // check if we have memories about this URL *already*
     const hasMemory = await hasMemoryOfResource(
       url
@@ -139,7 +138,8 @@ Make separate sections of facts for each section of the document, using \`\`\`--
 
     return `Document ingested successfully. ${facts.length} groups of facts were extracted from the ${url}.`;
   } catch (error) {
-    throw new Error(`Error occurred while making external request: ${error}`);
+    logger.error(`Error occurred while making external request: ${error}`);
+    throw error
   }
 }
 module.exports = {

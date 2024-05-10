@@ -131,14 +131,15 @@ async function processMissiveRequest(body, query) {
   let projectId = (data.length > 0) ? `Project ID: ${data[0].id}. \n` : ''
 
   const task = body.comment.task
-  let todoPrompt = ''
+  // Used for directing the LLM based on specific context:
+  // - Record a new todo if task is presented
+  // - Use ingest capability if the comment is a document
+  let contextPrompt = ''
   if (task) {
-    todoPrompt = 'I want to record this as a todo (no further action needed beyond that). '
-    if (task.completed_at) {
-      todoPrompt = todoPrompt.concat(`This todo is already completed at ${new Date(task.completed_at * 1000)}. \n`)
-    } else {
-      todoPrompt = todoPrompt.concat(`This todo is not completed yet. \n`)
-    }
+    contextPrompt = 'I want to record this as a todo (no further action needed beyond that). '
+      + (task.completed_at ? `This todo is already completed at ${new Date(task.completed_at * 1000)}. \n` : `This todo is not completed yet. \n`)
+  } else if (body.comment.attachment?.media_type === 'text')  {
+    contextPrompt = `ingest:deepDocumentIngest(${body.comment.attachment.url})`
   }
   // Process the webhook payload using the processWebhookPayload function
   const simplifiedPayload = processWebhookPayload(body)
@@ -146,6 +147,7 @@ async function processMissiveRequest(body, query) {
   // Check if there are any attachments in the comment
   const attachment = body.comment.attachment
 
+  // TODO: Add a check for the attachment type
   if (attachment) {
     // Extract the resource ID from the attachment
     const resourceId = attachment.id
@@ -244,7 +246,7 @@ async function processMissiveRequest(body, query) {
       ...formattedMessages,
       {
         role: 'user',
-        content: `${projectId} <${username}> \n ${todoPrompt} ${simplifiedPayload.userMessage}`
+        content: `${projectId} <${username}> \n ${contextPrompt} ${simplifiedPayload.userMessage}`
       }
     ]
 
@@ -256,6 +258,7 @@ async function processMissiveRequest(body, query) {
     })
   } catch (error) {
     // Log any errors that occur during message chain processing
+
     logger.error(`Error processing message chain: ${error.message}, ${error.stack}`)
   }
 
