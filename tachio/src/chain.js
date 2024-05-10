@@ -142,7 +142,7 @@ module.exports = (async () => {
           `${chainId} - Capability Call ${capabilityCallIndex} completed`,
         );
       } catch (error) {
-        logger.info(
+        logger.error(
           `${chainId} - Process message chain: error processing message: ${error} ${error.stack}`,
         );
         messages.push({
@@ -425,9 +425,8 @@ module.exports = (async () => {
       .reverse()
       .find((m) => m.role === "user");
     const prompt = lastUserMessage.content;
-
     const storedMessageId = await storeUserMessage(
-      { username, channel, guild },
+      { username, conversationId: channel, guild },
       prompt,
     );
 
@@ -453,7 +452,7 @@ module.exports = (async () => {
     void logInteraction(
       prompt,
       aiResponse || '',
-      { username, channel, guild, related_message_id: storedMessageId },
+      { username, channel, guild, relatedMessageId: storedMessageId },
       messages,
       !!capabilityName,
       capabilityName || "",
