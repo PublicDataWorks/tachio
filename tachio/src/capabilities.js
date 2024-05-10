@@ -30,7 +30,7 @@ const capabilities = JSON.parse(capabilityFile);
       }:${method.name}(${method.parameters.map((d) => d.name).join(",")})`;
     });
 
-    const capabilityInfo = `\n## ${capability.slug}: ${capability.description} 
+    const capabilityInfo = `\n## ${capability.slug}: ${capability.description}
 ${methods}`;
 
     prepareCapabilities.push(capabilityInfo);
@@ -70,7 +70,7 @@ async function callCapabilityMethod(capabilitySlug, methodName, args, messages) 
     // Return a success response
     return { success: true, data: capabilityResponse };
   } catch (error) {
-    logger.info(`Error running ${capabilitySlug}.${methodName}: ${error}`);
+    logger.info(`Error running ${capabilitySlug}.${methodName}: ${error}, ${error.stack}`);
     // Return an error response
     return { success: false, error: error.message };
   }

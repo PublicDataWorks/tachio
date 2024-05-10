@@ -325,7 +325,7 @@ async function deleteMemoriesOfResource(resourceId) {
     return `Error deleting memories of resource: ${error.message}`;
   }
 
-  return `Deleted ${data.length} memories of resource ${resourceId}`;
+  return `Deleted ${data?.length} memories of resource ${resourceId}`;
 }
 
 /**
