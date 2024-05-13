@@ -13,15 +13,13 @@ const { processLinearRequest } = require('./src/linear')
 const { processGithubRequest, verifyGithubSignature } = require('./src/github')
 const { anthropicThinkingRegex } = require('./helpers')
 const { PROJECT_TABLE_NAME } = require('./capabilities/manageprojects')
-const { processDailyReport } = require('./src/missive')
+const { processDailyReport, sendMissiveResponse } = require('./src/missive')
 const { supabase } = require('./src/supabaseclient')
 require('dotenv').config()
 
 const apiFront = 'https://public.missiveapp.com/v1'
 const apiKey = process.env.MISSIVE_API_KEY
 let port = process.env.EXPRESS_PORT
-const BOT_NAME = process.env.BOT_NAME
-
 
 app.use(
   express.json({
@@ -261,53 +259,8 @@ async function processMissiveRequest(body, query) {
 
     logger.error(`Error processing message chain: ${error.message}, ${error.stack}`)
   }
-
-  // Extract the last message from the processed message chain
   const lastMessage = processedMessage[processedMessage.length - 1]
-  // Separate thinking part out of result part of Claude's message
-  const messageMatches = lastMessage.content.match(anthropicThinkingRegex)
-  let attachments
-  if (messageMatches && messageMatches.length > 2) {
-    // Thinking part is always presented
-    attachments = [
-      {
-        'text': messageMatches[1].trim(),
-        'timestamp': Math.floor(Date.now() / 1000)
-      }
-    ]
-    if (messageMatches[2].trim()) {
-      attachments.push({
-        'color': '#2266ED',
-        'text': messageMatches[2].trim(),
-        'timestamp': Math.floor(Date.now() / 1000) + 1
-      })
-    }
-  }
-  const token = (query?.token?.length === 36) ? query.token : apiKey
-  // POST the response back to the Missive API using the conversation ID
-  const responsePost = await fetch(`${apiFront}/posts/`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`
-    },
-    body: JSON.stringify({
-      posts: {
-        conversation: conversationId,
-        notification: {
-          title: BOT_NAME,
-          body: ''
-        },
-        username: BOT_NAME,
-        attachments,
-        markdown: attachments ? undefined : lastMessage.content
-      }
-    })
-  })
-
-  // Log the response status and body from the Missive API
-  logger.info(`Response post status: ${responsePost.status}`)
-  logger.info(`Response post body: ${JSON.stringify(responsePost)}`)
+  await sendMissiveResponse(lastMessage, query, conversationId)
 }
 
 app.post('/api/missive-reply', async (req, res) => {
