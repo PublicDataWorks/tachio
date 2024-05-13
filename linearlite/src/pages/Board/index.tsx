@@ -3,7 +3,6 @@ import IssueBoard from './IssueBoard'
 import { Issues, useElectric } from '../../electric'
 import { useLiveQuery } from 'electric-sql/react'
 import { useFilterState, filterStateToWhere } from '../../utils/filterState'
-import { useSearchParams } from 'react-router-dom'
 
 function Board() {
   const [filterState] = useFilterState()
