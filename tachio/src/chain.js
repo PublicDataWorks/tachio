@@ -56,14 +56,12 @@ module.exports = (async () => {
         return messages;
       }
 
-      const processedMessages = await processMessageChainRecursively(
+      return await processMessageChainRecursively(
         messages,
         { username, channel, guild, related_message_id },
         capabilityCallCount,
         chainId,
       );
-
-      return processedMessages;
     } catch (error) {
       return await handleMessageChainError(
         messages,
