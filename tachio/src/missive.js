@@ -1,8 +1,10 @@
-const { JSDOM } = require("jsdom");
+const { JSDOM } = require('jsdom')
 const { supabase } = require('./supabaseclient')
-const DAILY_REPORT_REGEX = /Hi.*What has the team done since the last call\/email regarding this project\??(.*)What will the team do between now and the next call\/email regarding this project\??(.*)What impedes the team from performing their work as effectively as possible\??(.*)How much time have we spent today\??(.*)How much time have we spent this week.*How much time have we spent this month.*Our team today:?(.*)Regards/;
-const DESIGN_REGEX = /\[Design].*?billable (?:hour|day)\(s\)/;
-const DONE_TODAY_DESIGN_REGEX = /(?:\[?Design]?|\[?Designer]?).*/;
+const { anthropicThinkingRegex, notificationRegex } = require('../helpers')
+const logger = require('./logger.js')('missive')
+const DAILY_REPORT_REGEX = /Hi.*What has the team done since the last call\/email regarding this project\??(.*)What will the team do between now and the next call\/email regarding this project\??(.*)What impedes the team from performing their work as effectively as possible\??(.*)How much time have we spent today\??(.*)How much time have we spent this week.*How much time have we spent this month.*Our team today:?(.*)Regards/
+const DESIGN_REGEX = /\[Design].*?billable (?:hour|day)\(s\)/
+const DONE_TODAY_DESIGN_REGEX = /(?:\[?Design]?|\[?Designer]?).*/
 /*
 
 You must transmit your Missive user token as a Bearer token in the Authorization HTTP header.
@@ -112,38 +114,39 @@ There is no use to the organization param when passing a shared_label or team_ p
 */
 
 // require dotenv
-require("dotenv").config();
-const apiFront = "https://public.missiveapp.com/v1";
-const apiKey = process.env.MISSIVE_API_KEY;
+require('dotenv').config()
+const apiFront = 'https://public.missiveapp.com/v1'
+const apiKey = process.env.MISSIVE_API_KEY
+const BOT_NAME = process.env.BOT_NAME
 
 async function listConversations() {
-  let url = `${apiFront}/conversations`;
+  let url = `${apiFront}/conversations`
 
   // add params
   const params = {
     limit: 50,
-    all: true,
-  };
+    all: true
+  }
 
-  url += "?";
+  url += '?'
   for (let key in params) {
-    url += `${key}=${params[key]}&`;
+    url += `${key}=${params[key]}&`
   }
 
   const options = {
-    method: "GET",
+    method: 'GET',
 
     headers: {
       // "Content-Type": "application/json",
-      Host: "public.missiveapp.com",
-      Authorization: `Bearer ${apiKey}`,
-    },
-  };
+      Host: 'public.missiveapp.com',
+      Authorization: `Bearer ${apiKey}`
+    }
+  }
 
-  const response = await fetch(url, options);
-  const data = await response.json();
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  return data;
+  const response = await fetch(url, options)
+  const data = await response.json()
+  await new Promise((resolve) => setTimeout(resolve, 1000))
+  return data
 }
 
 /*
@@ -153,21 +156,21 @@ Fetch messages matching an email Message-ID.
 */
 
 async function listConversationMessages(emailMessageId) {
-  let url = `${apiFront}/conversations/${emailMessageId}/messages`;
+  let url = `${apiFront}/conversations/${emailMessageId}/messages`
 
   const options = {
-    method: "GET",
+    method: 'GET',
     headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-  };
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`
+    }
+  }
 
-  const response = await fetch(url, options);
-  const data = await response.json();
+  const response = await fetch(url, options)
+  const data = await response.json()
   // add a 1ms delay to avoid rate limiting
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  return data;
+  await new Promise((resolve) => setTimeout(resolve, 1000))
+  return data
 }
 
 // const messages = listConversationMessages(conversationId).then((data) => {
@@ -291,16 +294,16 @@ Fetch a specific message headers, body and attachments using the message id.
 */
 
 async function getMessage(messageId) {
-  const url = `${apiFront}/messages/${messageId}`;
+  const url = `${apiFront}/messages/${messageId}`
   const options = {
-    method: "GET",
+    method: 'GET',
     headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-  };
-  const response = await fetch(url, options);
-  return response.json();
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`
+    }
+  }
+  const response = await fetch(url, options)
+  return response.json()
 }
 
 /*
@@ -321,43 +324,43 @@ List shared labels in organizations the authenticated user is part of.
 }
 */
 async function listSharedLabels() {
-  const url = `${apiFront}/shared_labels`;
+  const url = `${apiFront}/shared_labels`
   const options = {
-    method: "GET",
+    method: 'GET',
     headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-  };
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`
+    }
+  }
 
-  const response = await fetch(url, options);
-  return response.json();
+  const response = await fetch(url, options)
+  return response.json()
 }
 
 async function createSharedLabel({ name, organization, parent, shareWithOrganization }) {
-  const url = `${apiFront}/shared_labels`;
+  const url = `${apiFront}/shared_labels`
   const options = {
-    method: "POST",
+    method: 'POST',
     headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`
     },
     body: JSON.stringify({
       shared_labels: [{
         name,
         organization,
         parent,
-        share_with_organization: shareWithOrganization,
-      }],
-    }),
-  };
+        share_with_organization: shareWithOrganization
+      }]
+    })
+  }
 
-  const response = await fetch(url, options);
+  const response = await fetch(url, options)
   if (!response.ok) {
-    const errorBody = await response.text();
-    throw new Error(`Error creating shared label. HTTP status: ${response.status}, status text: ${response.statusText}, body: ${errorBody}`);
+    const errorBody = await response.text()
+    throw new Error(`Error creating shared label. HTTP status: ${response.status}, status text: ${response.statusText}, body: ${errorBody}`)
   } else {
-    return response.json();
+    return response.json()
   }
 }
 
@@ -374,12 +377,12 @@ async function createPost({
                             markdown,
                             conversation
                           }) {
-  const url = `${apiFront}/posts`;
+  const url = `${apiFront}/posts`
   const options = {
-    method: "POST",
+    method: 'POST',
     headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`
     },
     body: JSON.stringify({
       posts: {
@@ -393,17 +396,17 @@ async function createPost({
         conversation,
         notification: {
           title: notificationTitle,
-          body: notificationBody,
-        },
-      },
-    }),
+          body: notificationBody
+        }
+      }
+    })
   }
-  const response = await fetch(url, options);
+  const response = await fetch(url, options)
   if (!response.ok) {
-    const errorBody = await response.text();
-    throw new Error(`Error creating post. HTTP status: ${response.status}, status text: ${response.statusText}, body: ${errorBody}`);
+    const errorBody = await response.text()
+    throw new Error(`Error creating post. HTTP status: ${response.status}, status text: ${response.statusText}, body: ${errorBody}`)
   } else {
-    return response.json();
+    return response.json()
   }
 }
 
@@ -428,53 +431,53 @@ Response example:
 */
 
 async function listUsers() {
-  const url = `${apiFront}/users`;
+  const url = `${apiFront}/users`
   const options = {
-    method: "GET",
+    method: 'GET',
     headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-  };
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`
+    }
+  }
 
-  const response = await fetch(url, options);
-  return response.json();
+  const response = await fetch(url, options)
+  return response.json()
 }
 
 async function processDailyReport(payload) {
-  if (!payload.rule.description.toLowerCase().includes("daily report")) return
+  if (!payload.rule.description.toLowerCase().includes('daily report')) return
 
-  const { id: messageId, subject } = payload.message;
+  const { id: messageId, subject } = payload.message
   const message = await getMessage(messageId)
-  const dom = new JSDOM(message.messages.body);
-  const listItems = dom.window.document.querySelectorAll('li');
+  const dom = new JSDOM(message.messages.body)
+  const listItems = dom.window.document.querySelectorAll('li')
   // Append a space after each list item
   listItems.forEach(li => {
-    const space = dom.window.document.createTextNode('. ');
-    li.appendChild(space);
-  });
-  const text = dom.window.document.body.textContent;
-  const match = text.match(DAILY_REPORT_REGEX);
+    const space = dom.window.document.createTextNode('. ')
+    li.appendChild(space)
+  })
+  const text = dom.window.document.body.textContent
+  const match = text.match(DAILY_REPORT_REGEX)
 
-  const doneToday = match ? match[1].trim() : '';
-  const designerDoneTodayMatch = doneToday.match(DONE_TODAY_DESIGN_REGEX);
-  const designerDoneToday = designerDoneTodayMatch ? designerDoneTodayMatch[0] : '';
-  const otherDoneToday = doneToday.replace(designerDoneToday, '');
+  const doneToday = match ? match[1].trim() : ''
+  const designerDoneTodayMatch = doneToday.match(DONE_TODAY_DESIGN_REGEX)
+  const designerDoneToday = designerDoneTodayMatch ? designerDoneTodayMatch[0] : ''
+  const otherDoneToday = doneToday.replace(designerDoneToday, '')
 
-  const willDo = match ? match[2].trim() : '';
-  const designerWillDoMatch = willDo.match(DONE_TODAY_DESIGN_REGEX);
-  const designerWillDo = designerWillDoMatch ? designerWillDoMatch[0] : '';
-  const otherWillDo = willDo.replace(designerWillDo, '');
+  const willDo = match ? match[2].trim() : ''
+  const designerWillDoMatch = willDo.match(DONE_TODAY_DESIGN_REGEX)
+  const designerWillDo = designerWillDoMatch ? designerWillDoMatch[0] : ''
+  const otherWillDo = willDo.replace(designerWillDo, '')
 
-  const impedes = match ? match[3].trim() : '';
-  const teamToday = match ? match[5].trim() : '';
+  const impedes = match ? match[3].trim() : ''
+  const teamToday = match ? match[5].trim() : ''
 
-  const timeSpentToday = match ? match[4].trim() : '';
+  const timeSpentToday = match ? match[4].trim() : ''
   const designMatch = timeSpentToday.match(DESIGN_REGEX)
-  const designerTimeSpentToday = designMatch ? designMatch[0] : '';
+  const designerTimeSpentToday = designMatch ? designMatch[0] : ''
   const developerTimeSpentToday = timeSpentToday.replace(designerTimeSpentToday, '')
 
-  const { error } = await supabase.from("daily_reports").insert([
+  const { error } = await supabase.from('daily_reports').insert([
     {
       subject,
       developer_done_today: otherDoneToday,
@@ -486,11 +489,71 @@ async function processDailyReport(payload) {
       designer_time_spent_today: designerTimeSpentToday,
       team_today: teamToday,
       content: text
+    }
+  ])
+  if (error) throw new Error(error.message)
+}
+
+async function sendMissiveResponse(lastMessage, requestQuery, conversationId) {
+  // Separate thinking part out of result part of Claude's message
+  const messageMatches = lastMessage.content.match(anthropicThinkingRegex)
+  let notification
+  const attachments = []
+  if (messageMatches && messageMatches.length > 2) {
+    // Thinking part is always presented
+    attachments.push({
+      'text': messageMatches[1].trim(),
+      'timestamp': Math.floor(Date.now() / 1000)
+    })
+    let resultPart = messageMatches[2]
+    const notificationMatches = resultPart.match(notificationRegex)
+    if (notificationMatches) {
+      resultPart = resultPart.replace(notificationMatches[0], '').trim()
+      try {
+        notification = JSON.parse(notificationMatches[1])
+      } catch (error) {
+        logger.error('Error parsing notification:', error, notificationMatches[1])
+        notification = {
+          title: BOT_NAME,
+          body: ''
+        }
+      }
+    }
+    // Add result part
+    resultPart.trim().split('---')
+      .filter(paragraph => paragraph.trim())
+      .forEach((paragraph, index) => {
+        attachments.push({
+          'color': '#2266ED',
+          'text': paragraph.trim(),
+          'timestamp': Math.floor(Date.now() / 1000) + 1 + index // Add index to avoid duplicate timestamps
+        })
+      })
+  }
+  const token = (requestQuery?.token?.length === 36) ? requestQuery.token : apiKey
+  // POST the response back to the Missive API using the conversation ID
+  const responsePost = await fetch(`${apiFront}/posts/`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`
     },
-  ]);
-  if (error) throw new Error(error.message);
+    body: JSON.stringify({
+      posts: {
+        conversation: conversationId,
+        notification,
+        username: BOT_NAME,
+        attachments,
+        markdown: attachments ? undefined : lastMessage.content
+      }
+    })
+  })
+
+  // Log the response status and body from the Missive API
+  logger.info(`Response post status: ${responsePost.status}`)
+  logger.info(`Response post body: ${JSON.stringify(responsePost)}`)
 }
 
 module.exports = {
-  createSharedLabel, createPost, processDailyReport
-};
+  createSharedLabel, createPost, processDailyReport, sendMissiveResponse
+}

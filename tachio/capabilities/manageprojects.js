@@ -36,21 +36,21 @@ async function createProject({
                                endDate,
                                linearTeamId
                              }) {
-  if (!orgName || !projectName) return 'Missing required fields'
+  if (!orgName || !projectName) throw new Error('Missing required fields')
 
   const { data: [org], error } = await supabase
     .from(ORG_TABLE_NAME)
     .select('id, missive_label_id')
     .match({ name: orgName })
   if (error) throw new Error(error.message)
-  if (!org) return `Org not found: ${orgName}`
+  if (!org) throw new Error(`Org not found: ${orgName}`)
 
   const { data: existingProject } = await supabase
     .from(PROJECT_TABLE_NAME)
     .select('id')
     .or(`name.eq.${projectName},shortname.eq.${shortname}`)
   // ElectricSQL does not support unique constraints, so we need to do this manually
-  if (existingProject.length > 0) return 'Project already exists'
+  if (existingProject.length > 0) throw new Error('Project already exists')
 
   const newLabel = await createSharedLabel({
     name: projectName,
@@ -115,28 +115,28 @@ async function updateProject({
                                newStartDate,
                                newEndDate
                              }) {
-  if (!newProjectName && !newAliases && !newStatus && !newStartDate && !newEndDate) return 'No changes made'
+  if (!newProjectName && !newAliases && !newStatus && !newStartDate && !newEndDate) throw new Error('No changes made')
 
   const { data: existingProject } = await supabase
     .from(PROJECT_TABLE_NAME)
     .select('id')
     .eq('name', newProjectName)
   // ElectricSQL does not support unique constraints, so we need to do this manually
-  if (existingProject.length > 0) return 'Project already exists'
+  if (existingProject.length > 0) throw new Error('Project already exists')
 
   const { data: [projectBefore], error } = await supabase
     .from(PROJECT_TABLE_NAME)
     .select('org_id, aliases, status, start_date, end_date')
     .match({ name: projectName })
   if (error) throw new Error(error.message)
-  if (!projectBefore || projectBefore.length === 0) return 'Project not found'
+  if (!projectBefore || projectBefore.length === 0) throw new Error('Project not found')
   if (
     (!newProjectName || newProjectName === projectName) &&
     (!newAliases || JSON.stringify(newAliases) === JSON.stringify(projectBefore.aliases)) &&
     (!newStatus || newStatus === projectBefore.status) &&
     (!newStartDate || newStartDate === projectBefore.start_date) &&
     (!newEndDate || newEndDate === projectBefore.end_date)
-  ) return 'No changes made'
+  ) throw new Error('No changes made')
 
   const { error: errUpdateProject } = await supabase
     .from(PROJECT_TABLE_NAME)
