@@ -45,16 +45,13 @@ const TODO_TABLE_NAME = 'issues'
  *
  */
 async function getPromptsFromSupabase() {
-  const { data, error } = await supabase.from("prompts").select()
-  const promptArray = data;
+  const { data: promptArray, error } = await supabase.from("prompts").select()
   const promptKeys = promptArray.map((prompt) => prompt.prompt_name);
   const promptValues = promptArray.map((prompt) => prompt.prompt_text);
   // return an object with all the keys and values
-  const prompts = Object.fromEntries(
+  return Object.fromEntries(
     promptKeys.map((_, i) => [promptKeys[i], promptValues[i]])
   );
-  // logger.info(`Prompts: ${JSON.stringify(prompts, null, 2)}`);
-  return prompts;
 }
 
 /**

@@ -16,7 +16,7 @@ const ORG_EMAIL_TABLE_NAME = 'org_secondary_emails'
  * @param {string} summary - The summary of the organization. It's optional.
  * @param {string} note - The note for the organization.
  * @param {string} firstContact - The date of the first contact with the organization. If not provided, the current date is used.
- * @param {string} primaryEmailAddress - The primary email address of the organization.
+ * @param {string} primaryEmailAddress - The primary email address of the organization, it's optional.
  * @param {Array} secondaryEmailAddresses - The email addresses of the organization.
  * @param {string} linearId - The Linear ID of the organization, it is optional.
  * @param {string} githubId - The GitHub ID of the organization, it is optional.
@@ -84,14 +84,16 @@ async function createOrg({
       .insert(newEmailAddresses)
       .select('id, email_address')
     if (error) throw new Error(error.message)
-    addedEmails = [...existingEmails, ...data]
+    addedEmails.push(...existingEmails, ...data)
   }
-
-  let primaryEmailId = addedEmails.find(email => email.email_address === primaryEmailAddress)?.id
-  if (!primaryEmailId) {
-    // If the primary email address is not in the newly added emails, it must already exist
-    const { data: primaryEmail } = await supabase.from(EMAIL_TABLE_NAME).select('id').eq('email_address', primaryEmailAddress)
-    primaryEmailId = primaryEmail[0].id
+  let primaryEmailId = undefined
+  if (primaryEmailAddress) {
+    primaryEmailId = addedEmails.find(email => email.email_address === primaryEmailAddress)?.id
+    if (!primaryEmailId) {
+      // If the primary email address is not in the newly added emails, it must already exist
+      const { data: primaryEmail } = await supabase.from(EMAIL_TABLE_NAME).select('id').eq('email_address', primaryEmailAddress)
+      primaryEmailId = primaryEmail[0].id
+    }
   }
   const { data, error } = await supabase.from(ORG_TABLE_NAME).insert([
     {

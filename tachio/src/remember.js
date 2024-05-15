@@ -387,7 +387,7 @@ async function getChannelMessageHistory(channelId, limit = 5) {
     .select("*")
     .limit(limit)
     .order("created_at", { ascending: false })
-    .eq("channel_id", channelId);
+    .eq("conversation_id", channelId);
 
   if (error) {
     logger.info("Error fetching channel message:", error);
