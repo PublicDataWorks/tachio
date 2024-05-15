@@ -32,6 +32,7 @@ const anthropic = new Anthropic();
 const capabilityRegex = /(\w+):(\w+)\(([^]*?)\)/; // captures newlines in the third argument
 const toolUseCapabilityRegex = /(toolu_[a-zA-Z0-9_-]{1,64})-(\w+)-(\w+)\(([^]*?)\)/;
 const anthropicThinkingRegex = /<thinking>(.*?)<\/thinking>\s*(?:<result>)?(.*?)(?:(?=<\/result>)|$)/s;
+const notificationRegex = /<notification>(.*?)<\/notification>/s;
 
 const TODO_TABLE_NAME = 'issues'
 
@@ -748,8 +749,7 @@ function loadCapabilityManifest() {
   const manifestPath = "./capabilities/_manifest.json";
   try {
     const manifestData = fs.readFileSync(manifestPath, "utf8");
-    const manifest = JSON.parse(manifestData);
-    return manifest;
+    return JSON.parse(manifestData);
   } catch (error) {
     logger.info("Error loading capability manifest:", error);
     return null;
@@ -1449,5 +1449,6 @@ module.exports = {
   capabilityRegex,
   toolUseCapabilityRegex,
   anthropicThinkingRegex,
+  notificationRegex,
   TODO_TABLE_NAME
 };

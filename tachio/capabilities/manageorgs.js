@@ -11,15 +11,15 @@ const ORG_EMAIL_TABLE_NAME = 'org_secondary_emails'
  * Creates a new organization, label and post
  *
  * @param {string} name - The name of the organization.
- * @param {string} shortname - The short name of the organization. If not provided, the name is used and spaces are replaced with hyphens.
- * @param {string} aliases - a string in JSON format of an array that represents a list of aliases for an organization.
- * @param {string} summary - The summary of the organization, it's optional.
+ * @param {string} shortname - The short name of the organization. If not provided, the name is used and spaces are replaced with hyphens. It's optional.
+ * @param {string} aliases - a string in JSON format of an array that represents a list of aliases for an organization. It's optional.
+ * @param {string} summary - The summary of the organization. It's optional.
  * @param {string} note - The note for the organization.
  * @param {string} firstContact - The date of the first contact with the organization. If not provided, the current date is used.
  * @param {string} primaryEmailAddress - The primary email address of the organization, it's optional.
  * @param {Array} secondaryEmailAddresses - The email addresses of the organization.
- * @param {string} linearId - The Linear ID of the organization.
- * @param {string} githubId - The GitHub ID of the organization.
+ * @param {string} linearId - The Linear ID of the organization, it is optional.
+ * @param {string} githubId - The GitHub ID of the organization, it is optional.
  * @param {string} pivotalTrackerId - The Pivotal Tracker ID of the organization.
  *
  * @returns {Promise<string>} A promise that resolves to a string message indicating the result of the operation.
@@ -140,7 +140,7 @@ async function createOrg({
  * @throws {Error} If there is an error with the Supabase operations.
  */
 async function updateOrg({ name, newName, newAliases, newFirstContact }) {
-  if (!newName && !newAliases && !newFirstContact) return 'No changes made'
+  if (!newName && !newAliases && !newFirstContact) throw new Error('No changes made')
 
   const { data: [orgBefore], error: errorGetOrg } = await supabase
     .from(ORG_TABLE_NAME)
@@ -151,7 +151,7 @@ async function updateOrg({ name, newName, newAliases, newFirstContact }) {
     (!newName || newName === name) &&
     (!newAliases || JSON.stringify(newAliases) === JSON.stringify(orgBefore.aliases)) &&
     (!newFirstContact || newFirstContact === orgBefore.first_contact)
-  ) return 'No changes made'
+  ) throw new Error('No changes made')
 
   const { error } = await supabase
     .from(ORG_TABLE_NAME)
