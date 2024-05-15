@@ -15,6 +15,7 @@ const { anthropicThinkingRegex } = require('./helpers')
 const { PROJECT_TABLE_NAME } = require('./capabilities/manageprojects')
 const { processDailyReport, sendMissiveResponse } = require('./src/missive')
 const { supabase } = require('./src/supabaseclient')
+const { makeBiweeklyProjectBriefing } = require('./capabilities/briefing')
 require('dotenv').config()
 
 const apiFront = 'https://public.missiveapp.com/v1'
@@ -121,13 +122,13 @@ async function processMissiveRequest(body, query) {
 
   // Extract the conversation ID from the request body
   const conversationId = body.conversation.id
+  const sharedLabelIDs = body.conversation.shared_labels?.map(label => label.id)
   const { data } = await supabase
     .from(PROJECT_TABLE_NAME)
     .select('id')
-    .in('missive_label_id', body.conversation.shared_labels)
+    .in('missive_label_id', sharedLabelIDs)
     .limit(1)
-  let projectId = (data.length > 0) ? `Project ID: ${data[0].id}. \n` : ''
-
+  let projectId = (data?.length > 0) ? `Project ID: ${data[0].id}. \n` : ''
   const task = body.comment.task
   // Used for directing the LLM based on specific context:
   // - Record a new todo if task is presented
@@ -364,7 +365,7 @@ app.post('/api/linear', async (req, res) => {
     return
   }
   processLinearRequest(req.body).then(() => logger.info('Linear webhook processed'))
-    .catch((error) => logger.error(`Error processing Linear webhook: ${error.message}`))
+    .catch((error) => logger.error(`Error processing Linear webhook: ${error.message} ${error.stack}`))
   logger.info(`Sending 200 response`)
   res.status(200).end()
 })
@@ -376,7 +377,7 @@ app.post('/api/github', async (req, res) => {
     return
   }
   processGithubRequest(req).then(() => logger.info('Github webhook processed'))
-    .catch((error) => logger.error(`Error processing Github webhook: ${error.message}`))
+    .catch((error) => logger.error(`Error processing Github webhook: ${error.message} ${error.stack}`))
   logger.info(`Sending 200 response`)
   res.status(200).end()
 })
@@ -389,10 +390,18 @@ app.post('/api/missive-daily-report', async (req, res) => {
       logger.info(`Daily report message processed`)
     })
     .catch((error) => {
-      logger.error(`Error processing daily report message: ${error.message}`)
+      logger.error(`Error processing daily report message: ${error.message} ${error.stack}`)
     })
 })
 
+app.post('/api/ky_test', validateAuthorizationHeader, async (req, res) => {
+  const projectID = req.query.projectID;
+  if (projectID?.length !== 36) {
+    return res.status(400).json({ error: 'Invalid projectID' });
+  }
+  res.status(201).end()
+  console.log(await makeBiweeklyProjectBriefing(projectID))
+})
 
 function jsonToMarkdownList(jsonObj, indentLevel = 0) {
   let str = ''
@@ -412,4 +421,19 @@ function jsonToMarkdownList(jsonObj, indentLevel = 0) {
   }
 
   return str
+}
+
+function validateAuthorizationHeader(req, res, next) {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Missing or invalid Authorization header' });
+  }
+
+  const token = authHeader.split(' ')[1];
+
+  if (token !== process.env.SUPABASE_API_KEY) {
+    return res.status(401).json({ error: 'Invalid token' });
+  }
+  next();
 }

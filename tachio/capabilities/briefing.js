@@ -199,7 +199,7 @@ async function makeBiweeklyProjectBriefing(projectID) {
 
   const memoriesInProjectConversation = await getMemoriesByConversationID(project.missive_conversation_id)
   // TODO: distinguish which project each calendar event belongs to
-  const calendarEntries = await readCalendar()
+  // const calendarEntries = await readCalendar()
 
   const { data, errorFetchDailyReports } = await supabase
     .from(DAILY_REPORT_TABLE_NAME)
@@ -210,7 +210,7 @@ async function makeBiweeklyProjectBriefing(projectID) {
 
   return await generateProjectSummary({
     projectName: project.name,
-    calendarEntries,
+    // calendarEntries,
     memoriesInProjectConversation,
     dailyReports
   })
@@ -482,9 +482,10 @@ async function generateProjectSummary({
 
   messages.push({
     role: 'user',
-    content: `Can you please generate a summary for project ${projectName}? Be as detailed as possible.`
+    content: `Can you please generate a summary for project ${projectName}? Be as detailed as possible and focus solely on creating the summary.`
   })
 
+  console.log(messages)
   return await createChatCompletion(messages)
 }
 
@@ -622,5 +623,6 @@ async function archiveSummary(summary) {
 }
 
 module.exports = {
-  handleCapabilityMethod
+  handleCapabilityMethod,
+  makeBiweeklyProjectBriefing
 }

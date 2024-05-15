@@ -1,10 +1,8 @@
 const { parseJSONArg } = require('../helpers')
-const { createSharedLabel, createPost } = require('../src/missive')
+const { createSharedLabel, createPost, PROJECT_TABLE_NAME } = require('../src/missive')
 const { ORG_TABLE_NAME } = require('./manageorgs')
 const { supabase } = require('../src/supabaseclient')
 require('dotenv').config()
-
-const PROJECT_TABLE_NAME = 'projects'
 
 /**
  * Creates a new project of an organization
@@ -190,5 +188,5 @@ module.exports = {
       throw new Error(`Invalid method: ${method}`)
     }
   },
-  PROJECT_TABLE_NAME
+  PROJECT_TABLE_NAME,
 }
