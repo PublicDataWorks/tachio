@@ -1,10 +1,12 @@
 const { JSDOM } = require('jsdom')
 const { supabase } = require('./supabaseclient')
 const { anthropicThinkingRegex, notificationRegex } = require('../helpers')
+const { PROJECT_TABLE_NAME } = require('../capabilities/manageprojects')
 const logger = require('./logger.js')('missive')
 const DAILY_REPORT_REGEX = /Hi.*What has the team done since the last call\/email regarding this project\??(.*)What will the team do between now and the next call\/email regarding this project\??(.*)What impedes the team from performing their work as effectively as possible\??(.*)How much time have we spent today\??(.*)How much time have we spent this week.*How much time have we spent this month.*Our team today:?(.*)Regards/
 const DESIGN_REGEX = /\[Design].*?billable (?:hour|day)\(s\)/
 const DONE_TODAY_DESIGN_REGEX = /(?:\[?Design]?|\[?Designer]?).*/
+const DAILY_REPORT_TABLE_NAME = 'daily_reports'
 /*
 
 You must transmit your Missive user token as a Bearer token in the Authorization HTTP header.
@@ -293,7 +295,7 @@ Fetch a specific message headers, body and attachments using the message id.
 }
 */
 
-async function getMessage(messageId) {
+async function  getMessage(messageId) {
   const url = `${apiFront}/messages/${messageId}`
   const options = {
     method: 'GET',
@@ -448,10 +450,12 @@ async function processDailyReport(payload) {
   if (!payload.rule.description.toLowerCase().includes('daily report')) return
 
   const { id: messageId, subject } = payload.message
+  // Body payload is only a summary of the content, we need to fetch the full message
   const message = await getMessage(messageId)
+  // It's in HTML format
   const dom = new JSDOM(message.messages.body)
   const listItems = dom.window.document.querySelectorAll('li')
-  // Append a space after each list item
+  // Append a space after each list item, otherwise the text will be concatenated
   listItems.forEach(li => {
     const space = dom.window.document.createTextNode('. ')
     li.appendChild(space)
@@ -477,7 +481,15 @@ async function processDailyReport(payload) {
   const designerTimeSpentToday = designMatch ? designMatch[0] : ''
   const developerTimeSpentToday = timeSpentToday.replace(designerTimeSpentToday, '')
 
-  const { error } = await supabase.from('daily_reports').insert([
+  const sharedLabelIDs = payload.conversation.shared_labels?.map(label => label.id)
+  const { data } = await supabase
+    .from(PROJECT_TABLE_NAME)
+    .select('id')
+    .in('missive_label_id', sharedLabelIDs)
+    .limit(1)
+  const projectId = data?.[0]?.id
+
+  const { error } = await supabase.from(DAILY_REPORT_TABLE_NAME).insert([
     {
       subject,
       developer_done_today: otherDoneToday,
@@ -488,7 +500,8 @@ async function processDailyReport(payload) {
       developer_time_spent_today: developerTimeSpentToday,
       designer_time_spent_today: designerTimeSpentToday,
       team_today: teamToday,
-      content: text
+      content: text,
+      project_id: projectId
     }
   ])
   if (error) throw new Error(error.message)
@@ -555,5 +568,6 @@ async function sendMissiveResponse(lastMessage, requestQuery, conversationId) {
 }
 
 module.exports = {
-  createSharedLabel, createPost, processDailyReport, sendMissiveResponse
+  createSharedLabel, createPost, processDailyReport, sendMissiveResponse,
+  DAILY_REPORT_TABLE_NAME
 }

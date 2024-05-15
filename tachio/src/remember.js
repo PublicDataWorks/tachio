@@ -14,7 +14,6 @@ const { supabase } = require("./supabaseclient.js");
  * @returns {Promise<Array>} - A promise that resolves to an array of user memories.
  */
 async function getUserMemory(userId, limit = 5) {
-  const { supabase } = require("./supabaseclient.js");
   if (!userId) {
     logger.info("No userId provided to getUserMemory");
     return [];
@@ -37,40 +36,39 @@ async function getUserMemory(userId, limit = 5) {
   return data;
 }
 
-// /**
-//  * Retrieves memories between two dates.
-//  * @param {Date} startDate - The start date.
-//  * @param {Date} endDate - The end date.
-//  * @returns {Promise<Array<Object>>} - A promise that resolves to an array of memory objects.
-//  */
-// async function getMemoriesBetweenDates(startDate, endDate) {
-//   if (!(startDate instanceof Date) || !(endDate instanceof Date)) {
-//     logger.info("Invalid dates provided to getMemoriesBetweenDates");
-//     return [];
-//   }
-//
-//   logger.info(`Looking for memories between ${startDate} and ${endDate}`);
-//   logger.info(
-//     `Looking for memories between ${startDate.toISOString()} and ${endDate.toISOString()}`,
-//   );
-//
-//   const { supabase } = require("./supabaseclient.js");
-//   const response = await supabase
-//     .from(MEMORIES_TABLE_NAME)
-//     .select("*")
-//     .gte("created_at", startDate.toISOString())
-//     .lte("created_at", endDate.toISOString())
-//     .order("created_at", { ascending: true });
-//
-//   const { data, error } = response;
-//
-//   if (error) {
-//     logger.info("Error fetching memories between dates:", error);
-//     return [];
-//   }
-//
-//   return data;
-// }
+/**
+ * Retrieves memories between two dates.
+ * @param {Date} startDate - The start date.
+ * @param {Date} endDate - The end date.
+ * @returns {Promise<Array<Object>>} - A promise that resolves to an array of memory objects.
+ */
+async function getMemoriesBetweenDates(startDate, endDate) {
+  if (!(startDate instanceof Date) || !(endDate instanceof Date)) {
+    logger.info("Invalid dates provided to getMemoriesBetweenDates");
+    return [];
+  }
+
+  logger.info(`Looking for memories between ${startDate} and ${endDate}`);
+  logger.info(
+    `Looking for memories between ${startDate.toISOString()} and ${endDate.toISOString()}`,
+  );
+
+  const response = await supabase
+    .from(MEMORIES_TABLE_NAME)
+    .select("*")
+    .gte("created_at", startDate.toISOString())
+    .lte("created_at", endDate.toISOString())
+    .order("created_at", { ascending: true });
+
+  const { data, error } = response;
+
+  if (error) {
+    logger.info("Error fetching memories between dates:", error);
+    return [];
+  }
+
+  return data;
+}
 
 /**
  * Retrieves a specified number of memories from the database.
@@ -79,7 +77,6 @@ async function getUserMemory(userId, limit = 5) {
  * @returns {Promise<Array<Object>>} - A promise that resolves to an array of memory objects.
  */
 async function getAllMemories(limit = 5) {
-  const { supabase } = require("./supabaseclient.js");
   const { data, error } = await supabase
     .from(MEMORIES_TABLE_NAME)
     .select("*")
@@ -184,7 +181,6 @@ async function storeUserMemory(
     validatedRelatedMessageId = parseInt(relatedMessageId);
   }
 
-  const { supabase } = require("./supabaseclient.js");
   const { data, error } = await supabase
     // .from("storage")
     .from(MEMORIES_TABLE_NAME)
@@ -220,7 +216,6 @@ async function storeUserMemory(
  * @returns {Promise<Array<Object>>} - A promise that resolves to an array of memory objects.
  **/
 async function getResourceMemories(resourceId, limit = 5) {
-  const { supabase } = require("./supabaseclient.js");
   const { data, error } = await supabase
     .from(MEMORIES_TABLE_NAME)
     .select("*")
@@ -243,7 +238,6 @@ async function getResourceMemories(resourceId, limit = 5) {
  * @returns {Promise<boolean>} - True if there is a memory of the file, false otherwise.
  */
 async function hasMemoryOfResource(resourceId) {
-  const { supabase } = require("./supabaseclient.js");
   const { data, error } = await supabase
     .from(MEMORIES_TABLE_NAME)
     .select("created_at")
@@ -308,7 +302,6 @@ async function hasMemoryOfResource(resourceId) {
  * @throws {Error} - If there is an error deleting the memories.
  **/
 async function deleteMemoriesOfResource(resourceId) {
-  const { supabase } = require("./supabaseclient.js");
   const { error } = await supabase
     .from(MEMORIES_TABLE_NAME)
     .delete()
@@ -332,7 +325,6 @@ async function deleteMemoriesOfResource(resourceId) {
  * @returns {Promise<string>} - A promise that resolves to the stored message data.
  */
 async function storeUserMessage({ username, guild, conversationId }, value) {
-  const { supabase } = require("./supabaseclient.js");
   const {data, error } = await supabase
     // .from("messages")
     .from(MESSAGES_TABLE_NAME)
@@ -516,7 +508,6 @@ async function getChannelMessageHistory(channelId, limit = 5) {
  * @returns {Promise<Array>} - A promise that resolves to an array of relevant memories.
  */
 async function getRelevantMemories(queryString, limit = 5) {
-  const { supabase } = require("./supabaseclient.js");
   // make sure queryString is a string
   if (typeof queryString !== "string") {
     logger.info("No query string provided to getRelevantMemories");
@@ -566,28 +557,44 @@ async function getRelevantMemories(queryString, limit = 5) {
   return data;
 }
 
-// /**
-//  * A plain old string search across memories
-//  * @param {string} queryString - The query string to search for relevant memories.
-//  */
-// async function getMemoriesByString(queryString) {
-//   const { supabase } = require("./supabaseclient.js");
-//   if (typeof queryString !== "string") {
-//     return logger.info("No query string provided to getRelevantMemories");
-//   }
-//   const { data, error } = await supabase
-//     .from(MEMORIES_TABLE_NAME)
-//     .select("*")
-//     .ilike("value", `%${queryString}%`);
-//
-//   if (error) {
-//     logger.error(`Error fetching relevant user memory: ${error.message}`);
-//     return null;
-//   }
-//
-//   return data;
-// }
+/**
+ * A plain old string search across memories
+ * @param {string} queryString - The query string to search for relevant memories.
+ */
+async function getMemoriesByString(queryString) {
+  if (typeof queryString !== "string") {
+    return logger.info("No query string provided to getRelevantMemories");
+  }
+  const { data, error } = await supabase
+    .from(MEMORIES_TABLE_NAME)
+    .select("*")
+    .ilike("value", `%${queryString}%`);
 
+  if (error) {
+    logger.error(`Error fetching relevant user memory: ${error.message}`);
+    return null;
+  }
+
+  return data;
+}
+
+/**
+ * Search for memories of a specific conversation
+ * @param {string} conversationID - The conversationID to search for relevant memories.
+ */
+async function getMemoriesByConversationID(conversationID) {
+  const { data, error } = await supabase
+    .from(MEMORIES_TABLE_NAME)
+    .select("*")
+    .eq("conversation_id", conversationID);
+
+  if (error) {
+    logger.error(`Error fetching relevant user memory: ${error.message}`);
+    return null;
+  }
+
+  return data;
+}
 module.exports = {
   getUserMemory,
   getUserMessageHistory,
@@ -598,5 +605,8 @@ module.exports = {
   getChannelMessageHistory,
   getResourceMemories,
   hasMemoryOfResource,
-  deleteMemoriesOfResource
+  deleteMemoriesOfResource,
+  getMemoriesBetweenDates,
+  getMemoriesByString,
+  getMemoriesByConversationID
 };
