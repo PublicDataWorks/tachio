@@ -250,6 +250,7 @@ services:
       IMGPROXY_LOCAL_FILESYSTEM_ROOT: /
       IMGPROXY_USE_ETAG: "true"
       IMGPROXY_ENABLE_WEBP_DETECTION: ${IMGPROXY_ENABLE_WEBP_DETECTION}
+    restart: unless-stopped
     volumes:
       - ./volumes/storage:/var/lib/storage:z
 
@@ -398,6 +399,7 @@ services:
       timeout: 5s
       interval: 5s
       retries: 3
+    restart: unless-stopped
     volumes:
       - ./volumes/logs/vector.yml:/etc/vector/vector.yml:ro
       - ${DOCKER_SOCKET_LOCATION}:/var/run/docker.sock:ro
@@ -444,6 +446,23 @@ services:
     image: containrrr/watchtower:latest
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+  dokku:
+    image: dokku/dokku:latest
+    container_name: dokku
+    ports:
+      - "4022:22"
+      - "480:80"
+      - "488:88"
+      - "4080:8080"
+      - "4443:443"
+    volumes:
+      - "~/Docker/dokku/data:/mnt/dokku"  # Stores Dokku data
+      - "/var/run/docker.sock:/var/run/docker.sock"  # Docker socket
+    environment:
+      DOKKU_HOSTNAME: dokku.me
+      DOKKU_HOST_ROOT: /var/lib/dokku/home/dokku
+      DOKKU_LIB_HOST_ROOT: /var/lib/dokku/var/lib/dokku
     restart: unless-stopped
 
   linearlite:
