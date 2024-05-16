@@ -148,7 +148,7 @@ class DiscordBot {
    */
   async processMessageChain(
     prompt,
-    { username, channel, guild, related_message_id },
+    { username, channel, guild, related_message_id }
   ) {
     const { processMessageChain } = await require("./chain.js");
     return await processMessageChain(
@@ -158,7 +158,7 @@ class DiscordBot {
           content: prompt
         }
       ],
-      { username, channel, guild, related_message_id },
+      { username, channel, guild, related_message_id }
     );
   }
 
