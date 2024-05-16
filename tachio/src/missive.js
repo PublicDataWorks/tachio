@@ -159,16 +159,7 @@ Fetch messages matching an email Message-ID.
 
 async function listConversationMessages(emailMessageId) {
   let url = `${apiFront}/conversations/${emailMessageId}/messages`
-
-  const options = {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`
-    }
-  }
-
-  const response = await fetch(url, options)
+  const response = await fetch(url, missiveOptions())
   const data = await response.json()
   // add a 1ms delay to avoid rate limiting
   await new Promise((resolve) => setTimeout(resolve, 1000))
@@ -295,16 +286,9 @@ Fetch a specific message headers, body and attachments using the message id.
 }
 */
 
-async function  getMessage(messageId) {
+async function getMessage(messageId) {
   const url = `${apiFront}/messages/${messageId}`
-  const options = {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`
-    }
-  }
-  const response = await fetch(url, options)
+  const response = await fetch(url, missiveOptions())
   return response.json()
 }
 
@@ -327,37 +311,21 @@ List shared labels in organizations the authenticated user is part of.
 */
 async function listSharedLabels() {
   const url = `${apiFront}/shared_labels`
-  const options = {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`
-    }
-  }
-
-  const response = await fetch(url, options)
+  const response = await fetch(url, missiveOptions())
   return response.json()
 }
 
 async function createSharedLabel({ name, organization, parent, shareWithOrganization }) {
   const url = `${apiFront}/shared_labels`
-  const options = {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`
-    },
-    body: JSON.stringify({
-      shared_labels: [{
-        name,
-        organization,
-        parent,
-        share_with_organization: shareWithOrganization
-      }]
-    })
-  }
-
-  const response = await fetch(url, options)
+  const body = JSON.stringify({
+    shared_labels: [{
+      name,
+      organization,
+      parent,
+      share_with_organization: shareWithOrganization
+    }]
+  })
+  const response = await fetch(url, missiveOptions(body, 'POST'))
   if (!response.ok) {
     const errorBody = await response.text()
     throw new Error(`Error creating shared label. HTTP status: ${response.status}, status text: ${response.statusText}, body: ${errorBody}`)
@@ -380,30 +348,23 @@ async function createPost({
                             conversation
                           }) {
   const url = `${apiFront}/posts`
-  const options = {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`
-    },
-    body: JSON.stringify({
-      posts: {
-        conversation_subject: conversationSubject,
-        username,
-        organization,
-        username_icon: usernameIcon,
-        add_shared_labels: addSharedLabels,
-        text,
-        markdown,
-        conversation,
-        notification: {
-          title: notificationTitle,
-          body: notificationBody
-        }
+  const body = JSON.stringify({
+    posts: {
+      conversation_subject: conversationSubject,
+      username,
+      organization,
+      username_icon: usernameIcon,
+      add_shared_labels: addSharedLabels,
+      text,
+      markdown,
+      conversation,
+      notification: {
+        title: notificationTitle,
+        body: notificationBody
       }
-    })
-  }
-  const response = await fetch(url, options)
+    }
+  })
+  const response = await fetch(url, missiveOptions(body, 'POST'))
   if (!response.ok) {
     const errorBody = await response.text()
     throw new Error(`Error creating post. HTTP status: ${response.status}, status text: ${response.statusText}, body: ${errorBody}`)
@@ -434,15 +395,7 @@ Response example:
 
 async function listUsers() {
   const url = `${apiFront}/users`
-  const options = {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`
-    }
-  }
-
-  const response = await fetch(url, options)
+  const response = await fetch(url, missiveOptions())
   return response.json()
 }
 
@@ -507,10 +460,13 @@ async function processDailyReport(payload) {
   if (error) throw new Error(error.message)
 }
 
-async function sendMissiveResponse(lastMessage, requestQuery, conversationId) {
+async function sendMissiveResponse(message, conversationId, requestQuery) {
   // Separate thinking part out of result part of Claude's message
-  const messageMatches = lastMessage.content.match(anthropicThinkingRegex)
-  let notification
+  const messageMatches = message.match(anthropicThinkingRegex)
+  let notification = {
+    title: BOT_NAME,
+    body: ''
+  }
   const attachments = []
   if (messageMatches && messageMatches.length > 2) {
     // Thinking part is always presented
@@ -526,10 +482,6 @@ async function sendMissiveResponse(lastMessage, requestQuery, conversationId) {
         notification = JSON.parse(notificationMatches[1])
       } catch (error) {
         logger.error('Error parsing notification:', error, notificationMatches[1])
-        notification = {
-          title: BOT_NAME,
-          body: ''
-        }
       }
     }
     // Add result part
@@ -544,7 +496,6 @@ async function sendMissiveResponse(lastMessage, requestQuery, conversationId) {
       })
   }
   const token = (requestQuery?.token?.length === 36) ? requestQuery.token : apiKey
-  // POST the response back to the Missive API using the conversation ID
   const responsePost = await fetch(`${apiFront}/posts/`, {
     method: 'POST',
     headers: {
@@ -557,14 +508,25 @@ async function sendMissiveResponse(lastMessage, requestQuery, conversationId) {
         notification,
         username: BOT_NAME,
         attachments,
-        markdown: attachments ? undefined : lastMessage.content
+        markdown: attachments ? undefined : message
       }
     })
   })
 
   // Log the response status and body from the Missive API
   logger.info(`Response post status: ${responsePost.status}`)
-  logger.info(`Response post body: ${JSON.stringify(responsePost)}`)
+  logger.info(`Response post body: ${JSON.stringify(await responsePost.json())}`)
+}
+
+function missiveOptions(body = undefined, method = 'GET') {
+  return {
+    body,
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`
+    }
+  }
 }
 
 module.exports = {

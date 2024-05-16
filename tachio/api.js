@@ -137,7 +137,7 @@ async function processMissiveRequest(body, query) {
   if (task) {
     contextPrompt = 'I want to record this as a todo (no further action needed beyond that). '
       + (task.completed_at ? `This todo is already completed at ${new Date(task.completed_at * 1000)}. \n` : `This todo is not completed yet. \n`)
-  } else if (body.comment.attachment?.media_type === 'text')  {
+  } else if (body.comment.attachment?.media_type === 'text') {
     contextPrompt = `ingest:deepDocumentIngest(${body.comment.attachment.url})`
   }
   // Process the webhook payload using the processWebhookPayload function
@@ -261,7 +261,7 @@ async function processMissiveRequest(body, query) {
     logger.error(`Error processing message chain: ${error.message}, ${error.stack}`)
   }
   const lastMessage = processedMessage[processedMessage.length - 1]
-  await sendMissiveResponse(lastMessage, query, conversationId)
+  await sendMissiveResponse(lastMessage.content, conversationId, query)
 }
 
 app.post('/api/missive-reply', async (req, res) => {
@@ -394,13 +394,26 @@ app.post('/api/missive-daily-report', async (req, res) => {
     })
 })
 
-app.post('/api/ky_test', validateAuthorizationHeader, async (req, res) => {
+app.post('/api/draft-biweely-briefing', validateAuthorizationHeader, async (req, res) => {
   const projectID = req.query.projectID;
   if (projectID?.length !== 36) {
+    logger.error(`Error processing biweely: Invalid projectID. Data: ${projectID}`);
     return res.status(400).json({ error: 'Invalid projectID' });
   }
+
+  const { data: [project], error } = await supabase
+    .from(PROJECT_TABLE_NAME)
+    .select('name, missive_conversation_id')
+    .eq('id', projectID)
+    .limit(1)
+  if (error || !project) {
+    logger.error(`Error processing biweely: Project not found. Data: ${projectID} ${error?.message}`);
+    return res.status(400).json({ error: 'Invalid projectID' });
+  }
+
   res.status(201).end()
-  console.log(await makeBiweeklyProjectBriefing(projectID))
+  const briefing = await makeBiweeklyProjectBriefing(project.name)
+  await sendMissiveResponse(briefing, project.missive_conversation_id)
 })
 
 function jsonToMarkdownList(jsonObj, indentLevel = 0) {

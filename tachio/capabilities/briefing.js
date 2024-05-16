@@ -185,32 +185,34 @@ async function makeProjectBriefing(projectName) {
 }
 
 /**
- * Makes a weekly briefing.
+ * Makes a biweekly briefing.
+ * @param {Array} projectName - The name of the project.
  * @returns {Promise<String>} A promise that resolves to a string indicating the status of the weekly briefing.
  * @example await makeWeeklyBriefing();
  */
-async function makeBiweeklyProjectBriefing(projectID) {
+async function makeBiweeklyProjectBriefing(projectName) {
   const { data: [project], error } = await supabase
     .from(PROJECT_TABLE_NAME)
-    .select('name, missive_conversation_id')
-    .eq('id', projectID)
+    .select('id, missive_conversation_id')
+    .eq('name', projectName)
+    .limit(1)
   if (!project) throw new Error('Error occurred while trying to make biweekly project briefing: Project not found')
   if (error) throw new Error(`Error occurred while trying to fetch project in making biweekly project briefing: ${error.message}`)
 
   const memoriesInProjectConversation = await getMemoriesByConversationID(project.missive_conversation_id)
   // TODO: distinguish which project each calendar event belongs to
-  // const calendarEntries = await readCalendar()
+  const calendarEntries = await readCalendar()
 
   const { data, errorFetchDailyReports } = await supabase
     .from(DAILY_REPORT_TABLE_NAME)
     .select('subject, content')
-    .eq('project_id', projectID)
+    .eq('project_id', project.id)
   if (errorFetchDailyReports) throw new Error(`Error occurred while trying to fetch daily reports in making biweekly project briefing: ${error.message}`)
   const dailyReports = data?.map(report => `Subject: ${report.subject}\nContent: ${report.content}`).join('\n\n') || ''
 
   return await generateProjectSummary({
-    projectName: project.name,
-    // calendarEntries,
+    projectName: projectName,
+    calendarEntries,
     memoriesInProjectConversation,
     dailyReports
   })
@@ -458,7 +460,7 @@ async function generateProjectSummary({
   if (memoriesInProjectConversation && memoriesInProjectConversation.length > 0) {
     messages.push({
       role: 'user',
-      content: `These memories in the project's conversation: ${memoriesMentioningProject
+      content: `These memories in the project's conversation: ${memoriesInProjectConversation
         .map((memory) => memory.value)
         .join('\n')}`
     })
@@ -482,10 +484,9 @@ async function generateProjectSummary({
 
   messages.push({
     role: 'user',
-    content: `Can you please generate a summary for project ${projectName}? Be as detailed as possible and focus solely on creating the summary.`
+    content: `Can you please generate a detailed summary for Project ${projectName} based on your own analysis and understanding? Focus solely on creating the summary without utilizing any other capabilities. Be as detailed as possible.`
   })
 
-  console.log(messages)
   return await createChatCompletion(messages)
 }
 
