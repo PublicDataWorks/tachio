@@ -11,15 +11,13 @@ const { createHmac } = require('crypto')
 const logger = require('./src/logger.js')('api')
 const { processLinearRequest } = require('./src/linear')
 const { processGithubRequest, verifyGithubSignature } = require('./src/github')
-const { anthropicThinkingRegex } = require('./helpers')
 const { PROJECT_TABLE_NAME } = require('./capabilities/manageprojects')
 const { processDailyReport, sendMissiveResponse } = require('./src/missive')
 const { supabase } = require('./src/supabaseclient')
 const { makeBiweeklyProjectBriefing } = require('./capabilities/briefing')
+const { differenceInMilliseconds } = require('date-fns')
 require('dotenv').config()
 
-const apiFront = 'https://public.missiveapp.com/v1'
-const apiKey = process.env.MISSIVE_API_KEY
 let port = process.env.EXPRESS_PORT
 
 app.use(
@@ -43,27 +41,27 @@ server.on('error', (err) => {
   }
 })
 
-async function listMessages(emailMessageId) {
-  let url = `${apiFront}/conversations/${emailMessageId}/messages`
-
-  logger.info(`Fetching messages from ${url}`)
-
-  const options = {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`
-    }
-  }
-
-  const response = await fetch(url, options)
-  const data = await response.json()
-
-
-  // logger.info(`Data: ${JSON.stringify(data)}`);
-
-  return data.messages
-}
+// async function listMessages(emailMessageId) {
+//   let url = `${apiFront}/conversations/${emailMessageId}/messages`
+//
+//   logger.info(`Fetching messages from ${url}`)
+//
+//   const options = {
+//     method: 'GET',
+//     headers: {
+//       'Content-Type': 'application/json',
+//       Authorization: `Bearer ${apiKey}`
+//     }
+//   }
+//
+//   const response = await fetch(url, options)
+//   const data = await response.json()
+//
+//
+//   // logger.info(`Data: ${JSON.stringify(data)}`);
+//
+//   return data.messages
+// }
 
 function processWebhookPayload(payload) {
   const userMessage = payload.comment.body
@@ -394,26 +392,38 @@ app.post('/api/missive-daily-report', async (req, res) => {
     })
 })
 
-app.post('/api/draft-biweely-briefing', validateAuthorizationHeader, async (req, res) => {
+app.post('/api/biweekly-briefing', validateAuthorizationHeader, async (req, res) => {
   const projectID = req.query.projectID;
   if (projectID?.length !== 36) {
-    logger.error(`Error processing biweely: Invalid projectID. Data: ${projectID}`);
+    logger.error(`Error processing biweekly: Invalid projectID. Data: ${projectID}`);
     return res.status(400).json({ error: 'Invalid projectID' });
   }
 
   const { data: [project], error } = await supabase
     .from(PROJECT_TABLE_NAME)
-    .select('name, missive_conversation_id')
+    .select('name, last_sent_biweekly_briefing, missive_conversation_id')
     .eq('id', projectID)
-    .limit(1)
+
   if (error || !project) {
-    logger.error(`Error processing biweely: Project not found. Data: ${projectID} ${error?.message}`);
+    logger.error(`Error processing biweekly: Project not found. Data: ${projectID} ${error?.message}`);
     return res.status(400).json({ error: 'Invalid projectID' });
+  }
+
+  // Assume that last_sent_biweekly_briefing is in the past
+  // Cron jobs cannot run biweekly directly, so we use a workaround to run it weekly and check if the task is within a 2-week period.
+  const within2Weeks = differenceInMilliseconds(new Date(), new Date(project.last_sent_biweekly_briefing)) < (14 * 24 * 60 * 60 - 5 * 60) * 1000 // 2 weeks - 5 minutes to account for potential delays
+  if (within2Weeks) {
+    logger.error(`Error processing biweekly: Project already sent briefing in the last 2 weeks. Data: ${projectID} ${project.last_sent_biweekly_briefing}`);
+    return res.status(400).json({ error: 'Project already sent briefing in the last 2 weeks' });
   }
 
   res.status(201).end()
   const briefing = await makeBiweeklyProjectBriefing(project.name)
   await sendMissiveResponse(briefing, project.missive_conversation_id)
+  await supabase
+    .from(PROJECT_TABLE_NAME)
+    .update({ last_sent_biweekly_briefing: new Date(), updated_at: new Date() }) // Explicitly set updated_at because of ElectricSQL not supporting default value
+    .eq('id', projectID)
 })
 
 function jsonToMarkdownList(jsonObj, indentLevel = 0) {
