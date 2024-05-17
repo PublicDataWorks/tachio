@@ -70,7 +70,7 @@ async function callCapabilityMethod(capabilitySlug, methodName, args, messages) 
     // Return a success response
     return { success: true, data: capabilityResponse };
   } catch (error) {
-    logger.info(`Error running ${capabilitySlug}.${methodName}: ${error}, ${error.stack}`);
+    logger.info(`Error running ${capabilitySlug}.${methodName}: ${error.message}, ${error.stack}`);
     // Return an error response
     return { success: false, error: error.message };
   }

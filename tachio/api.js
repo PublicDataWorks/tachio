@@ -16,6 +16,8 @@ const { processDailyReport, sendMissiveResponse } = require('./src/missive')
 const { supabase } = require('./src/supabaseclient')
 const { makeBiweeklyProjectBriefing } = require('./capabilities/briefing')
 const { differenceInMilliseconds } = require('date-fns')
+const { BIWEEKLY_BRIEFING } = require('./src/paths')
+const { invokeWeeklyBriefing } = require('./src/crons')
 require('dotenv').config()
 
 let port = process.env.EXPRESS_PORT
@@ -392,23 +394,22 @@ app.post('/api/missive-daily-report', async (req, res) => {
     })
 })
 
-app.post('/api/biweekly-briefing', validateAuthorizationHeader, async (req, res) => {
-  const projectID = req.query.projectID;
+app.post(BIWEEKLY_BRIEFING, async (req, res) => {
+  const projectID = req.body.projectID;
   if (projectID?.length !== 36) {
     logger.error(`Error processing biweekly: Invalid projectID. Data: ${projectID}`);
     return res.status(400).json({ error: 'Invalid projectID' });
   }
 
-  const { data: [project], error } = await supabase
+  const { data, error } = await supabase
     .from(PROJECT_TABLE_NAME)
     .select('name, last_sent_biweekly_briefing, missive_conversation_id')
     .eq('id', projectID)
-
-  if (error || !project) {
+  if (error || !data || data.length === 0) {
     logger.error(`Error processing biweekly: Project not found. Data: ${projectID} ${error?.message}`);
     return res.status(400).json({ error: 'Invalid projectID' });
   }
-
+  const project = data[0]
   // Assume that last_sent_biweekly_briefing is in the past
   // Cron jobs cannot run biweekly directly, so we use a workaround to run it weekly and check if the task is within a 2-week period.
   const within2Weeks = differenceInMilliseconds(new Date(), new Date(project.last_sent_biweekly_briefing)) < (14 * 24 * 60 * 60 - 5 * 60) * 1000 // 2 weeks - 5 minutes to account for potential delays
@@ -418,11 +419,15 @@ app.post('/api/biweekly-briefing', validateAuthorizationHeader, async (req, res)
   }
 
   res.status(201).end()
+
   const briefing = await makeBiweeklyProjectBriefing(project.name)
   await sendMissiveResponse(briefing, project.missive_conversation_id)
   await supabase
     .from(PROJECT_TABLE_NAME)
-    .update({ last_sent_biweekly_briefing: new Date(), updated_at: new Date() }) // Explicitly set updated_at because of ElectricSQL not supporting default value
+    .update({
+      last_sent_biweekly_briefing: new Date(),
+      updated_at: new Date()
+    }) // Explicitly set updated_at because of ElectricSQL not supporting default value
     .eq('id', projectID)
 })
 

@@ -2,6 +2,8 @@ const { parseJSONArg } = require('../helpers')
 const { createSharedLabel, createPost, PROJECT_TABLE_NAME } = require('../src/missive')
 const { ORG_TABLE_NAME } = require('./manageorgs')
 const { supabase } = require('../src/supabaseclient')
+const { invokeWeeklyBriefing } = require('../src/crons')
+const { BIWEEKLY_BRIEFING } = require('../src/paths')
 require('dotenv').config()
 
 /**
@@ -68,10 +70,10 @@ async function createProject({
     text: projectName
   })
   const conversationId = newPost.posts.conversation
-
+  const newProjectID = crypto.randomUUID()
   const { error: errAddProject } = await supabase.from(PROJECT_TABLE_NAME).insert([
     {
-      id: crypto.randomUUID(),
+      id: newProjectID,
       name: projectName,
       org_id: org.id,
       shortname: shortname || projectName.replace(/\s/g, '-'),
@@ -88,6 +90,7 @@ async function createProject({
     }
   ])
   if (errAddProject) throw new Error(errAddProject.message)
+  await invokeWeeklyBriefing(newProjectID, BIWEEKLY_BRIEFING)
   return `Successfully added project: ${projectName}`
 }
 

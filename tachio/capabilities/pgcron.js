@@ -225,4 +225,5 @@ module.exports = {
       return await listWebhookJobs();
     }
   },
+  createJob
 };
