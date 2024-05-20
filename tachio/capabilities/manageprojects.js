@@ -2,8 +2,11 @@ const { parseJSONArg } = require('../helpers')
 const { createSharedLabel, createPost, PROJECT_TABLE_NAME } = require('../src/missive')
 const { ORG_TABLE_NAME } = require('./manageorgs')
 const { supabase } = require('../src/supabaseclient')
-const { invokeWeeklyBriefing } = require('../src/crons')
+const { supabase: supabaseCron } = require('./pgcron')
+const { invokeWeeklyBriefing, generateJobName } = require('../src/crons')
 const { BIWEEKLY_BRIEFING } = require('../src/paths')
+const { updateJob } = require('./pgcron')
+const { MEMORIES_TABLE_NAME } = require('../config')
 require('dotenv').config()
 
 /**
@@ -154,22 +157,43 @@ async function updateProject({
   return `Successfully updated project: ${projectName}`
 }
 
-async function updateProjectStatus({ name, shortname, alias, endDate, newStatus }) {
-  if (!name && !shortname && !alias) throw new Error('Missing required fields')
-
-  let newValue = { status: newStatus }
-  if (endDate) newValue.end_date = endDate
-  let query = supabase
+/**
+ * Update status of aproject
+ *
+ * @param {string} name - The name of the project.
+ * @param {string} newStatus - The new status of the project. Can be 'active', 'paused', 'completed', or 'archived'.
+ *
+ * @returns {Promise<string>} A promise that resolves to a string message indicating the result of the operation.
+ *
+ * @throws {Error} If there is an error with the Supabase operations.
+ */
+async function updateProjectStatus({ name, newStatus }) {
+  if (!name || !newStatus) throw new Error('Missing required fields')
+  const { data: existingProject, error } = await supabase
     .from(PROJECT_TABLE_NAME)
-    .update(newValue)
-  if (name) query = query.eq('name', name)
-  if (shortname) query = query.eq('shortname', shortname)
-  if (alias) query = query.contains('aliases', [alias])
-
-  const { error } = await query
-
+    .select('id, status')
+    .eq('name', name)
   if (error) throw new Error(error.message)
-  return `Successfully ${newStatus} project: ${name || shortname || alias}`
+  if (existingProject.length === 0) throw new Error('Project not found')
+  if (existingProject[0].status === newStatus) throw new Error(`Project already ${newStatus}`)
+
+  const { error: errorUpdate } = await supabase
+    .from(PROJECT_TABLE_NAME)
+    .update({ status: newStatus })
+    .eq('name', name)
+
+  if (error) throw new Error(errorUpdate.message)
+  if (newStatus === 'paused') {
+    const { data, error } = await supabaseCron
+      .from('job')
+      .select('jobid')
+      .eq('jobname', generateJobName(existingProject[0].id))
+    if (error) throw new Error(error.message)
+    if (data.length === 0) throw new Error('Job not found')
+
+    await updateJob(data[0].jobid, undefined, undefined, false)
+  }
+  return `Successfully ${newStatus} project: ${name}`
 }
 
 module.exports = {
@@ -180,12 +204,7 @@ module.exports = {
       return await createProject(arg)
     } else if (method === 'updateProject') {
       return await updateProject(arg)
-    } else if (method === 'completeProject') {
-      arg.newStatus = 'completed'
-      return await updateProjectStatus(arg)
-    } else if (method === 'archiveProject') {
-      arg.newStatus = 'archived'
-      delete arg.endDate
+    } else if (method === 'updateProjectStatus') {
       return await updateProjectStatus(arg)
     } else {
       throw new Error(`Invalid method: ${method}`)
