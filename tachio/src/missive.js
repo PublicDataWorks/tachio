@@ -329,9 +329,8 @@ async function createSharedLabel({ name, organization, parent, shareWithOrganiza
   if (!response.ok) {
     const errorBody = await response.text()
     throw new Error(`Error creating shared label. HTTP status: ${response.status}, status text: ${response.statusText}, body: ${errorBody}`)
-  } else {
-    return response.json()
   }
+  return response.json()
 }
 
 
@@ -342,10 +341,12 @@ async function createPost({
                             organization,
                             addSharedLabels,
                             notificationTitle,
-                            notificationBody,
+                            notificationBody = '',
                             text,
                             markdown,
-                            conversation
+                            conversation,
+                            add_users,
+                            add_assignees
                           }) {
   const url = `${apiFront}/posts`
   const body = JSON.stringify({
@@ -358,6 +359,8 @@ async function createPost({
       text,
       markdown,
       conversation,
+      add_users,
+      add_assignees,
       notification: {
         title: notificationTitle,
         body: notificationBody
@@ -368,9 +371,8 @@ async function createPost({
   if (!response.ok) {
     const errorBody = await response.text()
     throw new Error(`Error creating post. HTTP status: ${response.status}, status text: ${response.statusText}, body: ${errorBody}`)
-  } else {
-    return response.json()
   }
+  return response.json()
 }
 
 /*
