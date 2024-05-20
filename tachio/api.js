@@ -394,7 +394,7 @@ app.post('/api/missive-daily-report', async (req, res) => {
     })
 })
 
-app.post(BIWEEKLY_BRIEFING, async (req, res) => {
+app.post(BIWEEKLY_BRIEFING, validateAuthorizationHeader, async (req, res) => {
   const projectID = req.body.projectID;
   if (projectID?.length !== 36) {
     logger.error(`Error processing biweekly: Invalid projectID. Data: ${projectID}`);
