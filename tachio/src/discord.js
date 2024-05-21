@@ -169,7 +169,7 @@ class DiscordBot {
   async respondToMessage(message) {
     const botMentionOrChannel = detectBotMentionOrChannel(message);
     const messageAuthorIsBot = message.author.bot;
-    const authorIsMe = message.author.username === "tachio";
+    const authorIsMe = message.author.username === "tachio"
     if (authorIsMe) return;
 
     let prompt = await this.processPrompt(message);
