@@ -9,20 +9,20 @@ const scopes = [
   "https://www.googleapis.com/auth/drive",
   "https://www.googleapis.com/auth/calendar",
   "https://www.googleapis.com/auth/calendar.events",
-  "https://www.googleapis.com/auth/calendar.readonly",
+  "https://www.googleapis.com/auth/calendar.readonly"
 ];
 
 const getCalendarInstance = async () => {
   const auth = new google.auth.GoogleAuth({
     keyFile,
-    scopes,
+    scopes
   });
 
   const client = await auth.getClient();
   return google.calendar({
     version: "v3",
     auth: client,
-    project: process.env.GOOGLE_PROJECT_NUMBER,
+    project: process.env.GOOGLE_PROJECT_NUMBER
   });
 };
 
@@ -51,7 +51,7 @@ async function listAllCalendars() {
     }
 
     return JSON.stringify(response.data.items.map(
-      ({ summary, id }) => `${summary} (${id})`,
+      ({ summary, id }) => `${summary} (${id})`
     ))
   } catch (error) {
     logger.info("Error occurred while listing calendars:" + error);
@@ -87,7 +87,7 @@ async function addPersonToEvent(calendarId, eventId, attendeeEmail) {
   return calendar.events.update({
     calendarId,
     eventId,
-    resource: event.data,
+    resource: event.data
   });
 }
 
@@ -110,10 +110,10 @@ async function createEvent(calendarId, event) {
         role: "reader",
         scope: {
           type: "group",
-          value: "room302.studio",
-        },
-      },
-    }),
+          value: "room302.studio"
+        }
+      }
+    })
   );
 
   await batch.execute();
@@ -137,7 +137,7 @@ async function listEventsThisWeek(calendarId) {
     timeMin: now.toISOString(),
     timeMax: nextWeek.toISOString(),
     singleEvents: true,
-    orderBy: "startTime",
+    orderBy: "startTime"
   });
   return JSON.stringify(response.data.items.map(extractCalendarData));
 }
@@ -159,7 +159,7 @@ async function listEventsPrevWeek(calendarId) {
     timeMin: prevWeek.toISOString(),
     timeMax: now.toISOString(),
     singleEvents: true,
-    orderBy: "startTime",
+    orderBy: "startTime"
   });
   return JSON.stringify(response.data.items.map(extractCalendarData));
 }
@@ -167,9 +167,9 @@ async function listEventsPrevWeek(calendarId) {
 /**
  * Retrieves a list of events occurring between the specified dates for the specified calendar.
  * @param {string} calendarId - The ID (email address) of the calendar to retrieve events from.
- * @param {string} startDate - The start date of the range.
- * @param {string} endDate - The end date of the range.
- * @returns {Promise<object>} - A promise that resolves to the list of events.
+ * @param {string | Date} startDate - The start date of the range.
+ * @param {string | Date} endDate - The end date of the range.
+ * @returns {Promise<string>} - A promise that resolves to the list of events.
  */
 async function listEventsBetweenDates(calendarId, startDate, endDate) {
   const calendar = await getCalendarInstance();
@@ -179,7 +179,7 @@ async function listEventsBetweenDates(calendarId, startDate, endDate) {
     timeMin: new Date(startDate).toISOString(),
     timeMax,
     singleEvents: true,
-    orderBy: "startTime",
+    orderBy: "startTime"
   });
   return JSON.stringify(response.data.items.map(extractCalendarData));
 }
@@ -189,7 +189,7 @@ function extractCalendarData(event) {
     status: event.status,
     summary: event.summary,
     start: event.start,
-    end: event.end,
+    end: event.end
   };
 }
 
@@ -221,5 +221,5 @@ module.exports = {
   },
   listEventsBetweenDates,
   listEventsThisWeek,
-  listEventsPrevWeek,
+  listEventsPrevWeek
 };
