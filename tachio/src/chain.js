@@ -282,7 +282,7 @@ module.exports = (async () => {
    */
   async function processAndLogCapabilityResponse(messages, capabilityMatch) {
     logger.info(`processAndLogCapabilityResponse: ${capabilityMatch}`);
-    let toolId, capSlug, capMethod, capArgs;
+    let toolId, capSlug, capMethod, capArgs
     if (capabilityMatch.length === 4) {
       [_, capSlug, capMethod, capArgs] = capabilityMatch
     } else {
