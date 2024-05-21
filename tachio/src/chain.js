@@ -422,7 +422,7 @@ module.exports = (async () => {
     logger.info(`Processing Message in chain.js: ${lastMessage}`);
 
     let capabilityMatch = lastMessage.match(capabilityRegex) || lastMessage.match(toolUseCapabilityRegex);
-    logger.info(`Is Capability: ${!!capabilityMatch} - ${lastMessage}`);
+    logger.info(`Is Capability: ${!!capabilityMatch} - ${lastMessage}`)
     let capabilityName
     if (capabilityMatch) {
       logger.info(`Capability Detected: ${lastMessage}`);
