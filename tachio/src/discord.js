@@ -224,6 +224,7 @@ class DiscordBot {
         shouldRespond ? "Responding" : "Not Responding"
       }`
     );
+
     // TODO: add channelName- make it easier to understand what the var is and how it is meant to be used- some places expect an object, like splitAndSendMessage, and other things expect a name string, like the memory saving
 
     // Okay one issue is this actually seems to be sending the message back itself
