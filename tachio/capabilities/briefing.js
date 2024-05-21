@@ -166,7 +166,7 @@ async function makeProjectBriefing(projectName) {
     const processedMemories = await getRelevantMemories(projectName)
     const memoriesMentioningProject = await getMemoriesByString(projectName)
     const todoChanges = await listTodoChanges()
-    const calendarEntries = await readCalendar()
+    const calendarEntries = await readCalendarByProject({ name: projectName })
     const projectMemoryMap =
       await identifyProjectsInMemories(processedMemories)
 
@@ -193,16 +193,25 @@ async function makeProjectBriefing(projectName) {
 async function makeBiweeklyProjectBriefing(projectName) {
   const { data: [project], error } = await supabase
     .from(PROJECT_TABLE_NAME)
-    .select('id, missive_conversation_id')
+    .select('id, missive_conversation_id,shortname,aliases')
     .eq('name', projectName)
     .limit(1)
   if (!project) throw new Error('Error occurred while trying to make biweekly project briefing: Project not found')
   if (error) throw new Error(`Error occurred while trying to fetch project in making biweekly project briefing: ${error.message}`)
 
   const memoriesInProjectConversation = await getMemoriesByConversationID(project.missive_conversation_id)
-  // TODO: distinguish which project each calendar event belongs to
-  const calendarEntries = await readCalendar()
+  let projectAliases
+  try {
+    projectAliases = JSON.parse(project.aliases)
+  } catch (e) {
+    logger.error(`Error parsing project aliases: ${e} ${projectName} ${project.aliases}`)
+  }
 
+  const calendarEntries = await readCalendarByProject({
+    name: projectName,
+    shortname: project.shortname,
+    aliases: projectAliases
+  })
   const { data, errorFetchDailyReports } = await supabase
     .from(DAILY_REPORT_TABLE_NAME)
     .select('subject, content')
@@ -373,26 +382,29 @@ async function listTodoChanges() {
 
 /**
  * Reads the calendar for the current week.
- * @returns {Promise<Object>} A promise that resolves to an object containing calendar entries.
+ * @returns {Promise<array>} A promise that resolves to an object containing calendar entries.
  */
 async function readCalendar() {
   try {
     // Assuming you have a way to determine the calendarId. It could be an environment variable or a fixed value.
-    // TODO: Get this from supabase config table
-    const calendarId = 'your_calendar_id_here' // Replace with actual calendar ID
+    const calendarIds = process.env.CALENDAR_IDS.split(',')
     // const events = await listEventsThisWeek(calendarId);
     // const events = await listEventsBetweenDates(calendarId, dateFns.startOfWeek(new Date()), dateFns.endOfWeek(new Date()));
     // pull 1 week behind and 1 week ahead
-    const events = await listEventsBetweenDates(
-      calendarId,
-      dateFns.subWeeks(new Date(), 1),
-      dateFns.addWeeks(new Date(), 1)
-    )
 
-    return events
+    const promises = calendarIds.map(async (calendarId) => {
+      const events = await listEventsBetweenDates(
+        calendarId,
+        dateFns.subWeeks(new Date(), 1),
+        dateFns.addWeeks(new Date(), 1)
+      )
+      return JSON.parse(events)
+    })
+    const events = await Promise.all(promises)
+    return events.flat()
   } catch (error) {
     logger.error(`Error reading calendar: ${error}`)
-    return {} // Return an empty object or handle the error as appropriate
+    return [] // Return an empty object or handle the error as appropriate
   }
 }
 
@@ -621,6 +633,16 @@ async function archiveSummary(summary) {
   }
 
   return data
+}
+
+// Helper functions
+async function readCalendarByProject({ name, shortname, aliases }) {
+  const events = await readCalendar()
+  if (!name && !shortname && !aliases) return events
+  return events.filter(event => {
+    const summary = event.summary.toLowerCase()
+    return summary.includes(name?.toLowerCase()) || summary.includes(shortname?.toLowerCase()) || aliases?.some(alias => summary.includes(alias?.toLowerCase()))
+  })
 }
 
 module.exports = {
