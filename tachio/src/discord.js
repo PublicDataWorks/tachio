@@ -170,7 +170,7 @@ class DiscordBot {
     const botMentionOrChannel = detectBotMentionOrChannel(message);
     const messageAuthorIsBot = message.author.bot;
     const authorIsMe = message.author.username === 'tachio'
-    if (authorIsMe) return;
+    if (authorIsMe) return
 
     let prompt = await this.processPrompt(message);
     let processedPrompt = await this.processImageAttachment(message, prompt);
