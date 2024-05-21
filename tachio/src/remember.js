@@ -504,10 +504,10 @@ async function getChannelMessageHistory(channelId, limit = 5) {
 /**
  * Retrieves relevant memories based on a query string.
  * @param {string} queryString - The query string to search for relevant memories.
- * @param {number} [limit=5] - The maximum number of memories to retrieve (default: 5).
+ * @param {number} [limit=20] - The maximum number of memories to retrieve (default: 5).
  * @returns {Promise<Array>} - A promise that resolves to an array of relevant memories.
  */
-async function getRelevantMemories(queryString, limit = 5) {
+async function getRelevantMemories(queryString, limit = 20) {
   // make sure queryString is a string
   if (typeof queryString !== "string") {
     logger.info("No query string provided to getRelevantMemories");

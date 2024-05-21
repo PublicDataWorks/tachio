@@ -11,10 +11,10 @@ const { createHmac } = require('crypto')
 const logger = require('./src/logger.js')('api')
 const { processLinearRequest } = require('./src/linear')
 const { processGithubRequest, verifyGithubSignature } = require('./src/github')
-const { PROJECT_TABLE_NAME } = require('./capabilities/manageprojects')
+const { PROJECT_TABLE_NAME, getActiveProjects } = require('./capabilities/manageprojects')
 const { processDailyReport, sendMissiveResponse, createPost } = require('./src/missive')
 const { supabase } = require('./src/supabaseclient')
-const { makeBiweeklyProjectBriefing } = require('./capabilities/briefing')
+const { makeBiweeklyProjectBriefing, makeWeeklyBriefing } = require('./capabilities/briefing')
 const { differenceInMilliseconds, getWeek } = require('date-fns')
 const { BIWEEKLY_BRIEFING } = require('./src/paths')
 require('dotenv').config()
@@ -430,7 +430,7 @@ app.post(BIWEEKLY_BRIEFING, validateAuthorizationHeader, async (req, res) => {
     .eq('id', projectID)
 })
 
-app.post("/aaaa", async (req, res) => {
+app.post("/api/weekly-thread", validateAuthorizationHeader, async (req, res) => {
   // Call by pg_cron, so we need to return 2xx to avoid spamming
   res.status(204).end()
   const today = new Date();
@@ -444,15 +444,14 @@ app.post("/aaaa", async (req, res) => {
     logger.error(`Error processing weekly: ${error?.message} ${JSON.stringify(data)} ${weekOfYear}`);
     return
   }
+  const briefing = await makeWeeklyBriefing()
   const title = `Weekly conversation for week ${getWeek(today)} of ${today.getFullYear()}`
-  console.log(await createPost({
-    text: "hehe",
+  await createPost({
+    text: briefing,
     notificationTitle: title,
     conversationSubject: title,
-    add_assignees: ["815e18a9-eab9-4b89-8227-de6518f5d987"],
     organization: process.env.MISSIVE_ORGANIZATION
-  }))
-
+  })
 })
 
 function jsonToMarkdownList(jsonObj, indentLevel = 0) {

@@ -11,8 +11,10 @@ const { listEventsBetweenDates } = require('./calendar.js') // Adjust the path a
 
 const { destructureArgs, countTokens } = require('../helpers')
 const { supabase } = require('../src/supabaseclient')
-const { PROJECT_TABLE_NAME } = require('./manageprojects')
+const { PROJECT_TABLE_NAME, getActiveProjects } = require('./manageprojects')
 const { DAILY_REPORT_TABLE_NAME } = require('../src/missive')
+const { createChatCompletion } = require('../helpers')
+const { addDays, addWeeks, subWeeks } = require("date-fns")
 
 async function handleCapabilityMethod(method, args) {
   const [arg1] = destructureArgs(args)
@@ -41,80 +43,22 @@ async function makeWeeklyBriefing() {
     // const feedback = await retrieveFeedback();
     // TODO: Figure out the best way to incorporate this feedback into the summary generation
 
-    // Look at all memories from this week (timestamp comparison in memories table)
-    // Turn this week's memories into a factlist/meta-summary
-    const weekStartDate = dateFns.startOfWeek(new Date())
-    const weekEndDate = dateFns.endOfWeek(new Date())
-    logger.info(
-      `Looking for memories between ${weekStartDate} and ${weekEndDate}`
-    )
-
-    const weekMemories = await getMemoriesBetweenDates(
-      weekStartDate,
-      weekEndDate
-    )
-    // console.log(weekMemories)
-
-    logger.info('Below is the weekMemories returned from supabase')
-    logger.info(`${JSON.stringify(weekMemories, null, 2)}`)
-
-    // we want to remove all the embeddings from each memory
-    // and turn into a giant string for tokenization
-    const cleanMemories = weekMemories.map((memory) => {
-      return memory.value
-    })
-
-    const cleanMemoryString = cleanMemories.join('\n')
-
-    logger.info(
-      `${countTokens(
-        cleanMemoryString
-      )} tokens for all memories this week from ${weekStartDate} to ${weekEndDate} and ${
-        weekMemories.length
-      } memories`
-    )
-
-    // Look for any projects / project IDs / project slugs
-    // const projects = await identifyProjectsInMemories(weekMemories);
-    // We now have an array of projects and identifying information about them
-
-    // const projectMemoryMap = {};
-
-    // loop through each project, and get the relevant memories for it
-    // for (const project of projects) {
-    //   const projectMemories = getRelevantMemories(project.label, 5);
-    //   logger.info(`Found ${countTokens(projectMemories)} tokens for project ${project.label} across ${projectMemories.length} memories`);
-    //   projectMemoryMap[project.label] = projectMemories;
-    // }
-
-    // Now we've built information about projects, more world context
-
-    // Look for any todos that have been completed
     // List all todo changes from this week (added, edited, deleted)
-    // const todoChanges = await listTodoChanges();
-    // logger.info(`Found ${todoChanges.length} todo changes this week`);
+    const now = new Date();
+    const weekLater = addWeeks(now, 1);
+    const weekBefore = subWeeks(now, 1);
+    const todoChanges = await listTodoChanges({ startDate: weekBefore, endDate: now });
+    logger.info(`Found ${todoChanges.length} todo changes this week`);
 
-    // Read the calendar for the previous + upcoming week
-    // const calendarEntries = await readCalendar();
-    // logger.info(`Found ${calendarEntries.length} calendar entries this week`);
+    // Read the calendar for the upcoming week
+    const calendarEntries = await readCalendar({ startDate: now, endDate: weekLater });
+    logger.info(`Found ${calendarEntries.length} calendar entries this week`);
 
-    // let projectSummaries = [];
-    // for (const projectMemories of projects) {
-    //   const projectSummary = await generateProjectSummary({ projectMemories, projectMemoryMap, todoChanges, calendarEntries });
-
-    //   logger.info(`Generated project summary for ${projectMemories.label}: ${projectSummary}`);
-
-    //   // add the project summary to the project summaries
-    //   projectSummaries.push(projectSummary);
-    // }
-    // logger.info(`Generated ${projectSummaries.length} project summaries`);
-
-    // // Generate meta-summary based on project summaries
-    const metaSummary = await generateMetaSummary({
-      weekMemories
-      // projectSummaries,
-      // todoChanges,
-      // calendarEntries,
+    const activeProjects = await getActiveProjects()
+    return await generateMetaSummary({
+      projectSummaries: activeProjects,
+      todoChanges,
+      calendarEntries
     })
 
     // Take fact-based summary and run it through weekly summary prompt / template
@@ -133,12 +77,11 @@ async function makeWeeklyBriefing() {
     // const formattedSummary = 'This is a formatted summary';
     // return metaSummary
     // console.log(metaSummary);
-    return metaSummary
 
     // return "Weekly summary done!";
     // return formattedSummary;
   } catch (error) {
-    throw new Error(`Error occurred while making external request: ${error}`)
+    throw new Error(`Error occurred while making external request: ${error} ${error.stack}`)
   }
 }
 
@@ -165,7 +108,7 @@ async function makeProjectBriefing(projectName) {
     // Placeholder for project briefing logic
     const processedMemories = await getRelevantMemories(projectName)
     const memoriesMentioningProject = await getMemoriesByString(projectName)
-    const todoChanges = await listTodoChanges()
+    const todoChanges = await listTodoChanges({})
     const calendarEntries = await readCalendarByProject({ name: projectName })
     const projectMemoryMap =
       await identifyProjectsInMemories(processedMemories)
@@ -255,7 +198,6 @@ async function retrieveFeedback() {
  * @returns {Promise<Array>} A promise that resolves to an array of project identifiers.
  */
 async function identifyProjectsInMemories(processedMemories) {
-  const { createChatCompletion } = require('../helpers')
   // Placeholder for project identification logic
   // We are going to get a bunch of memory objects
   // First let's extract all the content
@@ -362,18 +304,19 @@ In the previous message I just sent, please identify any GitHub Repos, Issues, M
 
 /**
  * Lists all todo changes from this week (added, edited, deleted).
+ * @param {Date | undefined} startDate - A optional start date for the todo changes. Leave it empty to default to the current week.
+ * @param {Date | undefined} endDate - A optional end date for the todo changes. Leave it empty to default to the current week.
  * @returns {Promise<Array>} A promise that resolves to an array of todo changes.
  */
-async function listTodoChanges() {
-  const { supabase } = require('../helpers')
+async function listTodoChanges({ startDate, endDate }) {
   const { data, error } = await supabase
-    .from('todo')
+    .from('issues')
     .select('*')
-    .gte('updated_at', dateFns.startOfWeek(new Date()))
-    .lte('updated_at', dateFns.endOfWeek(new Date()))
+    .gte('updated_at', startDate?.toISOString() || dateFns.startOfWeek(new Date()))
+    .lte('updated_at', endDate?.toISOString() || dateFns.endOfWeek(new Date()))
 
   if (error) {
-    logger.error('Error retrieving todo changes', error)
+    logger.error(`Error retrieving todo changes: ${JSON.stringify(error)}`)
     return []
   }
 
@@ -382,21 +325,20 @@ async function listTodoChanges() {
 
 /**
  * Reads the calendar for the current week.
+ * @param {Date | undefined} startDate - An optional start date for the calendar entries, leave it empty to default to the current week.
+ * @param {Date | undefined} endDate - An optional end date for the calendar entries, leave it empty to default to the current week.
+ *
  * @returns {Promise<array>} A promise that resolves to an object containing calendar entries.
  */
-async function readCalendar() {
+async function readCalendar({ startDate, endDate }) {
   try {
     // Assuming you have a way to determine the calendarId. It could be an environment variable or a fixed value.
     const calendarIds = process.env.CALENDAR_IDS.split(',')
-    // const events = await listEventsThisWeek(calendarId);
-    // const events = await listEventsBetweenDates(calendarId, dateFns.startOfWeek(new Date()), dateFns.endOfWeek(new Date()));
-    // pull 1 week behind and 1 week ahead
-
     const promises = calendarIds.map(async (calendarId) => {
       const events = await listEventsBetweenDates(
         calendarId,
-        dateFns.subWeeks(new Date(), 1),
-        dateFns.addWeeks(new Date(), 1)
+        startDate || dateFns.subWeeks(new Date(), 1),
+        endDate || dateFns.addWeeks(new Date(), 1)
       )
       return JSON.parse(events)
     })
@@ -429,7 +371,6 @@ async function generateProjectSummary({
                                         memoriesInProjectConversation,
                                         dailyReports
                                       }) {
-  const { createChatCompletion } = require('../helpers')
   // Placeholder for project summary generation logic
   let messages = []
 
@@ -513,28 +454,43 @@ async function generateMetaSummary({
                                      todoChanges,
                                      calendarEntries
                                    }) {
-  const { createChatCompletion } = require('../helpers')
-  logger.info(
-    `Generating meta-summary for weekMemories: ${weekMemories.length}`
-  )
-  // make sure all the things exist
-
-  // log out the first memory
-  logger.info(`First memory: ${JSON.stringify(weekMemories[0])}`)
-
-  // if(!projectSummaries || projectSummaries.length === 0) {
-  //   throw new Error("No project summaries found, can't generate a meta-summary");
-  // }
-
-  // if(!todoChanges || todoChanges.length === 0) {
-  //   throw new Error("No todo changes found, can't generate a meta-summary");
-  // }
+  logger.info(`Generating meta-summary for projectSummaries: ${projectSummaries?.length}`)
+  if (!projectSummaries || projectSummaries.length === 0) {
+    throw new Error("No project summaries found, can't generate a meta-summary");
+  }
 
   // if(!calendarEntries || Object.keys(calendarEntries).length === 0) {
   //   throw new Error("No calendar entries found, can't generate a meta-summary");
   // }
-
-  const metaSummaryCompletion = await createChatCompletion([
+  const messages = []
+  if (weekMemories && weekMemories.length > 0) {
+    logger.info(`First memory: ${JSON.stringify(weekMemories[0])}`)
+    messages.push({
+      role: 'user',
+      content: `Here are all the memories from this week: ${weekMemories
+        .map((memory) => {
+          return `${memory.created_at}: ${memory.value}`
+        })
+        .join('\n')}`
+    })
+  }
+  if (calendarEntries && calendarEntries.length > 0) {
+    messages.push({
+      role: 'user',
+      content: `Here are the calendar entries for the upcoming week: ${JSON.stringify(calendarEntries)}`
+    })
+  }
+  if (todoChanges && todoChanges.length > 0) {
+    messages.push({
+      role: 'user',
+      content: `Here are todo changes from last week (added, edited, deleted): ${JSON.stringify(todoChanges)}`
+    })
+  }
+  messages.push({
+    role: 'user',
+    content: `Here are the active projects with their to-dos. Each to-do has its own rank in terms of urgency: ${JSON.stringify(projectSummaries)}`
+  })
+  return await createChatCompletion([
     // {
     //   role: "user",
     //   content: `I want to generate a meta-summary based on the project summaries: ${projectSummaries.join("\n")}`,
@@ -547,14 +503,7 @@ async function generateMetaSummary({
     //   role: "user",
     //   content: `Here are the calendar entries: ${JSON.stringify(calendarEntries)}`,
     // },
-    {
-      role: 'user',
-      content: `Here are all the memories from this week: ${weekMemories
-        .map((memory) => {
-          return `${memory.created_at}: ${memory.value}`
-        })
-        .join('\n')}`
-    },
+    ...messages,
     {
       role: 'user',
       content: `Can you please generate a meta-summary of this week? Be as detailed as possible.`
@@ -564,8 +513,6 @@ async function generateMetaSummary({
 
   // return metaSummaryCompletion;
   // extract the response text from the openai chat completion
-  const responseText = metaSummaryCompletion.choices[0].message.content
-  return responseText
 }
 
 /**
@@ -637,7 +584,7 @@ async function archiveSummary(summary) {
 
 // Helper functions
 async function readCalendarByProject({ name, shortname, aliases }) {
-  const events = await readCalendar()
+  const events = await readCalendar({})
   if (!name && !shortname && !aliases) return events
   return events.filter(event => {
     const summary = event.summary.toLowerCase()
@@ -647,5 +594,6 @@ async function readCalendarByProject({ name, shortname, aliases }) {
 
 module.exports = {
   handleCapabilityMethod,
-  makeBiweeklyProjectBriefing
+  makeBiweeklyProjectBriefing,
+  makeWeeklyBriefing
 }
