@@ -537,7 +537,7 @@ async function generateAiCompletion(prompt, username, messages, config) {
       {
         temperature,
         presence_penalty,
-        max_token
+        max_token,
       }
     );
     logger.info(`🔧 Chat completion created:\n- Completion: ${completion}`);
