@@ -551,7 +551,7 @@ async function sendMissiveResponse(lastMessage, requestQuery, conversationId) {
 
   // Log the response status and body from the Missive API
   logger.info(`Response post status: ${responsePost.status}`)
-  logger.info(`Response post body: ${JSON.stringify(responsePost)}`)
+  logger.info(`Response post body: ${JSON.stringify(await responsePost.json())}`)
 }
 
 module.exports = {

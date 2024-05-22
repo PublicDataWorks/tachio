@@ -211,7 +211,7 @@ async function processMissiveRequest(body, query) {
   formattedMessages.push(
     ...contextMessages.map((m) => ({
         role: 'user',
-        content: `#### Contextual message in conversation:\n${m.value}`
+        content: `#### Contextual message in conversation ${m.conversation_id}:\n ${m.created_at} ${m.value}`
       })
     )
   )

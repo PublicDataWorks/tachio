@@ -876,7 +876,7 @@ async function addUserMessages(username, messages) {
     userMessages.forEach((message) => {
       messages.push({
         role: "user",
-        content: `${message.value}`,
+        content: `${message.created_at}, in conversation ${message.conversation_id}: ${message.value}`,
       });
     });
   } catch (error) {
@@ -898,7 +898,7 @@ async function addUserMemories(username, messages) {
     userMemories.forEach((memory) => {
       messages.push({
         role: "system",
-        content: `You remember from a previous interaction on ${memory.created_at}: ${memory.value}`,
+        content: `You remember from a previous interaction on ${memory.created_at}, in conversation: ${memory.conversation_id}: ${memory.value}`,
       });
     });
   } catch (err) {
@@ -945,7 +945,7 @@ async function addRelevantMemories(username, messages) {
       logger.info('relevant memory ' + JSON.stringify(memory))
       messages.push({
         role: 'system',
-        content: `${memory.created_at}: ${memory.value}`
+        content: `${memory.created_at}, in conversation: ${memory.conversation_id}: ${memory.value}`
       })
     })
   } catch (err) {
@@ -966,7 +966,7 @@ async function addGeneralMemories(messages) {
     generalMemories.forEach((memory) => {
       messages.push({
         role: "system",
-        content: `${memory.created_at}: ${memory.value}`,
+        content: `${memory.created_at} in conversation: ${memory.conversation_id}: ${memory.value}`,
       });
     });
   } catch (err) {
