@@ -361,7 +361,7 @@ async function processChunks(chunks, data, limit = 2, userPrompt = "") {
  * @param {string} userPrompt - The user prompt.
  * @returns {Promise<string>} - The generated summary.
  */
-async function fetchAndSummarizeUrl({ url, userPrompt = "" }) {
+async function fetchAndSummarizeUrl({ url, userPrompt = '' }) {
   const cleanedUrl = cleanUrlForPuppeteer(url);
   const hashedUrl = crypto.createHash("md5").update(cleanedUrl).digest("hex");
   const cachePath = path.join(__dirname, "cache", `${hashedUrl}.json`);
