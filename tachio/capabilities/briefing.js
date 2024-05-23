@@ -4,7 +4,7 @@ dotenv.config()
 const {
   getRelevantMemories,
   getMemoriesBetweenDates,
-  getMemoriesByString, getMemoriesByConversationID
+  getMemoriesByString, getMemoriesByConversationID, getChannelMessageHistory
 } = require('../src/remember')
 const logger = require('../src/logger')('briefing')
 const { listEventsBetweenDates } = require('./calendar.js') // Adjust the path as necessary
@@ -60,28 +60,8 @@ async function makeWeeklyBriefing() {
       todoChanges,
       calendarEntries
     })
-
-    // Take fact-based summary and run it through weekly summary prompt / template
-    // TODO: Prompt engineering around turning list of facts across org into well-summarized document
-    // for final user-facing message
-    // const formattedSummary = await formatSummary(metaSummary);
-
-    // Create new post in new conversation (if missive)
-    // and/or
-    // Create new thread in private channel (if Discord)
-    // TODO: For when we do long-running capabilities
-    // await communicateSummary(formattedSummary);
-
-    // Save an archived copy of this weekly summary into our database (as special memory?)
-    // await archiveSummary(formattedSummary);
-    // const formattedSummary = 'This is a formatted summary';
-    // return metaSummary
-    // console.log(metaSummary);
-
-    // return "Weekly summary done!";
-    // return formattedSummary;
   } catch (error) {
-    throw new Error(`Error occurred while making external request: ${error} ${error.stack}`)
+    throw new Error(`Error occurred while making external request: ${error}, ${error.stack}`)
   }
 }
 
@@ -104,11 +84,20 @@ async function makeDailyBriefing() {
  * @param {String} projectName - The project name to make a briefing on.
  */
 async function makeProjectBriefing(projectName) {
+  const { data, error } = await supabase
+    .from(PROJECT_TABLE_NAME)
+    .select('id')
+    .eq('name', projectName)
+    .limit(1)
+  if (error) throw new Error(`Error occurred while trying to fetch project in making project briefing ${projectName}: ${error.message}`)
+  if (!data || data.length === 0) throw new Error(`Error occurred while trying to make project briefing: Project not found, ${projectName}`)
+  const project = data[0]
+
   try {
     // Placeholder for project briefing logic
-    const processedMemories = await getRelevantMemories(projectName)
-    const memoriesMentioningProject = await getMemoriesByString(projectName)
-    const todoChanges = await listTodoChanges({})
+    const todoChanges = await listTodoChanges()
+    const conversationMessages = await getChannelMessageHistory(project.id)
+    const processedMemories = await getMemoriesByConversationID(project.id) // this includes attachments
     const calendarEntries = await readCalendarByProject({ name: projectName })
     const projectMemoryMap =
       await identifyProjectsInMemories(processedMemories)
@@ -134,13 +123,14 @@ async function makeProjectBriefing(projectName) {
  * @example await makeWeeklyBriefing();
  */
 async function makeBiweeklyProjectBriefing(projectName) {
-  const { data: [project], error } = await supabase
+  const { data: dataFetchProject, error } = await supabase
     .from(PROJECT_TABLE_NAME)
     .select('id, missive_conversation_id,shortname,aliases')
     .eq('name', projectName)
     .limit(1)
-  if (!project) throw new Error('Error occurred while trying to make biweekly project briefing: Project not found')
-  if (error) throw new Error(`Error occurred while trying to fetch project in making biweekly project briefing: ${error.message}`)
+  if (error) throw new Error(`Error occurred while trying to fetch project in making biweekly project briefing ${projectName}: ${error.message}`)
+  if (!dataFetchProject || dataFetchProject.length === 0) throw new Error(`Error occurred while trying to make biweekly project briefing ${projectName}: Project not found`)
+  const project = dataFetchProject[0]
 
   const memoriesInProjectConversation = await getMemoriesByConversationID(project.missive_conversation_id)
   let projectAliases
@@ -308,7 +298,7 @@ In the previous message I just sent, please identify any GitHub Repos, Issues, M
  * @param {Date | undefined} endDate - A optional end date for the todo changes. Leave it empty to default to the current week.
  * @returns {Promise<Array>} A promise that resolves to an array of todo changes.
  */
-async function listTodoChanges({ startDate, endDate }) {
+async function listTodoChanges({ startDate, endDate } = {}) {
   const { data, error } = await supabase
     .from('issues')
     .select('*')
@@ -455,13 +445,6 @@ async function generateMetaSummary({
                                      calendarEntries
                                    }) {
   logger.info(`Generating meta-summary for projectSummaries: ${projectSummaries?.length}`)
-  if (!projectSummaries || projectSummaries.length === 0) {
-    throw new Error("No project summaries found, can't generate a meta-summary");
-  }
-
-  // if(!calendarEntries || Object.keys(calendarEntries).length === 0) {
-  //   throw new Error("No calendar entries found, can't generate a meta-summary");
-  // }
   const messages = []
   if (weekMemories && weekMemories.length > 0) {
     logger.info(`First memory: ${JSON.stringify(weekMemories[0])}`)

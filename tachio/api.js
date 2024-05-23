@@ -17,6 +17,7 @@ const { supabase } = require('./src/supabaseclient')
 const { makeBiweeklyProjectBriefing, makeWeeklyBriefing } = require('./capabilities/briefing')
 const { differenceInMilliseconds, getWeek } = require('date-fns')
 const { BIWEEKLY_BRIEFING } = require('./src/paths')
+const { MEMORIES_TABLE_NAME } = require("./config")
 require('dotenv').config()
 
 let port = process.env.EXPRESS_PORT
@@ -137,7 +138,7 @@ async function processMissiveRequest(body, query) {
     contextPrompt = 'I want to record this as a todo (no further action needed beyond that). '
       + (task.completed_at ? `This todo is already completed at ${new Date(task.completed_at * 1000)}. \n` : `This todo is not completed yet. \n`)
   } else if (body.comment.attachment?.media_type === 'text') {
-    contextPrompt = `ingest:deepDocumentIngest(${body.comment.attachment.url})`
+    contextPrompt = `ingest:deepDocumentIngest(${body.comment.attachment.url}, ${conversationId})`
   }
   // Process the webhook payload using the processWebhookPayload function
   const simplifiedPayload = processWebhookPayload(body)
@@ -145,8 +146,8 @@ async function processMissiveRequest(body, query) {
   // Check if there are any attachments in the comment
   const attachment = body.comment.attachment
 
-  // TODO: Add a check for the attachment type
-  if (attachment) {
+  // text memory is handled by deepDocumentIngest
+  if (attachment && body.comment.attachment?.media_type !== 'text') {
     // Extract the resource ID from the attachment
     const resourceId = attachment.id
 
@@ -446,12 +447,26 @@ app.post("/api/weekly-thread", validateAuthorizationHeader, async (req, res) => 
   }
   const briefing = await makeWeeklyBriefing()
   const title = `Weekly conversation for week ${getWeek(today)} of ${today.getFullYear()}`
-  await createPost({
+  const newPost = await createPost({
     text: briefing,
     notificationTitle: title,
     conversationSubject: title,
     organization: process.env.MISSIVE_ORGANIZATION
   })
+  const conversationId = newPost?.posts?.conversation
+  if (!conversationId) {
+    logger.error(`Error creating new thread for weekly conversation: ${JSON.stringify(newPost)}`);
+    return
+  }
+  const { error: errorNewWeekly } = await supabase
+    .from("weekly_conversations")
+    .insert({
+      conversation_id: conversationId,
+      week_of_year: weekOfYear,
+      briefing
+    });
+  if (errorNewWeekly)
+    logger.error(`Error insert new weekly conversation: ${errorNewWeekly.message}, ${weekOfYear}, ${conversationId}`);
 })
 
 function jsonToMarkdownList(jsonObj, indentLevel = 0) {

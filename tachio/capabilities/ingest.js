@@ -30,10 +30,11 @@ async function handleCapabilityMethod(method, args) {
  * @async
  * @function deepDocumentIngest
  * @param {string} url - The arguments object that contains the URL or the text of the document to be ingested
+ * @param {string} conversationId - The conversation ID to associate with the memory
  * @returns {Promise<string>} - The meta-summary of the document
  *
  */
-async function deepDocumentIngest(url) {
+async function deepDocumentIngest(url, conversationId) {
   // For testing:
   // node capability-player.js --runCapability="ingest:deepDocumentIngest(https://docs.pdw.co/tachio-overview)"
   const { PROMPT_DEEP_INGEST } = await getPromptsFromSupabase();
@@ -77,7 +78,7 @@ async function deepDocumentIngest(url) {
       // make a new memory that the document was re-ingested
       const updateMessage = `We previously ingested this document on ${prevImportDate}. We re-ingested it at ${new Date().toISOString()} and removed our previous memories.`;
       await storeUserMemory(
-        { username: "capability-deepdocumentingest", guild: "" },
+        { username: "capability-deepdocumentingest", guild: "", conversationId },
         updateMessage,
         "capability-deepdocumentingest",
         url,

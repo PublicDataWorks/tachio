@@ -330,7 +330,10 @@ async function createSharedLabel({ name, organization, parent, shareWithOrganiza
     const errorBody = await response.text()
     throw new Error(`Error creating shared label. HTTP status: ${response.status}, status text: ${response.statusText}, body: ${errorBody}`)
   }
-  return response.json()
+  const responseBody = await response.json()
+  logger.info(`Response createPost status: ${response.status}`)
+  logger.info(`Response createPost body: ${JSON.stringify(responseBody)}`)
+  return responseBody
 }
 
 
@@ -372,7 +375,10 @@ async function createPost({
     const errorBody = await response.text()
     throw new Error(`Error creating post. HTTP status: ${response.status}, status text: ${response.statusText}, body: ${errorBody}`)
   }
-  return response.json()
+  const responseBody = await response.json()
+  logger.info(`Response createPost status: ${response.status}`)
+  logger.info(`Response createPost body: ${JSON.stringify(responseBody)}`)
+  return responseBody
 }
 
 /*
