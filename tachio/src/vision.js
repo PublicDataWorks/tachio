@@ -11,7 +11,7 @@ const fetchImageDescription = async () => {
   logger.info(`Requesting description of image at ${imageUrl}`);
   try {
     const completion = await openai.chat.completions.create({
-      model: "gpt-4-vision-preview",
+      model: "gpt-4o",
       max_tokens: 1024,
       messages: [
         {

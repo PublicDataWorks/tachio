@@ -497,7 +497,10 @@ async function processDailyReport(payload) {
 async function sendMissiveResponse(lastMessage, requestQuery, conversationId) {
   // Separate thinking part out of result part of Claude's message
   const messageMatches = lastMessage.content.match(anthropicThinkingRegex)
-  let notification
+  let notification = {
+    title: BOT_NAME,
+    body: ''
+  }
   const attachments = []
   if (messageMatches && messageMatches.length > 2) {
     // Thinking part is always presented
@@ -513,10 +516,6 @@ async function sendMissiveResponse(lastMessage, requestQuery, conversationId) {
         notification = JSON.parse(notificationMatches[1])
       } catch (error) {
         logger.error('Error parsing notification:', error, notificationMatches[1])
-        notification = {
-          title: BOT_NAME,
-          body: ''
-        }
       }
     }
     // Add result part
@@ -551,7 +550,7 @@ async function sendMissiveResponse(lastMessage, requestQuery, conversationId) {
 
   // Log the response status and body from the Missive API
   logger.info(`Response post status: ${responsePost.status}`)
-  logger.info(`Response post body: ${JSON.stringify(responsePost)}`)
+  logger.info(`Response post body: ${JSON.stringify(await responsePost.json())}`)
 }
 
 module.exports = {
