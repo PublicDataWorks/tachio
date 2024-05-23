@@ -227,7 +227,7 @@ function getHexNameMap() {
  * @returns {boolean} - True if the message contains a capability, false otherwise.
  */
 function doesMessageContainCapability(message) {
-  return !!(message.match(capabilityRegex) || message.match(toolUseCapabilityRegex));
+  return !!(message?.match(capabilityRegex) || message?.match(toolUseCapabilityRegex));
 }
 
 /**
@@ -949,7 +949,7 @@ async function addRelevantMemories(username, messages) {
       })
     })
   } catch (err) {
-    logger.info(err);
+    logger.info(`${err} ${err.stack}`);
   }
 }
 

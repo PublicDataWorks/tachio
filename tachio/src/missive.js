@@ -495,8 +495,9 @@ async function processDailyReport(payload) {
 }
 
 async function sendMissiveResponse(lastMessage, requestQuery, conversationId) {
+  const content = lastMessage?.content || 'No content found. Check the log for more information.'
   // Separate thinking part out of result part of Claude's message
-  const messageMatches = lastMessage.content.match(anthropicThinkingRegex)
+  const messageMatches = content.match(anthropicThinkingRegex)
   let notification = {
     title: BOT_NAME,
     body: ''
@@ -543,7 +544,7 @@ async function sendMissiveResponse(lastMessage, requestQuery, conversationId) {
         notification,
         username: BOT_NAME,
         attachments,
-        markdown: attachments ? undefined : lastMessage.content
+        markdown: attachments.length > 0 ? undefined : content
       }
     })
   })
