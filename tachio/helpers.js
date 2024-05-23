@@ -1450,5 +1450,6 @@ module.exports = {
   toolUseCapabilityRegex,
   anthropicThinkingRegex,
   notificationRegex,
+  lastUserMessage,
   TODO_TABLE_NAME
 };
