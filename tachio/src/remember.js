@@ -50,7 +50,7 @@ async function getMemoriesBetweenDates(startDate, endDate) {
 
   logger.info(`Looking for memories between ${startDate} and ${endDate}`);
   logger.info(
-    `Looking for memories between ${startDate.toISOString()} and ${endDate.toISOString()}`,
+    `Looking for memories between ${startDate.toISOString()} and ${endDate.toISOString()}`
   );
 
   const response = await supabase
@@ -104,7 +104,7 @@ async function storeUserMemory(
   { username, guild, conversationId, relatedMessageId },
   value,
   memoryType = "user",
-  resourceId = null,
+  resourceId = null
 ) {
   // first we do some checks to make sure we have the right types of data
   if (!username) {
@@ -121,19 +121,19 @@ async function storeUserMemory(
     logger.info("value provided to storeUserMemory is not a string");
   }
 
-  if(!conversationId) {
+  if (!conversationId) {
     logger.info("No conversationId provided to storeUserMemory");
   }
 
-  if(!guild) {
+  if (!guild) {
     logger.info("No guild provided to storeUserMemory");
   }
 
-  if(!relatedMessageId) {
+  if (!relatedMessageId) {
     logger.info("No relatedMessageId provided to storeUserMemory");
   }
 
-  if(!memoryType) {
+  if (!memoryType) {
     logger.info("No memoryType provided to storeUserMemory");
   }
 
@@ -157,7 +157,7 @@ async function storeUserMemory(
   // }
 
   logger.info(
-    `Storing memory for ${username}: ${value} in ${memoryType} memory`,
+    `Storing memory for ${username}: ${value} in ${memoryType} memory`
   );
 
   // const { embedding1: embedding, embedding2, embedding3, embedding4 } = embeddings;
@@ -165,7 +165,7 @@ async function storeUserMemory(
   try {
     const openAiEmbeddingResponse = await openai.embeddings.create({
       model: "text-embedding-ada-002",
-      input: value,
+      input: value
     });
 
     const [{ embedding: fetchedEmbedding }] = openAiEmbeddingResponse.data;
@@ -193,7 +193,7 @@ async function storeUserMemory(
       memory_type: memoryType,
       resource_id: resourceId,
       conversation_id: conversationId,
-      related_message_id: validatedRelatedMessageId,
+      related_message_id: validatedRelatedMessageId
     });
 
   // logger.info(
@@ -325,14 +325,14 @@ async function deleteMemoriesOfResource(resourceId) {
  * @returns {Promise<string>} - A promise that resolves to the stored message data.
  */
 async function storeUserMessage({ username, guild, conversationId }, value) {
-  const {data, error } = await supabase
+  const { data, error } = await supabase
     // .from("messages")
     .from(MESSAGES_TABLE_NAME)
     .insert({
       user_id: username,
       guild_id: guild,
       conversation_id: conversationId,
-      value,
+      value
     })
     .select()
 
@@ -369,17 +369,26 @@ async function getUserMessageHistory(userId, limit = 5) {
 /**
  * Retrieves message history for a specific channel_id
  * @param {string} channelId - The ID of the channel.
- * @param {number} [limit=5] - The maximum number of messages to retrieve. Default is 5.
+ * @param {number} [limit=20] - The maximum number of messages to retrieve. Default is 20.
+ * @param {Date | undefined} startDate - A optional start date for the retrieval.
+ * @param {Date | undefined} endDate - A optional end date for the retrieval.
  * @returns {Promise<Array<Object>>} - A promise that resolves to an array of message objects.
  */
-async function getChannelMessageHistory(channelId, limit = 5) {
-  const { data, error } = await supabase
-    // .from("messages")
+async function getChannelMessageHistory({ channelId, limit = 30, startDate, endDate }) {
+  const query = supabase
     .from(MESSAGES_TABLE_NAME)
     .select("*")
     .limit(limit)
     .order("created_at", { ascending: false })
     .eq("conversation_id", channelId);
+
+  if (startDate && endDate) {
+    query
+      .gte("created_at", startDate.toISOString())
+      .lte("created_at", endDate.toISOString());
+  }
+
+  const { data, error } = await query
 
   if (error) {
     logger.info("Error fetching channel message:", error);
@@ -532,7 +541,7 @@ async function getRelevantMemories(queryString, limit = 20) {
   // const { embedding1: embedding } = await stringToEmbedding(queryString);
   const openAiEmbeddingResponse = await openai.embeddings.create({
     model: "text-embedding-ada-002",
-    input: queryString,
+    input: queryString
   });
   const [{ embedding }] = openAiEmbeddingResponse.data;
 
@@ -541,7 +550,7 @@ async function getRelevantMemories(queryString, limit = 20) {
     query_embedding: embedding,
     // match_threshold: 0.78,
     match_threshold: 0.85,
-    match_count: limit,
+    match_count: limit
   });
 
   if (error) {
@@ -581,12 +590,21 @@ async function getMemoriesByString(queryString) {
 /**
  * Search for memories of a specific conversation
  * @param {string} conversationID - The conversationID to search for relevant memories.
+ * @param {Date | undefined} startDate - A optional start date for the retrieval.
+ * @param {Date | undefined} endDate - A optional end date for the retrieval.
  */
-async function getMemoriesByConversationID(conversationID) {
-  const { data, error } = await supabase
+async function getMemoriesByConversationID({ conversationID, startDate, endDate }) {
+  const query = supabase
     .from(MEMORIES_TABLE_NAME)
     .select("*")
     .eq("conversation_id", conversationID);
+  if (startDate && endDate) {
+    query
+      .gte("created_at", startDate.toISOString())
+      .lte("created_at", endDate.toISOString());
+  }
+
+  const { data, error } = await query
 
   if (error) {
     logger.error(`Error fetching relevant user memory: ${error.message}`);
@@ -595,6 +613,7 @@ async function getMemoriesByConversationID(conversationID) {
 
   return data;
 }
+
 module.exports = {
   getUserMemory,
   getUserMessageHistory,

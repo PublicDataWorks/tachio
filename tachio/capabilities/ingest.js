@@ -4,13 +4,19 @@ const dotenv = require("dotenv");
 dotenv.config();
 const { webPageToText, webpageToHTML } = require("./web.js"); // Adjust the path as necessary
 const { destructureArgs, createChatCompletion, getPromptsFromSupabase, getConfigFromSupabase } = require("../helpers");
-const { storeUserMemory, hasMemoryOfResource, deleteMemoriesOfResource, getResourceMemories } = require("../src/remember");
+const {
+  storeUserMemory,
+  hasMemoryOfResource,
+  deleteMemoriesOfResource,
+  getResourceMemories
+} = require("../src/remember");
 const logger = require("../src/logger.js")("ingest-capability");
 const { convert } = require("html-to-text");
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 
+const MEMORY_TYPE = 'capability-deepdocumentingest'
 const cacheDir = path.join(__dirname, "cache");
 if (!fs.existsSync(cacheDir)) {
   fs.mkdirSync(cacheDir, { recursive: true });
@@ -57,7 +63,7 @@ async function deepDocumentIngest(url, conversationId) {
   try {
     const { html } = await webpageToHTML(url);
     const document = convert(html.substring(0, TOKEN_LIMIT), {
-      wordwrap: 130,
+      wordwrap: 130
     });
     // check if we have memories about this URL *already*
     const hasMemory = await hasMemoryOfResource(
@@ -78,10 +84,10 @@ async function deepDocumentIngest(url, conversationId) {
       // make a new memory that the document was re-ingested
       const updateMessage = `We previously ingested this document on ${prevImportDate}. We re-ingested it at ${new Date().toISOString()} and removed our previous memories.`;
       await storeUserMemory(
-        { username: "capability-deepdocumentingest", guild: "", conversationId },
+        { username: MEMORY_TYPE, guild: "", conversationId },
         updateMessage,
-        "capability-deepdocumentingest",
-        url,
+        MEMORY_TYPE,
+        url
       );
 
     }
@@ -94,11 +100,11 @@ ${JSON.stringify(document, null, 2)}
 
 ${PROMPT_DEEP_INGEST}
 
-Make separate sections of facts for each section of the document, using \`\`\`---\`\`\` between each section. Respond immediately, beginning with the first section, no introductions or confirmation.`,
-      },
+Make separate sections of facts for each section of the document, using \`\`\`---\`\`\` between each section. Respond immediately, beginning with the first section, no introductions or confirmation.`
+      }
     ];
     const completion = await createChatCompletion(messages, {
-      max_tokens: 4000,
+      max_tokens: 4000
     });
 
     const facts = completion.split("\n---\n");
@@ -108,10 +114,10 @@ Make separate sections of facts for each section of the document, using \`\`\`--
 (${index + 1}/${facts.length})
       `;
       await storeUserMemory(
-        { username: "capability-deepdocumentingest", guild: "" },
+        { username: MEMORY_TYPE, guild: "" },
         factAsMemory,
-        "capability-deepdocumentingest",
-        url,
+        MEMORY_TYPE,
+        url
       );
     });
 
@@ -124,14 +130,14 @@ Make separate sections of facts for each section of the document, using \`\`\`--
     ];
 
     const metaSummaryCompletion = await createChatCompletion(metaSummaryMessages, {
-      max_tokens: 2000,
+      max_tokens: 2000
     });
 
     await storeUserMemory(
-      { username: "capability-deepdocumentingest", guild: "" },
+      { username: MEMORY_TYPE, guild: "" },
       metaSummaryCompletion,
-      "capability-deepdocumentingest",
-      url,
+      MEMORY_TYPE,
+      url
     );
 
     // Cache the current document for future reference
@@ -143,6 +149,8 @@ Make separate sections of facts for each section of the document, using \`\`\`--
     throw error
   }
 }
+
 module.exports = {
   handleCapabilityMethod,
+  INGEST_MEMORY_TYPE: MEMORY_TYPE
 };

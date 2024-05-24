@@ -14,7 +14,7 @@ const { processGithubRequest, verifyGithubSignature } = require('./src/github')
 const { PROJECT_TABLE_NAME, getActiveProjects } = require('./capabilities/manageprojects')
 const { processDailyReport, sendMissiveResponse, createPost } = require('./src/missive')
 const { supabase } = require('./src/supabaseclient')
-const { makeBiweeklyProjectBriefing, makeWeeklyBriefing } = require('./capabilities/briefing')
+const { makeBiweeklyProjectBriefing, makeWeeklyBriefing, makeProjectBriefing } = require('./capabilities/briefing')
 const { differenceInMilliseconds, getWeek } = require('date-fns')
 const { BIWEEKLY_BRIEFING } = require('./src/paths')
 const { MEMORIES_TABLE_NAME } = require("./config")
@@ -207,7 +207,7 @@ async function processMissiveRequest(body, query) {
   }
 
   // Fetch the context messages for the conversation from the database
-  const contextMessages = await getChannelMessageHistory(conversationId)
+  const contextMessages = await getChannelMessageHistory({ channelId: conversationId })
   // Add the context messages to the formatted messages array
   formattedMessages.push(
     ...contextMessages.map((m) => ({

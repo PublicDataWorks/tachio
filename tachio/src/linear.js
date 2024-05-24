@@ -45,6 +45,18 @@ function processWebhookPayload(payload) {
   }
 }
 
+async function getLinearWebhooks(repositoryUrl, startDate, endDate) {
+  const { data, error } = await supabase
+    .from(WEBHOOK_TABLE_NAME)
+    .select('type, data, url, updated_from, action, actor')
+    .eq('repository_url', repositoryUrl)
+    .gte('created_at', startDate)
+    .lte('created_at', endDate)
+  if (error) throw new Error(`Error occurred while trying to fetch linear webhook ${repositoryUrl}, ${startDate}, ${endDate}`)
+  return data || []
+}
+
 module.exports = {
   processLinearRequest,
+  getLinearWebhooks
 };

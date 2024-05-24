@@ -1,4 +1,6 @@
 const { supabase } = require("./supabaseclient");
+const { PROJECT_TABLE_NAME } = require("../capabilities/manageprojects")
+const dateFns = require("date-fns")
 
 const WEBHOOK_TABLE_NAME = "github_webhooks";
 
@@ -21,7 +23,7 @@ function processWebhookPayload(req) {
     sender_id: payload.sender.id,
     repository_url: payload.repository?.html_url || payload.issue?.repository_url,
     repository_created_at: repositoryCreatedAt,
-    repository_updated_at: payload.repository?.updated_at,
+    repository_updated_at: payload.repository?.updated_at
   }
 }
 
@@ -36,7 +38,7 @@ async function verifyGithubSignature(secret, header, payload) {
     encoder.encode(secret),
     algorithm,
     false,
-    ["sign", "verify"],
+    ["sign", "verify"]
   );
 
   const sigBytes = hexToBytes(parts[1]);
@@ -45,7 +47,7 @@ async function verifyGithubSignature(secret, header, payload) {
     algorithm.name,
     key,
     sigBytes,
-    dataBytes,
+    dataBytes
   );
 }
 
@@ -58,11 +60,23 @@ function hexToBytes(hex) {
     bytes[index] = parseInt(c, 16);
     index += 1;
   }
-
   return bytes;
+}
+
+async function getGithubWebhooks(repositoryUrl, startDate, endDate) {
+  if (!repositoryUrl) return []
+  const { data, error } = await supabase
+    .from(WEBHOOK_TABLE_NAME)
+    .select('type, action, target_type, repository_url, title, body')
+    .eq('repository_url', repositoryUrl)
+    .gte('created_at', startDate)
+    .lte('created_at', endDate)
+  if (error) throw new Error(`Error occurred while trying to fetch github webhook ${repositoryUrl}, ${startDate}, ${endDate}`)
+  return data || []
 }
 
 module.exports = {
   processGithubRequest,
   verifyGithubSignature,
+  getGithubWebhooks
 };

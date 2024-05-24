@@ -15,6 +15,12 @@ const { PROJECT_TABLE_NAME, getActiveProjects } = require('./manageprojects')
 const { DAILY_REPORT_TABLE_NAME } = require('../src/missive')
 const { createChatCompletion } = require('../helpers')
 const { addDays, addWeeks, subWeeks } = require("date-fns")
+const { createDateInTimeZone } = require("../src/dateUtils")
+const { INGEST_MEMORY_TYPE } = require("./ingest")
+const { getGithubWebhooks } = require("../src/github")
+const { getLinearWebhooks } = require("../src/linear")
+
+const MISSIVE_CONVERSATION_URL_REGEX = /https:\/\/mail\.missiveapp\.com\/[^ ]*\/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})\/?/
 
 async function handleCapabilityMethod(method, args) {
   const [arg1] = destructureArgs(args)
@@ -86,29 +92,34 @@ async function makeDailyBriefing() {
 async function makeProjectBriefing(projectName) {
   const { data, error } = await supabase
     .from(PROJECT_TABLE_NAME)
-    .select('id')
+    .select('id, github_repository_url, linear_team_id')
     .eq('name', projectName)
     .limit(1)
   if (error) throw new Error(`Error occurred while trying to fetch project in making project briefing ${projectName}: ${error.message}`)
   if (!data || data.length === 0) throw new Error(`Error occurred while trying to make project briefing: Project not found, ${projectName}`)
+
   const project = data[0]
+  const startDate = createDateInTimeZone(5, 30, 'America/Los_Angeles', -2);
+  const endDate = createDateInTimeZone(23, 30, 'America/Los_Angeles');
 
   try {
-    // Placeholder for project briefing logic
-    const todoChanges = await listTodoChanges()
-    const conversationMessages = await getChannelMessageHistory(project.id)
-    const processedMemories = await getMemoriesByConversationID(project.id) // this includes attachments
-    const calendarEntries = await readCalendarByProject({ name: projectName })
-    const projectMemoryMap =
-      await identifyProjectsInMemories(processedMemories)
+    const todoChanges = await listTodoChanges({ startDate, endDate })
 
-    return await generateProjectSummary({
-      projectName,
-      projectMemoryMap,
-      todoChanges,
-      calendarEntries,
-      memoriesMentioningProject
-    })
+    const conversationMessages = await getChannelMessageHistory({ channelId: project.id, startDate, endDate })
+    const importedConversations = conversationMessages.map(message => {
+      const match = message.value.match(MISSIVE_CONVERSATION_URL_REGEX);
+      return match ? match[1] : null;
+    }).filter(uuid => uuid !== null);
+    const { messages: importedMessage, memories: importedMemories } = await processImportedConversations(importedConversations)
+
+    const relevantMemories = await getRelevantMemories(projectName)
+    const processedMemories = await getMemoriesByConversationID({ conversationID: project.id, startDate, endDate })
+    const attachmentMemories = processedMemories.filter(memory => memory.memory_type === 'attachment' || memory.memory_type === INGEST_MEMORY_TYPE)
+    const messageMemories = processedMemories.filter(memory => memory.memory_type !== 'attachment' && memory.memory_type !== INGEST_MEMORY_TYPE)
+
+    const githubWebhooks = project.github_repository_url && await getGithubWebhooks(project.github_repository_url, startDate, endDate)
+    const linearWebhooks = project.linear_team_id && await getLinearWebhooks(project.linear_team_id, startDate, endDate)
+    return ''
   } catch (error) {
     throw new Error(
       `Error occurred while trying to make project briefing: ${error}`
@@ -575,8 +586,26 @@ async function readCalendarByProject({ name, shortname, aliases }) {
   })
 }
 
+async function processImportedConversations(uuids, startDate, endDate) {
+  const uniqueIds = [...new Set(uuids)]
+  const messages = [];
+  const memories = [];
+  for (const uuid of uniqueIds) {
+    try {
+      const channelMessageHistory = await getChannelMessageHistory({ channelId: uuid, startDate, endDate });
+      const memoryHistory = await getMemoriesByConversationID({ conversationID: uuid, startDate, endDate });
+      channelMessageHistory.length > 0 && messages.push(`ConversationID ${uuid}. Message history: ${JSON.stringify(channelMessageHistory)}`)
+      memoryHistory.length > 0 && memories.push(`ConversationID ${uuid}. Memories: ${JSON.stringify(memoryHistory)}`)
+    } catch (error) {
+      logger.error(`Error processing UUID ${uuid}: ${error} ${error.stack}`);
+    }
+  }
+  return { messages, memories };
+}
+
 module.exports = {
   handleCapabilityMethod,
   makeBiweeklyProjectBriefing,
-  makeWeeklyBriefing
+  makeWeeklyBriefing,
+  makeProjectBriefing
 }
