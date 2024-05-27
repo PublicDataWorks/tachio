@@ -3,18 +3,17 @@ const dateFns = require('date-fns')
 dotenv.config()
 const {
   getRelevantMemories,
-  getMemoriesBetweenDates,
   getMemoriesByString, getMemoriesByConversationID, getChannelMessageHistory
 } = require('../src/remember')
 const logger = require('../src/logger')('briefing')
 const { listEventsBetweenDates } = require('./calendar.js') // Adjust the path as necessary
 
-const { destructureArgs, countTokens } = require('../helpers')
+const { destructureArgs } = require('../helpers')
 const { supabase } = require('../src/supabaseclient')
 const { PROJECT_TABLE_NAME, getActiveProjects } = require('./manageprojects')
 const { DAILY_REPORT_TABLE_NAME } = require('../src/missive')
 const { createChatCompletion } = require('../helpers')
-const { addDays, addWeeks, subWeeks } = require("date-fns")
+const { addWeeks, subWeeks } = require("date-fns")
 const { createDateInTimeZone } = require("../src/dateUtils")
 const { INGEST_MEMORY_TYPE } = require("./ingest")
 const { getGithubWebhooks } = require("../src/github")
@@ -76,13 +75,17 @@ async function makeWeeklyBriefing() {
  * @returns {Promise<String>} A promise that resolves to a string indicating the status of the daily briefing.
  */
 async function makeDailyBriefing() {
-  try {
-    return 'Daily briefing done!'
-  } catch (error) {
-    throw new Error(
-      `Error occurred while trying to make daily briefing: ${error}`
-    )
-  }
+  const startDate = createDateInTimeZone(6, 0, 'America/Los_Angeles', -1);
+  const endDate = createDateInTimeZone(6, 0, 'America/Los_Angeles', 1);
+
+  const calendarEntries = await readCalendar({ startDate, endDate })
+  const pendingTodos = await listPendingTodos()
+  const { data, error } = await supabase.from('project_briefings')
+    .select('*')
+    .gte('created_at', startDate.toISOString())
+    .lte('created_at', endDate.toISOString())
+  if (error) logger.error(`Error fetching project briefings in makeDailyBriefing: ${error.message}`)
+  return await generateDailyBriefing(calendarEntries, pendingTodos, data)
 }
 
 /**
@@ -135,7 +138,7 @@ async function makeProjectBriefing(projectName) {
         importedMemories,
         importedMessages,
         githubWebhooks,
-        linearWebhooks,
+        linearWebhooks
       })
     } else {
       return `No updates found for this project from ${startDate.toISOString()} to ${endDate.toISOString()}.`
@@ -373,17 +376,17 @@ async function readCalendar({ startDate, endDate }) {
 
 /**
  * Generates summary by project.
- * @param {Object} worldInfoObject - An object containing information about the various projects.
- * @param {Array} worldInfoObject.projectName - The name of the project
- * @param {Array} worldInfoObject.todoChanges - An array of changes made to the project's to-do list. Each change could be an addition, deletion, or modification..
- * @param {Object} worldInfoObject.calendarEntries - An object that contains calendar entries related to the project.
- * @param {Object} worldInfoObject.memoriesMentioningProject - A list of memory objects that mention the project.
- * @param {Object} worldInfoObject.memoriesInProjectConversation - A list of memory object that were part of the project's conversation.
- * @param {Object} worldInfoObject.importedMemories - A list of memories string that were imported into the project's conversation.
- * @param {Object} worldInfoObject.importedMessages - A list of messages string that were imported into the project's conversation.
- * @param {Object} worldInfoObject.githubWebhooks - A list of objects that contain the history of GitHub webhooks related to the project
- * @param {Object} worldInfoObject.linearWebhooks - A list of objects that contain the history of Linear webhooks related to the project
- * @param {String} worldInfoObject.dailyReports - A string aggregator of all daily reports of this project
+ * @param {Array} projectName - The name of the project
+ * @param {Array} todoChanges - An array of changes made to the project's to-do list. Each change could be an addition, deletion, or modification..
+ * @param {Object} calendarEntries - An object that contains calendar entries related to the project.
+ * @param {Object} memoriesMentioningProject - A list of memory objects that mention the project.
+ * @param {Object} memoriesInProjectConversation - A list of memory object that were part of the project's conversation.
+ * @param {Object} relevantMemories - A list of memory object that is relevant.
+ * @param {Object} importedMemories - A list of memories string that were imported into the project's conversation.
+ * @param {Object} importedMessages - A list of messages string that were imported into the project's conversation.
+ * @param {Object} githubWebhooks - A list of objects that contain the history of GitHub webhooks related to the project
+ * @param {Object} linearWebhooks - A list of objects that contain the history of Linear webhooks related to the project
+ * @param {String} dailyReports - A string aggregator of all daily reports of this project
  * @returns {Promise<String>} A promise that resolves to an array of project summaries.
  * @example await generateProjectSummary({ project, projectMemoryMap, todoChanges, calendarEntries });
  */
@@ -403,7 +406,7 @@ async function generateProjectSummary({
   logger.info(
     `Generating project summary for: ${projectName}`
   )
-  let messages = []
+  const messages = []
 
   if (projectName) {
     messages.push({
@@ -425,8 +428,7 @@ async function generateProjectSummary({
   if (todoChanges && todoChanges.length > 0) {
     messages.push({
       role: 'user',
-      content: `Here are the todo changes for project ${projectName}: ${
-        todoChanges.map((todo) => todo.content).join('\n')}`
+      content: `Here are the todo changes for project ${projectName}: ${JSON.stringify(todoChanges)}`
     })
   } else {
     logger.info(`No todo changes found for project ${projectName}`)
@@ -538,6 +540,9 @@ async function generateProjectSummary({
 /**
  * Generates a meta-summary based on project summaries.
  * @param {Array} projectSummaries - The project summaries to base the meta-summary on.
+ * @param {Array} weekMemories - The project memories to base the meta-summary on.
+ * @param {Array} todoChanges - An array of changes made to the project's to-do list. Each change could be an addition, deletion, or modification..
+ * @param {Object} calendarEntries - An object that contains calendar entries related to the project.
  * @returns {Promise<String>} A promise that resolves to a string containing the meta-summary.
  */
 async function generateMetaSummary({
@@ -576,28 +581,12 @@ async function generateMetaSummary({
     content: `Here are the active projects with their to-dos. Each to-do has its own rank in terms of urgency: ${JSON.stringify(projectSummaries)}`
   })
   return await createChatCompletion([
-    // {
-    //   role: "user",
-    //   content: `I want to generate a meta-summary based on the project summaries: ${projectSummaries.join("\n")}`,
-    // // },
-    // {
-    //   role: "user",
-    //   content: `Here are the todo changes: ${todoChanges.map((todo) => todo.content).join("\n")}`,
-    // },
-    // {
-    //   role: "user",
-    //   content: `Here are the calendar entries: ${JSON.stringify(calendarEntries)}`,
-    // },
     ...messages,
     {
       role: 'user',
       content: `Can you please generate a meta-summary of this week? Be as detailed as possible.`
     }
   ])
-
-
-  // return metaSummaryCompletion;
-  // extract the response text from the openai chat completion
 }
 
 /**
@@ -667,7 +656,7 @@ async function archiveSummary(summary) {
   return data
 }
 
-// Helper functions
+// ===============================Helper functions===============================
 async function readCalendarByProject({ name, shortname, aliases }) {
   const events = await readCalendar({})
   if (!name && !shortname && !aliases) return events
@@ -694,9 +683,54 @@ async function processImportedConversations(uuids, startDate, endDate) {
   return { messages, memories };
 }
 
+async function listPendingTodos() {
+  const { data, error } = await supabase
+    .from('issues')
+    .select('*')
+    .in('status', ['todo', 'backlog'])
+
+  if (error) {
+    logger.error(`Error retrieving todo changes: ${JSON.stringify(error)}`)
+    return []
+  }
+
+  return data
+}
+
+async function generateDailyBriefing(calendarEntries, pendingTodos, projectBriefings) {
+  const today = new Date()
+  logger.info(`Generating daily briefing for: ${today}`)
+  const messages = []
+
+  messages.push({
+    role: 'user',
+    content: `Here are the calendar entries: ${JSON.stringify(calendarEntries)}`
+  })
+
+  messages.push({
+    role: 'user',
+    content: `Here are the pending todo changes as of today ${new Date()}: ${JSON.stringify(pendingTodos)}`
+  })
+
+  messages.push({
+    role: 'user',
+    content: `Here are the project briefings yesterday: ${
+      projectBriefings.map(briefing => briefing.content).join('\n')
+    }`
+  })
+
+  messages.push({
+    role: 'user',
+    content: `Can you please generate a detailed summary for today briefing ${today} based on your own analysis and understanding? Focus solely on creating the summary without utilizing any other capabilities. Be as detailed as possible.`
+  })
+
+  return await createChatCompletion(messages)
+}
+
 module.exports = {
   handleCapabilityMethod,
   makeBiweeklyProjectBriefing,
   makeWeeklyBriefing,
-  makeProjectBriefing
+  makeProjectBriefing,
+  makeDailyBriefing
 }
