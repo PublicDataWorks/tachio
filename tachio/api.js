@@ -542,4 +542,14 @@ app.post(PROJECT_BRIEFING, async (req, res) => {
     conversationId: data[0].missive_conversation_id,
     notificationTitle: `Project briefing for ${data[0].name}`
   })
+  const { error: insertProjectBriefing } = await supabase.from('project_briefings').insert([
+    {
+      project_id: projectId,
+      briefing,
+      weekly_conversation_id: weeklyConversation[0].id
+    }
+  ])
+  if (insertProjectBriefing)
+    logger.error(`Error insert new project briefing: ${insertProjectBriefing.message}, ${projectId}, ${weeklyConversation[0].id}`);
+})
 })

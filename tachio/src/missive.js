@@ -521,10 +521,11 @@ async function sendMissiveResponse({ message, conversationId, notificationTitle,
       }
     })
   })
-
+  const response = await responsePost.json()
   // Log the response status and body from the Missive API
   logger.info(`Response post status: ${responsePost.status}`)
-  logger.info(`Response post body: ${JSON.stringify(await responsePost.json())}`)
+  logger.info(`Response post body: ${JSON.stringify(response)}`)
+  return response
 }
 
 function missiveOptions(body = undefined, method = 'GET') {
