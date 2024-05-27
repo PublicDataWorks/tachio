@@ -555,7 +555,7 @@ async function getRelevantMemories(queryString, limit = 20) {
 
   if (error) {
     logger.error(`Error fetching relevant user memory: ${error.message}`);
-    return null;
+    return [];
   }
 
   // if data is an empty object, make it an empty array

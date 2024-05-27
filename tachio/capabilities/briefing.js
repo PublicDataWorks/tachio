@@ -110,16 +110,34 @@ async function makeProjectBriefing(projectName) {
       const match = message.value.match(MISSIVE_CONVERSATION_URL_REGEX);
       return match ? match[1] : null;
     }).filter(uuid => uuid !== null);
-    const { messages: importedMessage, memories: importedMemories } = await processImportedConversations(importedConversations)
+    const {
+      messages: importedMessages,
+      memories: importedMemories
+    } = await processImportedConversations(importedConversations)
 
     const relevantMemories = await getRelevantMemories(projectName)
-    const processedMemories = await getMemoriesByConversationID({ conversationID: project.id, startDate, endDate })
-    const attachmentMemories = processedMemories.filter(memory => memory.memory_type === 'attachment' || memory.memory_type === INGEST_MEMORY_TYPE)
-    const messageMemories = processedMemories.filter(memory => memory.memory_type !== 'attachment' && memory.memory_type !== INGEST_MEMORY_TYPE)
+    const memoriesMentioningProject = await getMemoriesByString(projectName)
+    const memoriesInProjectConversation = await getMemoriesByConversationID({
+      conversationID: project.id,
+      startDate,
+      endDate
+    })
 
     const githubWebhooks = project.github_repository_url && await getGithubWebhooks(project.github_repository_url, startDate, endDate)
     const linearWebhooks = project.linear_team_id && await getLinearWebhooks(project.linear_team_id, startDate, endDate)
-    return ''
+
+    if (todoChanges.length > 0 || conversationMessages.length > 0 || importedMessages.length > 0 || importedMemories.length > 0 || relevantMemories.length > 0 || memoriesInProjectConversation.length > 0 || githubWebhooks.length > 0 || linearWebhooks.length > 0) {
+      return await generateProjectSummary({
+        projectName,
+        relevantMemories,
+        todoChanges,
+        memoriesMentioningProject,
+        importedMemories,
+        importedMessages,
+        githubWebhooks,
+        linearWebhooks,
+      })
+    }
   } catch (error) {
     throw new Error(
       `Error occurred while trying to make project briefing: ${error}`
@@ -355,24 +373,34 @@ async function readCalendar({ startDate, endDate }) {
  * Generates summary by project.
  * @param {Object} worldInfoObject - An object containing information about the various projects.
  * @param {Array} worldInfoObject.projectName - The name of the project
- * @param {Array} worldInfoObject.todoChanges - An array of todo changes.
- * @param {Object} worldInfoObject.calendarEntries - An object containing calendar entries.
- * @param {Object} worldInfoObject.memoriesMentioningProject - A list of object containing relevant memories.
- * @param {Object} worldInfoObject.memoriesInProjectConversation - A list of object containing memories in the project conversation.
+ * @param {Array} worldInfoObject.todoChanges - An array of changes made to the project's to-do list. Each change could be an addition, deletion, or modification..
+ * @param {Object} worldInfoObject.calendarEntries - An object that contains calendar entries related to the project.
+ * @param {Object} worldInfoObject.memoriesMentioningProject - A list of memory objects that mention the project.
+ * @param {Object} worldInfoObject.memoriesInProjectConversation - A list of memory object that were part of the project's conversation.
+ * @param {Object} worldInfoObject.importedMemories - A list of memories string that were imported into the project's conversation.
+ * @param {Object} worldInfoObject.importedMessages - A list of messages string that were imported into the project's conversation.
+ * @param {Object} worldInfoObject.githubWebhooks - A list of objects that contain the history of GitHub webhooks related to the project
+ * @param {Object} worldInfoObject.linearWebhooks - A list of objects that contain the history of Linear webhooks related to the project
  * @param {String} worldInfoObject.dailyReports - A string aggregator of all daily reports of this project
  * @returns {Promise<String>} A promise that resolves to an array of project summaries.
  * @example await generateProjectSummary({ project, projectMemoryMap, todoChanges, calendarEntries });
  */
 async function generateProjectSummary({
                                         projectName,
-                                        projectMemoryMap,
+                                        relevantMemories,
                                         todoChanges,
                                         calendarEntries,
                                         memoriesMentioningProject,
                                         memoriesInProjectConversation,
+                                        importedMemories,
+                                        importedMessages,
+                                        githubWebhooks,
+                                        linearWebhooks,
                                         dailyReports
                                       }) {
-  // Placeholder for project summary generation logic
+  logger.info(
+    `Generating project summary for: ${projectName}`
+  )
   let messages = []
 
   if (projectName) {
@@ -382,42 +410,99 @@ async function generateProjectSummary({
     })
   }
 
-  if (projectMemoryMap && projectMemoryMap[projectName]) {
+  if (relevantMemories && relevantMemories.length > 0) {
     messages.push({
       role: 'user',
-      content: `Here are the memories for project ${
-        projectName
-      }: ${projectMemoryMap[projectName]
-        .map((memory) => memory.value)
-        .join('\n')}`
+      content: `Here are the relevant memories for project ${projectName}: ${
+        relevantMemories.map(memory => memory.value).join('\n')}`
     })
+  } else {
+    logger.info(`No relevant memories found for project ${projectName}`)
   }
 
   if (todoChanges && todoChanges.length > 0) {
     messages.push({
       role: 'user',
-      content: `Here are the todo changes for project ${
-        projectName
-      }: ${todoChanges.map((todo) => todo.content).join('\n')}`
+      content: `Here are the todo changes for project ${projectName}: ${
+        todoChanges.map((todo) => todo.content).join('\n')}`
     })
+  } else {
+    logger.info(`No todo changes found for project ${projectName}`)
   }
 
   if (memoriesMentioningProject && memoriesMentioningProject.length > 0) {
     messages.push({
       role: 'user',
-      content: `These memories reference the project: ${memoriesMentioningProject
-        .map((memory) => memory.value)
-        .join('\n')}`
+      content: `These memories reference the project ${projectName}: ${
+        memoriesMentioningProject.map((memory) => memory.value).join('\n')
+      }`
     })
+  } else {
+    logger.info(`No memories mentioning project found for project ${projectName}`)
   }
 
   if (memoriesInProjectConversation && memoriesInProjectConversation.length > 0) {
+    const attachmentMemories = memoriesInProjectConversation.filter(memory => memory.memory_type === 'attachment' || memory.memory_type === INGEST_MEMORY_TYPE)
+    const messageMemories = memoriesInProjectConversation.filter(memory => memory.memory_type !== 'attachment' && memory.memory_type !== INGEST_MEMORY_TYPE)
+    if (attachmentMemories.length > 0) {
+      messages.push({
+        role: 'user',
+        content: `These attachment memories in the project ${projectName} conversation: ${
+          attachmentMemories.map((memory) => memory.value).join('\n')}`
+      })
+    }
+    if (messageMemories.length > 0) {
+      messages.push({
+        role: 'user',
+        content: `These message memories in the project ${projectName} conversation: ${
+          messageMemories.map((memory) => memory.value).join('\n')
+        }`
+      })
+    }
+  } else {
+    logger.info(`No memories in project conversation found for project ${projectName}`)
+  }
+
+  if (importedMemories && importedMemories.length > 0) {
     messages.push({
       role: 'user',
-      content: `These memories in the project's conversation: ${memoriesInProjectConversation
-        .map((memory) => memory.value)
-        .join('\n')}`
+      content: `These memories are imported into the project ${projectName}: ${
+        importedMemories.join('\n')}`
     })
+  } else {
+    logger.info(`No memories imported into the project ${projectName}`)
+  }
+
+  if (importedMessages && importedMessages.length > 0) {
+    messages.push({
+      role: 'user',
+      content: `These messages are imported into the project ${projectName}: ${
+        importedMessages.join('\n')}`
+    })
+  } else {
+    logger.info(`No messages imported into the project ${projectName}`)
+  }
+
+  if (githubWebhooks && githubWebhooks.length > 0) {
+    messages.push({
+      role: 'user',
+      content: `Here are the Github webhook history for project ${projectName}: ${
+        githubWebhooks.map(data => JSON.stringify(data)).join('\n')
+      }`
+    })
+  } else {
+    logger.info(`No Github webhooks found for project ${projectName}`)
+  }
+
+  if (linearWebhooks && linearWebhooks.length > 0) {
+    messages.push({
+      role: 'user',
+      content: `Here are the Linear webhook history for project ${projectName}: ${
+        linearWebhooks.map(data => JSON.stringify(data)).join('\n')
+      }`
+    })
+  } else {
+    logger.info(`No Linear webhooks found for project ${projectName}`)
   }
 
   if (calendarEntries && Object.keys(calendarEntries).length > 0) {
@@ -427,6 +512,8 @@ async function generateProjectSummary({
         projectName
       }: ${JSON.stringify(calendarEntries)}`
     })
+  } else {
+    logger.info(`No calendar found for project ${projectName}`)
   }
 
   if (dailyReports) {
@@ -434,6 +521,8 @@ async function generateProjectSummary({
       role: 'user',
       content: `Here are daily reports for project ${dailyReports}`
     })
+  } else {
+    logger.info(`No daily report found for project ${projectName}`)
   }
 
   messages.push({
