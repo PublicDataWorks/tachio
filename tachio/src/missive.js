@@ -517,7 +517,7 @@ async function sendMissiveResponse({ message, conversationId, notificationTitle,
         notification,
         username: BOT_NAME,
         attachments,
-        markdown: attachments ? undefined : message
+        markdown: attachments.length > 0 ? undefined : message
       }
     })
   })

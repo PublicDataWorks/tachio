@@ -16,7 +16,7 @@ const { processDailyReport, sendMissiveResponse, createPost } = require('./src/m
 const { supabase } = require('./src/supabaseclient')
 const { makeBiweeklyProjectBriefing, makeWeeklyBriefing, makeProjectBriefing } = require('./capabilities/briefing')
 const { differenceInMilliseconds, getWeek } = require('date-fns')
-const { BIWEEKLY_BRIEFING } = require('./src/paths')
+const { BIWEEKLY_BRIEFING, PROJECT_BRIEFING } = require('./src/paths')
 const { MEMORIES_TABLE_NAME } = require("./config")
 require('dotenv').config()
 
@@ -261,7 +261,7 @@ async function processMissiveRequest(body, query) {
     logger.error(`Error processing message chain: ${error.message}, ${error.stack}`)
   }
   const lastMessage = processedMessage[processedMessage.length - 1]
-  await sendMissiveResponse(lastMessage.content, conversationId, query)
+  await sendMissiveResponse({ message: lastMessage.content, conversationId, requestQuery: query })
 }
 
 app.post('/api/missive-reply', async (req, res) => {
@@ -504,20 +504,20 @@ function validateAuthorizationHeader(req, res, next) {
   next();
 }
 
-app.post('/api/project-briefing', async (req, res) => {
+app.post(PROJECT_BRIEFING, async (req, res) => {
   res.status(200).end()
-  const projectName = req.body.projectName
-  if (!projectName) {
-    logger.error('Error processing linear1: Missing projectName')
+  const projectId = req.body.projectId
+  if (!projectId) {
+    logger.error('Error processing project-briefing: Missing projectId')
     return
   }
   const { data, error: fetchProjectError } = await supabase
     .from(PROJECT_TABLE_NAME)
-    .select('missive_conversation_id')
-    .eq('name', projectName)
+    .select('name, missive_conversation_id')
+    .eq('id', projectId)
     .limit(1)
   if (fetchProjectError || !data || data?.length === 0) {
-    throw new Error(`Error occurred while trying to fetch project in making project briefing ${projectName}: ${fetchProjectError?.message} ${JSON.stringify(data)}`)
+    logger.error(`Error occurred while trying to fetch project in making project briefing ${projectId}: ${fetchProjectError?.message} ${JSON.stringify(data)}`)
     return
   }
 
@@ -531,15 +531,15 @@ app.post('/api/project-briefing', async (req, res) => {
     logger.error(`Error processing linear1: ${error?.message} ${JSON.stringify(data)} ${weekOfYear}`);
     return
   }
-  const briefing = await makeProjectBriefing(projectName)
+  const briefing = await makeProjectBriefing(data[0].name)
   await sendMissiveResponse({
     message: briefing,
     conversationId: weeklyConversation[0].conversation_id,
-    notificationTitle: `Project briefing for ${projectName}`
+    notificationTitle: `Project briefing for ${data[0].name}`
   })
   await sendMissiveResponse({
     message: briefing,
     conversationId: data[0].missive_conversation_id,
-    notificationTitle: `Project briefing for ${projectName}`
+    notificationTitle: `Project briefing for ${data[0].name}`
   })
 })

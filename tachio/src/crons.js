@@ -1,6 +1,7 @@
 const { createJob } = require('../capabilities/pgcron')
+const { BIWEEKLY_BRIEFING, PROJECT_BRIEFING } = require("./paths")
 
-const invokeWeeklyBriefing = async (projectID, path) => {
+const invokeWeeklyBriefing = async (projectId) => {
   const now = new Date();
   const everyWeekFromNow = `${now.getMinutes()} ${now.getHours()} * * ${now.getDay()}`;
   await createJob(
@@ -8,15 +9,31 @@ const invokeWeeklyBriefing = async (projectID, path) => {
     `
       SELECT
         net.http_post(
-            url:='${process.env.BACKEND_URL}${path}',
+            url:='${process.env.BACKEND_URL}${BIWEEKLY_BRIEFING}',
             headers:='{"Content-Type": "application/json", "Authorization": "Bearer ${process.env.SUPABASE_API_KEY}"}'::jsonb,
-            body:=concat('{ "projectID": ', '"${projectID}" }')::jsonb
+            body:=concat('{ "projectID": ', '"${projectId}" }')::jsonb
         ) AS request_id;
     `,
-    generateJobName(projectID)
+    generateWeeklyBriefingJobName(projectId)
   );
 }
 
-const generateJobName = (projectID) => `job-${projectID}-weekly-briefing`;
+const invokeProjectBriefing = async (projectId) => {
+  const cronExpression = '30 13 * * *'; // 5:30 AM PT every day
+  await createJob(
+    cronExpression,
+    `
+      SELECT
+        net.http_post(
+            url:='${process.env.BACKEND_URL}${PROJECT_BRIEFING}',
+            headers:='{"Content-Type": "application/json", "Authorization": "Bearer ${process.env.SUPABASE_API_KEY}"}'::jsonb,
+            body:=concat('{ "projectId": ', '"${projectId}" }')::jsonb
+        ) AS request_id;
+    `,
+    `job-${projectId}-project-briefing`
+  );
+}
 
-module.exports = { invokeWeeklyBriefing, generateJobName }
+const generateWeeklyBriefingJobName = (projectId) => `job-${projectId}-weekly-briefing`;
+
+module.exports = { invokeWeeklyBriefing, generateWeeklyBriefingJobName, invokeProjectBriefing }
