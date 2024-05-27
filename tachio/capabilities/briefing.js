@@ -99,8 +99,8 @@ async function makeProjectBriefing(projectName) {
   if (!data || data.length === 0) throw new Error(`Error occurred while trying to make project briefing: Project not found, ${projectName}`)
 
   const project = data[0]
-  const startDate = createDateInTimeZone(5, 30, 'America/Los_Angeles', -2);
-  const endDate = createDateInTimeZone(23, 30, 'America/Los_Angeles');
+  const startDate = createDateInTimeZone(5, 30, 'America/Los_Angeles', -1);
+  const endDate = createDateInTimeZone(5, 30, 'America/Los_Angeles');
 
   try {
     const todoChanges = await listTodoChanges({ startDate, endDate })
@@ -123,8 +123,8 @@ async function makeProjectBriefing(projectName) {
       endDate
     })
 
-    const githubWebhooks = project.github_repository_url && await getGithubWebhooks(project.github_repository_url, startDate, endDate)
-    const linearWebhooks = project.linear_team_id && await getLinearWebhooks(project.linear_team_id, startDate, endDate)
+    const githubWebhooks = await getGithubWebhooks(project.github_repository_url, startDate, endDate)
+    const linearWebhooks = await getLinearWebhooks(project.linear_team_id, startDate, endDate)
 
     if (todoChanges.length > 0 || conversationMessages.length > 0 || importedMessages.length > 0 || importedMemories.length > 0 || relevantMemories.length > 0 || memoriesInProjectConversation.length > 0 || githubWebhooks.length > 0 || linearWebhooks.length > 0) {
       return await generateProjectSummary({
@@ -137,10 +137,12 @@ async function makeProjectBriefing(projectName) {
         githubWebhooks,
         linearWebhooks,
       })
+    } else {
+      return `No updates found for this project from ${startDate.toISOString()} to ${endDate.toISOString()}.`
     }
   } catch (error) {
     throw new Error(
-      `Error occurred while trying to make project briefing: ${error}`
+      `Error occurred while trying to make project briefing: ${error} ${error.stack}`
     )
   }
 }

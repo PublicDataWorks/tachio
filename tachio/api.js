@@ -421,7 +421,7 @@ app.post(BIWEEKLY_BRIEFING, validateAuthorizationHeader, async (req, res) => {
   res.status(204).end()
 
   const briefing = await makeBiweeklyProjectBriefing(project.name)
-  await sendMissiveResponse(briefing, project.missive_conversation_id)
+  await sendMissiveResponse({ message: briefing, conversationId: project.missive_conversation_id })
   await supabase
     .from(PROJECT_TABLE_NAME)
     .update({
@@ -447,11 +447,11 @@ app.post("/api/weekly-thread", validateAuthorizationHeader, async (req, res) => 
   }
   const briefing = await makeWeeklyBriefing()
   const title = `Weekly conversation for week ${getWeek(today)} of ${today.getFullYear()}`
-  const newPost = await createPost({
-    text: briefing,
+  const newPost = await sendMissiveResponse({
+    message: briefing,
     notificationTitle: title,
     conversationSubject: title,
-    organization: process.env.MISSIVE_ORGANIZATION
+    conversation_subject: title
   })
   const conversationId = newPost?.posts?.conversation
   if (!conversationId) {
@@ -503,3 +503,43 @@ function validateAuthorizationHeader(req, res, next) {
   }
   next();
 }
+
+app.post('/api/project-briefing', async (req, res) => {
+  res.status(200).end()
+  const projectName = req.body.projectName
+  if (!projectName) {
+    logger.error('Error processing linear1: Missing projectName')
+    return
+  }
+  const { data, error: fetchProjectError } = await supabase
+    .from(PROJECT_TABLE_NAME)
+    .select('missive_conversation_id')
+    .eq('name', projectName)
+    .limit(1)
+  if (fetchProjectError || !data || data?.length === 0) {
+    throw new Error(`Error occurred while trying to fetch project in making project briefing ${projectName}: ${fetchProjectError?.message} ${JSON.stringify(data)}`)
+    return
+  }
+
+  const today = new Date();
+  const weekOfYear = `${getWeek(today)}_${today.getFullYear()}`;
+  const { data: weeklyConversation, error } = await supabase
+    .from("weekly_conversations")
+    .select('conversation_id')
+    .eq('week_of_year', weekOfYear)
+  if (error || weeklyConversation?.length === 0) {
+    logger.error(`Error processing linear1: ${error?.message} ${JSON.stringify(data)} ${weekOfYear}`);
+    return
+  }
+  const briefing = await makeProjectBriefing(projectName)
+  await sendMissiveResponse({
+    message: briefing,
+    conversationId: weeklyConversation[0].conversation_id,
+    notificationTitle: `Project briefing for ${projectName}`
+  })
+  await sendMissiveResponse({
+    message: briefing,
+    conversationId: data[0].missive_conversation_id,
+    notificationTitle: `Project briefing for ${projectName}`
+  })
+})

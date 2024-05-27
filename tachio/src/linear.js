@@ -45,14 +45,15 @@ function processWebhookPayload(payload) {
   }
 }
 
-async function getLinearWebhooks(repositoryUrl, startDate, endDate) {
+async function getLinearWebhooks(teamId, startDate, endDate) {
+  if (!teamId) return []
   const { data, error } = await supabase
     .from(WEBHOOK_TABLE_NAME)
     .select('type, data, url, updated_from, action, actor')
-    .eq('repository_url', repositoryUrl)
-    .gte('created_at', startDate)
-    .lte('created_at', endDate)
-  if (error) throw new Error(`Error occurred while trying to fetch linear webhook ${repositoryUrl}, ${startDate}, ${endDate}`)
+    .eq('team_id', teamId)
+    .gte('created_at', startDate.toISOString())
+    .lte('created_at', endDate.toISOString())
+  if (error) throw new Error(`Error occurred while trying to fetch linear webhook ${error.message}, ${startDate}`)
   return data || []
 }
 

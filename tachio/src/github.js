@@ -71,7 +71,7 @@ async function getGithubWebhooks(repositoryUrl, startDate, endDate) {
     .eq('repository_url', repositoryUrl)
     .gte('created_at', startDate)
     .lte('created_at', endDate)
-  if (error) throw new Error(`Error occurred while trying to fetch github webhook ${repositoryUrl}, ${startDate}, ${endDate}`)
+  if (error) throw new Error(`Error occurred while trying to fetch github webhook ${error.message}, ${repositoryUrl}`)
   return data || []
 }
 
