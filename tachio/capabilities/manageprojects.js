@@ -6,7 +6,6 @@ const { supabase: supabaseCron } = require('./pgcron')
 const { invokeWeeklyBriefing, generateJobName } = require('../src/crons')
 const { BIWEEKLY_BRIEFING } = require('../src/paths')
 const { updateJob } = require('./pgcron')
-const { MEMORIES_TABLE_NAME } = require('../config')
 require('dotenv').config()
 
 /**
@@ -157,16 +156,6 @@ async function updateProject({
   return `Successfully updated project: ${projectName}`
 }
 
-/**
- * Update status of aproject
- *
- * @param {string} name - The name of the project.
- * @param {string} newStatus - The new status of the project. Can be 'active', 'paused', 'completed', or 'archived'.
- *
- * @returns {Promise<string>} A promise that resolves to a string message indicating the result of the operation.
- *
- * @throws {Error} If there is an error with the Supabase operations.
- */
 async function updateProjectStatus({ name, newStatus }) {
   if (!name || !newStatus) throw new Error('Missing required fields')
   const { data: existingProject, error } = await supabase
@@ -196,6 +185,16 @@ async function updateProjectStatus({ name, newStatus }) {
   return `Successfully ${newStatus} project: ${name}`
 }
 
+// Helper functions
+async function getActiveProjects() {
+  // Do not add JSdoc here, as this function is not exposed
+  const { data, error } = await supabase
+    .from(PROJECT_TABLE_NAME)
+    .select('name, issues (*)')
+    .eq('status', 'active')
+  if (error) throw new Error(error.message)
+  return data
+}
 module.exports = {
   handleCapabilityMethod: async (method, args) => {
     console.log(`⚡️ Calling capability method: manageprojects.${method}`)
@@ -211,4 +210,5 @@ module.exports = {
     }
   },
   PROJECT_TABLE_NAME,
+  getActiveProjects,
 }

@@ -11,13 +11,12 @@ const { createHmac } = require('crypto')
 const logger = require('./src/logger.js')('api')
 const { processLinearRequest } = require('./src/linear')
 const { processGithubRequest, verifyGithubSignature } = require('./src/github')
-const { PROJECT_TABLE_NAME } = require('./capabilities/manageprojects')
-const { processDailyReport, sendMissiveResponse } = require('./src/missive')
+const { PROJECT_TABLE_NAME, getActiveProjects } = require('./capabilities/manageprojects')
+const { processDailyReport, sendMissiveResponse, createPost } = require('./src/missive')
 const { supabase } = require('./src/supabaseclient')
-const { makeBiweeklyProjectBriefing } = require('./capabilities/briefing')
-const { differenceInMilliseconds } = require('date-fns')
+const { makeBiweeklyProjectBriefing, makeWeeklyBriefing } = require('./capabilities/briefing')
+const { differenceInMilliseconds, getWeek } = require('date-fns')
 const { BIWEEKLY_BRIEFING } = require('./src/paths')
-const { invokeWeeklyBriefing } = require('./src/crons')
 require('dotenv').config()
 
 let port = process.env.EXPRESS_PORT
@@ -418,7 +417,7 @@ app.post(BIWEEKLY_BRIEFING, validateAuthorizationHeader, async (req, res) => {
     return res.status(400).json({ error: 'Project already sent briefing in the last 2 weeks' });
   }
 
-  res.status(201).end()
+  res.status(204).end()
 
   const briefing = await makeBiweeklyProjectBriefing(project.name)
   await sendMissiveResponse(briefing, project.missive_conversation_id)
@@ -429,6 +428,30 @@ app.post(BIWEEKLY_BRIEFING, validateAuthorizationHeader, async (req, res) => {
       updated_at: new Date()
     }) // Explicitly set updated_at because of ElectricSQL not supporting default value
     .eq('id', projectID)
+})
+
+app.post("/api/weekly-thread", validateAuthorizationHeader, async (req, res) => {
+  // Call by pg_cron, so we need to return 2xx to avoid spamming
+  res.status(204).end()
+  const today = new Date();
+  const weekOfYear = `${getWeek(today)}_${today.getFullYear()}`;
+  const { data, error } = await supabase
+    .from('weekly_conversations')
+    .select("id")
+    .limit(1)
+    .eq("week_of_year", weekOfYear)
+  if (error || data?.length !== 0) {
+    logger.error(`Error processing weekly: ${error?.message} ${JSON.stringify(data)} ${weekOfYear}`);
+    return
+  }
+  const briefing = await makeWeeklyBriefing()
+  const title = `Weekly conversation for week ${getWeek(today)} of ${today.getFullYear()}`
+  await createPost({
+    text: briefing,
+    notificationTitle: title,
+    conversationSubject: title,
+    organization: process.env.MISSIVE_ORGANIZATION
+  })
 })
 
 function jsonToMarkdownList(jsonObj, indentLevel = 0) {

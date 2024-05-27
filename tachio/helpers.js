@@ -74,7 +74,7 @@ async function getConfigFromSupabase() {
 
 /**
  * Counts the number of tokens in a string.
- * @param {string} str - The string to count the tokens in.
+ * @param {object} str - The string to count the tokens in.
  * @returns {number} - The number of tokens in the string.
  */
 function countTokens(str) {
