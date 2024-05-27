@@ -12,9 +12,14 @@ const logger = require('./src/logger.js')('api')
 const { processLinearRequest } = require('./src/linear')
 const { processGithubRequest, verifyGithubSignature } = require('./src/github')
 const { PROJECT_TABLE_NAME, getActiveProjects } = require('./capabilities/manageprojects')
-const { processDailyReport, sendMissiveResponse, createPost } = require('./src/missive')
+const { processDailyReport, sendMissiveResponse, createPost, DAILY_REPORT_TABLE_NAME } = require('./src/missive')
 const { supabase } = require('./src/supabaseclient')
-const { makeBiweeklyProjectBriefing, makeWeeklyBriefing, makeProjectBriefing } = require('./capabilities/briefing')
+const {
+  makeBiweeklyProjectBriefing,
+  makeWeeklyBriefing,
+  makeProjectBriefing,
+  makeDailyBriefing
+} = require('./capabilities/briefing')
 const { differenceInMilliseconds, getWeek } = require('date-fns')
 const { BIWEEKLY_BRIEFING, PROJECT_BRIEFING } = require('./src/paths')
 const { MEMORIES_TABLE_NAME } = require("./config")
@@ -395,7 +400,7 @@ app.post('/api/missive-daily-report', async (req, res) => {
 })
 
 app.post(BIWEEKLY_BRIEFING, validateAuthorizationHeader, async (req, res) => {
-  const projectID = req.body.projectID;
+  const projectID = req.body.projectId;
   if (projectID?.length !== 36) {
     logger.error(`Error processing biweekly: Invalid projectID. Data: ${projectID}`);
     return res.status(400).json({ error: 'Invalid projectID' });
@@ -469,6 +474,79 @@ app.post("/api/weekly-thread", validateAuthorizationHeader, async (req, res) => 
     logger.error(`Error insert new weekly conversation: ${errorNewWeekly.message}, ${weekOfYear}, ${conversationId}`);
 })
 
+
+app.post(PROJECT_BRIEFING, async (req, res) => {
+  res.status(200).end()
+  const projectId = req.body.projectId
+  if (!projectId) {
+    logger.error('Error processing project-briefing: Missing projectId')
+    return
+  }
+  const { data, error: fetchProjectError } = await supabase
+    .from(PROJECT_TABLE_NAME)
+    .select('name, missive_conversation_id')
+    .eq('id', projectId)
+    .limit(1)
+  if (fetchProjectError || !data || data?.length === 0) {
+    logger.error(`Error occurred while trying to fetch project in making project briefing ${projectId}: ${fetchProjectError?.message} ${JSON.stringify(data)}`)
+    return
+  }
+
+  const today = new Date();
+  const weekOfYear = `${getWeek(today)}_${today.getFullYear()}`;
+  const { data: weeklyConversation, error } = await supabase
+    .from("weekly_conversations")
+    .select('id, conversation_id')
+    .eq('week_of_year', weekOfYear)
+  if (error || weeklyConversation?.length === 0) {
+    logger.error(`Error processing project-briefing: ${error?.message} ${JSON.stringify(data)} ${weekOfYear}`);
+    return
+  }
+
+  const briefing = await makeProjectBriefing(data[0].name)
+  await sendMissiveResponse({
+    message: briefing,
+    conversationId: weeklyConversation[0].conversation_id,
+    notificationTitle: `Project briefing for ${data[0].name}`
+  })
+  await sendMissiveResponse({
+    message: briefing,
+    conversationId: data[0].missive_conversation_id,
+    notificationTitle: `Project briefing for ${data[0].name}`
+  })
+  const { error: insertProjectBriefing } = await supabase.from('project_briefings').insert([
+    {
+      project_id: projectId,
+      briefing,
+      weekly_conversation_id: weeklyConversation[0].id
+    }
+  ])
+  if (insertProjectBriefing)
+    logger.error(`Error insert new project briefing: ${insertProjectBriefing.message}, ${projectId}, ${weeklyConversation[0].id}`);
+})
+
+
+app.post('/api/daily-briefing', async (req, res) => {
+  res.status(200).end()
+  const briefing = await makeDailyBriefing()
+
+  const today = new Date()
+  const weekOfYear = `${getWeek(today)}_${today.getFullYear()}`;
+  const { data: weeklyConversation, error } = await supabase
+    .from("weekly_conversations")
+    .select('conversation_id')
+    .eq('week_of_year', weekOfYear)
+  if (error || weeklyConversation?.length === 0) {
+    logger.error(`Error processing project-briefing: ${error?.message} ${JSON.stringify(data)} ${weekOfYear}`);
+    return
+  }
+  await sendMissiveResponse({
+    message: briefing,
+    conversationId: weeklyConversation[0].conversation_id,
+    notificationTitle: `Daily briefing for ${today}`
+  })
+})
+
 function jsonToMarkdownList(jsonObj, indentLevel = 0) {
   let str = ''
   const indentSpaces = ' '.repeat(indentLevel * 2)
@@ -503,43 +581,3 @@ function validateAuthorizationHeader(req, res, next) {
   }
   next();
 }
-
-app.post(PROJECT_BRIEFING, async (req, res) => {
-  res.status(200).end()
-  const projectId = req.body.projectId
-  if (!projectId) {
-    logger.error('Error processing project-briefing: Missing projectId')
-    return
-  }
-  const { data, error: fetchProjectError } = await supabase
-    .from(PROJECT_TABLE_NAME)
-    .select('name, missive_conversation_id')
-    .eq('id', projectId)
-    .limit(1)
-  if (fetchProjectError || !data || data?.length === 0) {
-    logger.error(`Error occurred while trying to fetch project in making project briefing ${projectId}: ${fetchProjectError?.message} ${JSON.stringify(data)}`)
-    return
-  }
-
-  const today = new Date();
-  const weekOfYear = `${getWeek(today)}_${today.getFullYear()}`;
-  const { data: weeklyConversation, error } = await supabase
-    .from("weekly_conversations")
-    .select('conversation_id')
-    .eq('week_of_year', weekOfYear)
-  if (error || weeklyConversation?.length === 0) {
-    logger.error(`Error processing linear1: ${error?.message} ${JSON.stringify(data)} ${weekOfYear}`);
-    return
-  }
-  const briefing = await makeProjectBriefing(data[0].name)
-  await sendMissiveResponse({
-    message: briefing,
-    conversationId: weeklyConversation[0].conversation_id,
-    notificationTitle: `Project briefing for ${data[0].name}`
-  })
-  await sendMissiveResponse({
-    message: briefing,
-    conversationId: data[0].missive_conversation_id,
-    notificationTitle: `Project briefing for ${data[0].name}`
-  })
-})

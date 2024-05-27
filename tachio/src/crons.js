@@ -11,7 +11,7 @@ const invokeWeeklyBriefing = async (projectId) => {
         net.http_post(
             url:='${process.env.BACKEND_URL}${BIWEEKLY_BRIEFING}',
             headers:='{"Content-Type": "application/json", "Authorization": "Bearer ${process.env.SUPABASE_API_KEY}"}'::jsonb,
-            body:=concat('{ "projectID": ', '"${projectId}" }')::jsonb
+            body:=concat('{ "projectId": ', '"${projectId}" }')::jsonb
         ) AS request_id;
     `,
     generateWeeklyBriefingJobName(projectId)
