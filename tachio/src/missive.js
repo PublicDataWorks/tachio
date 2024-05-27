@@ -330,7 +330,10 @@ async function createSharedLabel({ name, organization, parent, shareWithOrganiza
     const errorBody = await response.text()
     throw new Error(`Error creating shared label. HTTP status: ${response.status}, status text: ${response.statusText}, body: ${errorBody}`)
   }
-  return response.json()
+  const responseBody = await response.json()
+  logger.info(`Response createPost status: ${response.status}`)
+  logger.info(`Response createPost body: ${JSON.stringify(responseBody)}`)
+  return responseBody
 }
 
 
@@ -372,7 +375,10 @@ async function createPost({
     const errorBody = await response.text()
     throw new Error(`Error creating post. HTTP status: ${response.status}, status text: ${response.statusText}, body: ${errorBody}`)
   }
-  return response.json()
+  const responseBody = await response.json()
+  logger.info(`Response createPost status: ${response.status}`)
+  logger.info(`Response createPost body: ${JSON.stringify(responseBody)}`)
+  return responseBody
 }
 
 /*
@@ -462,11 +468,11 @@ async function processDailyReport(payload) {
   if (error) throw new Error(error.message)
 }
 
-async function sendMissiveResponse(message, conversationId, requestQuery) {
+async function sendMissiveResponse({ message, conversationId, notificationTitle, conversationSubject, requestQuery }) {
   // Separate thinking part out of result part of Claude's message
   const messageMatches = message.match(anthropicThinkingRegex)
   let notification = {
-    title: BOT_NAME,
+    title: notificationTitle || BOT_NAME,
     body: ''
   }
   const attachments = []
@@ -506,18 +512,20 @@ async function sendMissiveResponse(message, conversationId, requestQuery) {
     },
     body: JSON.stringify({
       posts: {
+        conversation_subject: conversationSubject,
         conversation: conversationId,
         notification,
         username: BOT_NAME,
         attachments,
-        markdown: attachments ? undefined : message
+        markdown: attachments.length > 0 ? undefined : message
       }
     })
   })
-
+  const response = await responsePost.json()
   // Log the response status and body from the Missive API
   logger.info(`Response post status: ${responsePost.status}`)
-  logger.info(`Response post body: ${JSON.stringify(await responsePost.json())}`)
+  logger.info(`Response post body: ${JSON.stringify(response)}`)
+  return response
 }
 
 function missiveOptions(body = undefined, method = 'GET') {
