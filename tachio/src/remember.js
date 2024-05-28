@@ -206,6 +206,8 @@ async function storeUserMemory(
   if (error) {
     logger.info(`Error storing user memory: ${error.message}`);
   }
+  
+  // TODO: Call LLM to generate 3 suggestions and store in db
 }
 
 

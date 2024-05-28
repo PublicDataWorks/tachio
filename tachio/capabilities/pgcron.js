@@ -14,7 +14,7 @@ const { destructureArgs } = require('../helpers');
  * @param {string} schedule - The schedule for the cron job (e.g., '0 0 * * *' for daily at midnight).
  * @param {string} command - The command to be executed by the cron job.
  * @param {string} jobName - An option job name.
- * @returns {Promise<{ data: any, error: Error | null }>} - A promise that resolves with the result of the cron job creation.
+ * @returns {Promise<string>} - A promise that resolves with the result of the cron job creation.
  * @example createJob('0 0 * * *', 'DELETE FROM table WHERE created_at < NOW() - INTERVAL '1 month';') -- Deletes old records from a table every day at midnight.
  *   -- Makes a webhook request to the specified URL every day at midnight.
  * @example createJob('0 0 * * *', 'select
@@ -97,16 +97,13 @@ async function listWebhookJobs() {
     throw error;
   }
 
-  // no jobs without `net.http_post(`
-  const filteredJobs = data.filter((job) => job.command.includes('net.http_post('));
-
   logger.info('Webhook Jobs:', data);
   return JSON.stringify(data, null, 2);
 }
 
 /**
  * Lists the cron jobs currently scheduled with pg_cron in Supabase.
- * @returns {Promise<{ data: any, error: Error | null }>} A promise that resolves with the list of cron jobs.
+ * @returns {Promise<string>} A promise that resolves with the list of cron jobs.
  */
 async function listJobs() {
   try {

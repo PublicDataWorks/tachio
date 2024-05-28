@@ -498,8 +498,8 @@ async function sendMissiveResponse({ message, conversationId, notificationTitle,
       .forEach((paragraph, index) => {
         attachments.push({
           'color': '#2266ED',
-          'text': paragraph.trim(),
-          'timestamp': Math.floor(Date.now() / 1000) + 1 + index // Add index to avoid duplicate timestamps
+          'text': paragraph.trim(), // TODO: replace with markdown
+          'timestamp': Math.floor(Date.now() / 1000) + 1 + index // Add index to avoid duplicate timestamps // TODO: removeme
         })
       })
   }
