@@ -529,7 +529,7 @@ async function generateAiCompletion(prompt, username, messages, config) {
     logger.info(`🔧 Chat completion parameters:
     - Temperature: ${temperature}
     - Presence Penalty: ${presence_penalty}`);
-    logger.info("🔧 Messages:");
+    logger.info("🔧 Messages:")
     logger.info(`Creating chat completion with ${messages.length} messages`);
 
     completion = await createChatCompletion(
@@ -542,7 +542,7 @@ async function generateAiCompletion(prompt, username, messages, config) {
     );
     logger.info(`🔧 Chat completion created:\n- Completion: ${completion}`);
   } catch (err) {
-    logger.info(`Error creating chat completion ${err}`);
+    logger.error(`Error creating chat completion ${err}`);
   }
 
   const aiResponse = completion; //.choices[0].message.content;
