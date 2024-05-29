@@ -421,7 +421,7 @@ function trimResponseByLineCount(response, trimAmount = 0.1) {
 // function splitResponseIntoLines(response) {
 //   const parsed = JSON.parse(response)
 //   if (Array.isArray(parsed)) {
-//     return parsed;
+//     return parsed
 //   }
 //   return response.split("\n");
 // }
