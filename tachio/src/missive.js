@@ -467,7 +467,7 @@ async function processDailyReport(payload) {
   if (error) throw new Error(error.message)
 }
 
-async function sendMissiveResponse({ message, conversationId, notificationTitle, conversationSubject, organization, add_to_inbox, requestQuery }) {
+async function sendMissiveResponse({ message, conversationId, notificationTitle, conversationSubject, organization, addToInbox, requestQuery }) {
   // Separate thinking part out of result part of Claude's message
   const messageMatches = message.match(anthropicThinkingRegex)
   let notification = {
@@ -518,7 +518,7 @@ async function sendMissiveResponse({ message, conversationId, notificationTitle,
         attachments,
         markdown: attachments.length > 0 ? undefined : message,
         organization,
-        add_to_inbox
+        add_to_inbox: addToInbox
       }
     })
   })

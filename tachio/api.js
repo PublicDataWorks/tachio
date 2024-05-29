@@ -20,7 +20,12 @@ const {
   makeDailyBriefing
 } = require('./capabilities/briefing')
 const { differenceInMilliseconds, getWeek } = require('date-fns')
-const { BIWEEKLY_BRIEFING, PROJECT_BRIEFING, PROJECT_TABLE_NAME, MISSIVE_CONVERSATIONS_TABLE_NAME } = require('./src/constants')
+const {
+  BIWEEKLY_BRIEFING,
+  PROJECT_BRIEFING,
+  PROJECT_TABLE_NAME,
+  MISSIVE_CONVERSATIONS_TABLE_NAME
+} = require('./src/constants')
 require('dotenv').config()
 
 let port = process.env.EXPRESS_PORT
@@ -426,7 +431,13 @@ app.post(BIWEEKLY_BRIEFING, async (req, res) => {
   res.status(204).end()
 
   const briefing = await makeBiweeklyProjectBriefing(project.name)
-  await sendMissiveResponse({ message: briefing, conversationId: project.missive_conversation_id })
+  await sendMissiveResponse({
+    message: briefing,
+    notificationTitle: `Biweekly briefing for ${project.name}`,
+    conversationSubject: `Biweekly briefing for ${project.name}`,
+    organization: process.env.MISSIVE_ORGANIZATION,
+    addToInbox: true
+  })
   await supabase
     .from(PROJECT_TABLE_NAME)
     .update({
@@ -443,7 +454,7 @@ app.post(BIWEEKLY_BRIEFING, async (req, res) => {
 })
 
 // TODO: Add back validateAuthorizationHeader
-app.post("/api/weekly-thread", async (req, res) => {
+app.post("/api/weekly-briefing", async (req, res) => {
   // Call by pg_cron, so we need to return 2xx to avoid spamming
   res.status(204).end()
   const today = new Date();
@@ -464,9 +475,8 @@ app.post("/api/weekly-thread", async (req, res) => {
     message: briefing,
     notificationTitle: title,
     conversationSubject: title,
-    conversation_subject: title,
     organization: process.env.MISSIVE_ORGANIZATION,
-    add_to_inbox: true
+    addToInbox: true
   })
   const conversationId = newPost?.posts?.conversation
   if (!conversationId) {
@@ -485,7 +495,7 @@ app.post("/api/weekly-thread", async (req, res) => {
 
 
 app.post(PROJECT_BRIEFING, async (req, res) => {
-  res.status(200).end()
+  res.status(204).end()
   const projectId = req.body.projectId
   if (!projectId) {
     logger.error('Error processing project-briefing: Missing projectId')
@@ -536,9 +546,7 @@ app.post(PROJECT_BRIEFING, async (req, res) => {
 
 
 app.post('/api/daily-briefing', async (req, res) => {
-  res.status(200).end()
-  const briefing = await makeDailyBriefing()
-
+  res.status(204).end()
   const today = new Date()
   const weekOfYear = `${getWeek(today)}_${today.getFullYear()}`;
   const { data: weeklyConversation, error } = await supabase
@@ -549,6 +557,8 @@ app.post('/api/daily-briefing', async (req, res) => {
     logger.error(`Error processing project-briefing: ${error?.message} ${JSON.stringify(data)} ${weekOfYear}`);
     return
   }
+  const briefing = await makeDailyBriefing()
+
   await sendMissiveResponse({
     message: briefing,
     conversationId: weeklyConversation[0].conversation_id,
@@ -606,10 +616,5 @@ app.post("/api/label-changed", async (req, res) => {
     logger.error(`Error updating record: ${upsertError.message}`);
   }
 
-  res.status(200).end()
-})
-
-app.post("/api/test", async (req, res) => {
-  console.log(await makeProjectBriefing('pro201'))
   res.status(200).end()
 })

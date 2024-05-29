@@ -134,8 +134,8 @@ async function makeProjectBriefing(projectName) {
 
   const githubWebhooks = await getGithubWebhooks(project.github_repository_url, startDate, endDate)
   const linearWebhooks = await getLinearWebhooks(project.linear_team_id, startDate, endDate)
-
-  if (todoChanges.length > 0 || conversationMessages.length > 0 || importedMessages.length > 0 || importedMemories.length > 0 || relevantMemories.length > 0 || memoriesInProjectConversation.length > 0 || githubWebhooks.length > 0 || linearWebhooks.length > 0) {
+  const { PROJECT_BRIEFING_TEMPLATE } = await getPromptsFromSupabase();
+  if (todoChanges.length > 0 || conversationMessages.length > 0 || importedMessages.length > 0 || importedMemories.length > 0 || relevantMemories.length > 0 || memoriesInProjectConversation.length > 0 || githubWebhooks.length > 0 || linearWebhooks.length > 0 || memoriesMentioningProject.length > 0) {
     return await generateProjectSummary({
       projectName,
       relevantMemories,
@@ -145,7 +145,8 @@ async function makeProjectBriefing(projectName) {
       importedMemories,
       importedMessages,
       githubWebhooks,
-      linearWebhooks
+      linearWebhooks,
+      template: PROJECT_BRIEFING_TEMPLATE
     })
   } else {
     return NO_PROJECT_UPDATE
@@ -438,10 +439,6 @@ async function generateProjectSummary({
                                         dailyReports,
                                         template
                                       }) {
-  if (!template) {
-    const { PROJECT_BRIEFING_TEMPLATE } = await getPromptsFromSupabase();
-    template = PROJECT_BRIEFING_TEMPLATE
-  }
   logger.info(`Generating project summary for: ${projectName}`)
   const messages = []
 
@@ -578,7 +575,7 @@ async function generateProjectSummary({
     role: 'user',
     content: `Can you please generate a detailed summary for project ${projectName} from ${startDate} to ${endDate} based on your own analysis and understanding?
      Focus solely on creating the summary without utilizing any other capabilities. Please do the best you can using only the data I provide, do not mention or comment on any missing data or gaps.
-     Be as detailed as possible based on this template: ${template}`
+     Be as detailed as possible based on this: ${template}`
   })
 
   return await createChatCompletion(messages)
@@ -599,6 +596,8 @@ async function generateMetaSummary({
                                      calendarEntries
                                    }) {
   logger.info(`Generating meta-summary for projectSummaries: ${projectSummaries?.length}`)
+  const { WEEKLY_BRIEFING_TEMPLATE } = await getPromptsFromSupabase();
+
   const messages = []
   if (weekMemories && weekMemories.length > 0) {
     messages.push({
@@ -629,27 +628,7 @@ async function generateMetaSummary({
       role: 'user',
       content: `Can you please generate a detailed summary based on your own analysis and understanding?
      Focus solely on creating the summary without utilizing any other capabilities. Please do the best you can using only the data I provide, do not mention or comment on any missing data or gaps.
-     The briefing should include the following sections:
-1. Upcoming Week Preview:
- - Summarize the key meetings, conversations, and events scheduled for the upcoming week based on the team's calendar data.
- - Highlight any critical deadlines, milestones, or decision points that require special attention.
- - Identify the top 5 tasks the team should prioritize this week, considering their urgency and importance in relation to the team's goals, organized by project.
-2. Previous Week Reflection:
- - Reflect on the team's progress and accomplishments from the previous week, highlighting any significant achievements or breakthroughs.
- - Identify any tasks or goals that were not completed, and discuss the blockers or other reasons behind the delays and propose potential solutions or workarounds, based on how urgent the deadline is.
- - Assess the team's overall progress toward their strategic objectives, and recommend any necessary adjustments to stay on track.
-3. Learning and Improvement:
- - Analyze the feedback and interactions from the previous week to identify any recurring themes or areas for improvement.
- - Discuss how Tachio can better support the team in the coming week based on the insights gained from the feedback.
- - Propose 2-3 specific enhancements or new features that could make Tachio more useful for the team and effective in general.
-4. Strategic Planning Prompts:
- - Pose 3-4 thought-provoking questions to guide the team's strategic planning and decision-making for the upcoming week.
- - Encourage the team to consider potential risks, opportunities, and innovative/counterintuitive solutions as they plan their tasks and priorities.
- - Help to identify 2-3 external perspectives or individual viewpoints that the team should be intentional about considering this week.
-
-Please generate this briefing using data from the team's calendar, project management tools, task tracking systems, and feedback logs.
-The tone should be concise, insightful, and forward-looking, with a focus on aligning the team's efforts with their long-term strategic goals.
-Try not to be too cheesy or corny. The PDW team does not like the way that most management consultants talk. Focus solely on creating the briefing without utilizing any other capabilities
+     ${WEEKLY_BRIEFING_TEMPLATE}
       `
     }
   ])
@@ -764,6 +743,8 @@ async function listPendingTodos() {
 }
 
 async function generateDailyBriefing(calendarEntries, pendingTodos, projectBriefings) {
+  const { DAILY_BRIEFING_TEMPLATE } = await getPromptsFromSupabase();
+
   const today = new Date()
   logger.info(`Generating daily briefing for: ${today}`)
   const messages = []
@@ -787,7 +768,10 @@ async function generateDailyBriefing(calendarEntries, pendingTodos, projectBrief
 
   messages.push({
     role: 'user',
-    content: `Can you please generate a detailed summary for today briefing ${today} based on your own analysis and understanding? Focus solely on creating the summary without utilizing any other capabilities. Be as detailed as possible.`
+    content: `Can you please generate a detailed summary for today briefing ${today} based on your own analysis and understanding?
+     Focus solely on creating the summary without utilizing any other capabilities. Please do the best you can using only the data I provide, do not mention or comment on any missing data or gaps.
+     ${DAILY_BRIEFING_TEMPLATE}
+     `
   })
 
   return await createChatCompletion(messages)
