@@ -397,6 +397,7 @@ app.post('/api/missive-daily-report', async (req, res) => {
     })
 })
 
+// TODO: Add back validateAuthorizationHeader
 app.post(BIWEEKLY_BRIEFING, async (req, res) => {
   const projectId = req.body.projectId;
   if (projectId?.length !== 36) {
@@ -415,7 +416,7 @@ app.post(BIWEEKLY_BRIEFING, async (req, res) => {
   const project = data[0]
   // Assume that last_sent_biweekly_briefing is in the past
   // Cron jobs cannot run biweekly directly, so we use a workaround to run it weekly and check if the task is within a 2-week period.
-  // TODO: comment for testing
+  // TODO: comment for testing, add back later
   // const within2Weeks = differenceInMilliseconds(new Date(), new Date(project.last_sent_biweekly_briefing)) < (14 * 24 * 60 * 60 - 5 * 60) * 1000 // 2 weeks - 5 minutes to account for potential delays
   // if (within2Weeks) {
   //   logger.error(`Error processing biweekly: Project already sent briefing in the last 2 weeks. Data: ${projectID} ${project.last_sent_biweekly_briefing}`);
@@ -441,42 +442,45 @@ app.post(BIWEEKLY_BRIEFING, async (req, res) => {
     })
 })
 
-app.post("/api/weekly-thread", validateAuthorizationHeader, async (req, res) => {
+// TODO: Add back validateAuthorizationHeader
+app.post("/api/weekly-thread", async (req, res) => {
   // Call by pg_cron, so we need to return 2xx to avoid spamming
   res.status(204).end()
   const today = new Date();
   const weekOfYear = `${getWeek(today)}_${today.getFullYear()}`;
-  const { data, error } = await supabase
-    .from('weekly_conversations')
-    .select("id")
-    .limit(1)
-    .eq("week_of_year", weekOfYear)
-  if (error || data?.length !== 0) {
-    logger.error(`Error processing weekly: ${error?.message} ${JSON.stringify(data)} ${weekOfYear}`);
-    return
-  }
+  // const { data, error } = await supabase
+  //   .from('weekly_conversations')
+  //   .select("id")
+  //   .limit(1)
+  //   .eq("week_of_year", weekOfYear)
+  // TODO: Add back later
+  // if (error || data?.length !== 0) {
+  //   logger.error(`Error processing weekly: ${error?.message} ${JSON.stringify(data)} ${weekOfYear}`);
+  //   return
+  // }
   const briefing = await makeWeeklyBriefing()
   const title = `Weekly conversation for week ${getWeek(today)} of ${today.getFullYear()}`
   const newPost = await sendMissiveResponse({
     message: briefing,
     notificationTitle: title,
     conversationSubject: title,
-    conversation_subject: title
+    conversation_subject: title,
+    organization: process.env.MISSIVE_ORGANIZATION,
+    add_to_inbox: true
   })
   const conversationId = newPost?.posts?.conversation
   if (!conversationId) {
     logger.error(`Error creating new thread for weekly conversation: ${JSON.stringify(newPost)}`);
     return
   }
+  // TODO: Revert to insert later
   const { error: errorNewWeekly } = await supabase
     .from("weekly_conversations")
-    .insert({
-      conversation_id: conversationId,
-      week_of_year: weekOfYear,
-      briefing
-    });
-  if (errorNewWeekly)
-    logger.error(`Error insert new weekly conversation: ${errorNewWeekly.message}, ${weekOfYear}, ${conversationId}`);
+    .upsert(
+      { conversation_id: conversationId, week_of_year: weekOfYear, briefing },
+      { onConflict: 'week_of_year', ignoreDuplicates: false }
+    );
+  // if (errorNewWeekly) logger.error(`Error insert new weekly conversation: ${errorNewWeekly.message}, ${weekOfYear}, ${conversationId}`);
 })
 
 

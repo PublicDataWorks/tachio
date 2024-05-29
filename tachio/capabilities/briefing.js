@@ -3,7 +3,7 @@ const dateFns = require('date-fns')
 dotenv.config()
 const {
   getRelevantMemories,
-  getMemoriesByString, getMemoriesByConversationID, getChannelMessageHistory
+  getMemoriesByString, getMemoriesByConversationID, getChannelMessageHistory, getMemoriesBetweenDates
 } = require('../src/remember')
 const logger = require('../src/logger')('briefing')
 const { listEventsBetweenDates } = require('./calendar.js') // Adjust the path as necessary
@@ -49,24 +49,16 @@ async function handleCapabilityMethod(method, args) {
  */
 async function makeWeeklyBriefing() {
   try {
-    // look for feedback on previous weekly summaries
-    // const feedback = await retrieveFeedback();
-    // TODO: Figure out the best way to incorporate this feedback into the summary generation
-
-    // List all todo changes from this week (added, edited, deleted)
     const now = new Date();
     const weekLater = addWeeks(now, 1);
     const weekBefore = subWeeks(now, 1);
     const todoChanges = await listTodoChanges({ startDate: weekBefore, endDate: now });
-    logger.info(`Found ${todoChanges.length} todo changes this week`);
-
-    // Read the calendar for the upcoming week
     const calendarEntries = await readCalendar({ startDate: now, endDate: weekLater });
-    logger.info(`Found ${calendarEntries.length} calendar entries this week`);
-
+    const weekMemories = await getMemoriesBetweenDates(weekBefore, now)
     const activeProjects = await getActiveProjects()
     return await generateMetaSummary({
       projectSummaries: activeProjects,
+      weekMemories,
       todoChanges,
       calendarEntries
     })
@@ -609,14 +601,10 @@ async function generateMetaSummary({
   logger.info(`Generating meta-summary for projectSummaries: ${projectSummaries?.length}`)
   const messages = []
   if (weekMemories && weekMemories.length > 0) {
-    logger.info(`First memory: ${JSON.stringify(weekMemories[0])}`)
     messages.push({
       role: 'user',
-      content: `Here are all the memories from this week: ${weekMemories
-        .map((memory) => {
-          return `${memory.created_at}: ${memory.value}`
-        })
-        .join('\n')}`
+      content: `Here are all the memories from last week: ${
+        weekMemories.map(memory => `${memory.created_at}: ${memory.value}`).join('\n')}`
     })
   }
   if (calendarEntries && calendarEntries.length > 0) {
@@ -628,18 +616,41 @@ async function generateMetaSummary({
   if (todoChanges && todoChanges.length > 0) {
     messages.push({
       role: 'user',
-      content: `Here are todo changes from last week (added, edited, deleted): ${JSON.stringify(todoChanges)}`
+      content: `Here are todo changes from last week: ${JSON.stringify(todoChanges)}`
     })
   }
   messages.push({
     role: 'user',
-    content: `Here are the active projects with their to-dos. Each to-do has its own rank in terms of urgency: ${JSON.stringify(projectSummaries)}`
+    content: `Here are the active projects with their to-do list. Each to-do has its own rank in terms of urgency: ${JSON.stringify(projectSummaries)}`
   })
   return await createChatCompletion([
     ...messages,
     {
       role: 'user',
-      content: `Can you please generate a meta-summary of this week? Be as detailed as possible.`
+      content: `Can you please generate a detailed summary based on your own analysis and understanding?
+     Focus solely on creating the summary without utilizing any other capabilities. Please do the best you can using only the data I provide, do not mention or comment on any missing data or gaps.
+     The briefing should include the following sections:
+1. Upcoming Week Preview:
+ - Summarize the key meetings, conversations, and events scheduled for the upcoming week based on the team's calendar data.
+ - Highlight any critical deadlines, milestones, or decision points that require special attention.
+ - Identify the top 5 tasks the team should prioritize this week, considering their urgency and importance in relation to the team's goals, organized by project.
+2. Previous Week Reflection:
+ - Reflect on the team's progress and accomplishments from the previous week, highlighting any significant achievements or breakthroughs.
+ - Identify any tasks or goals that were not completed, and discuss the blockers or other reasons behind the delays and propose potential solutions or workarounds, based on how urgent the deadline is.
+ - Assess the team's overall progress toward their strategic objectives, and recommend any necessary adjustments to stay on track.
+3. Learning and Improvement:
+ - Analyze the feedback and interactions from the previous week to identify any recurring themes or areas for improvement.
+ - Discuss how Tachio can better support the team in the coming week based on the insights gained from the feedback.
+ - Propose 2-3 specific enhancements or new features that could make Tachio more useful for the team and effective in general.
+4. Strategic Planning Prompts:
+ - Pose 3-4 thought-provoking questions to guide the team's strategic planning and decision-making for the upcoming week.
+ - Encourage the team to consider potential risks, opportunities, and innovative/counterintuitive solutions as they plan their tasks and priorities.
+ - Help to identify 2-3 external perspectives or individual viewpoints that the team should be intentional about considering this week.
+
+Please generate this briefing using data from the team's calendar, project management tools, task tracking systems, and feedback logs.
+The tone should be concise, insightful, and forward-looking, with a focus on aligning the team's efforts with their long-term strategic goals.
+Try not to be too cheesy or corny. The PDW team does not like the way that most management consultants talk. Focus solely on creating the briefing without utilizing any other capabilities
+      `
     }
   ])
 }
