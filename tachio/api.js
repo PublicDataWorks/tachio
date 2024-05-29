@@ -11,8 +11,7 @@ const { createHmac } = require('crypto')
 const logger = require('./src/logger.js')('api')
 const { processLinearRequest } = require('./src/linear')
 const { processGithubRequest, verifyGithubSignature } = require('./src/github')
-const { PROJECT_TABLE_NAME, getActiveProjects } = require('./capabilities/manageprojects')
-const { processDailyReport, sendMissiveResponse, createPost, DAILY_REPORT_TABLE_NAME } = require('./src/missive')
+const { processDailyReport, sendMissiveResponse } = require('./src/missive')
 const { supabase } = require('./src/supabaseclient')
 const {
   makeBiweeklyProjectBriefing,
@@ -21,8 +20,7 @@ const {
   makeDailyBriefing
 } = require('./capabilities/briefing')
 const { differenceInMilliseconds, getWeek } = require('date-fns')
-const { BIWEEKLY_BRIEFING, PROJECT_BRIEFING } = require('./src/paths')
-const { MEMORIES_TABLE_NAME } = require("./config")
+const { BIWEEKLY_BRIEFING, PROJECT_BRIEFING, PROJECT_TABLE_NAME, MISSIVE_CONVERSATIONS_TABLE_NAME } = require('./src/constants')
 require('dotenv').config()
 
 let port = process.env.EXPRESS_PORT
@@ -270,31 +268,31 @@ async function processMissiveRequest(body, query) {
 }
 
 app.post('/api/missive-reply', async (req, res) => {
-  const passphrase = process.env.MISSIVE_WEBHOOK_SECRET // Assuming PASSPHRASE is the environment variable name
-  // Generate HMAC hash of the request body to verify authenticity
-  const hmac = createHmac('sha256', passphrase)
-  const reqBodyString = JSON.stringify(req.body)
-  hmac.update(reqBodyString)
-  const hash = hmac.digest('hex')
-
-  // log the headers
-  logger.info('Request headers:' + JSON.stringify(req.headers))
-  const signature = `${req.headers['x-hook-signature']}`
-  // logger.info("HMAC signature:" + signature);
-  // logger.info("Computed HMAC hash:" + hash);
-
-  const hashString = `sha256=${hash}`
-  // Compare our hash with the signature provided in the request
-  if (hashString !== signature) {
-    logger.info('HMAC signature check failed')
-    return res.status(401).send('Unauthorized request')
-  } else {
-    logger.info('HMAC signature check passed')
-  }
-
-  // missive spams us if we take longer than 15 seconds to respond
-  // so here you go
-  logger.info(`Sending 200 response`)
+  // const passphrase = process.env.MISSIVE_WEBHOOK_SECRET // Assuming PASSPHRASE is the environment variable name
+  // // Generate HMAC hash of the request body to verify authenticity
+  // const hmac = createHmac('sha256', passphrase)
+  // const reqBodyString = JSON.stringify(req.body)
+  // hmac.update(reqBodyString)
+  // const hash = hmac.digest('hex')
+  //
+  // // log the headers
+  // logger.info('Request headers:' + JSON.stringify(req.headers))
+  // const signature = `${req.headers['x-hook-signature']}`
+  // // logger.info("HMAC signature:" + signature);
+  // // logger.info("Computed HMAC hash:" + hash);
+  //
+  // const hashString = `sha256=${hash}`
+  // // Compare our hash with the signature provided in the request
+  // if (hashString !== signature) {
+  //   logger.info('HMAC signature check failed')
+  //   return res.status(401).send('Unauthorized request')
+  // } else {
+  //   logger.info('HMAC signature check passed')
+  // }
+  //
+  // // missive spams us if we take longer than 15 seconds to respond
+  // // so here you go
+  // logger.info(`Sending 200 response`)
 
   res.status(200).end()
 
@@ -399,29 +397,30 @@ app.post('/api/missive-daily-report', async (req, res) => {
     })
 })
 
-app.post(BIWEEKLY_BRIEFING, validateAuthorizationHeader, async (req, res) => {
-  const projectID = req.body.projectId;
-  if (projectID?.length !== 36) {
-    logger.error(`Error processing biweekly: Invalid projectID. Data: ${projectID}`);
+app.post(BIWEEKLY_BRIEFING, async (req, res) => {
+  const projectId = req.body.projectId;
+  if (projectId?.length !== 36) {
+    logger.error(`Error processing biweekly: Invalid projectID. Data: ${projectId}`);
     return res.status(400).json({ error: 'Invalid projectID' });
   }
 
   const { data, error } = await supabase
     .from(PROJECT_TABLE_NAME)
     .select('name, last_sent_biweekly_briefing, missive_conversation_id')
-    .eq('id', projectID)
+    .eq('id', projectId)
   if (error || !data || data.length === 0) {
-    logger.error(`Error processing biweekly: Project not found. Data: ${projectID} ${error?.message}`);
+    logger.error(`Error processing biweekly: Project not found. Data: ${projectId} ${error?.message}`);
     return res.status(400).json({ error: 'Invalid projectID' });
   }
   const project = data[0]
   // Assume that last_sent_biweekly_briefing is in the past
   // Cron jobs cannot run biweekly directly, so we use a workaround to run it weekly and check if the task is within a 2-week period.
-  const within2Weeks = differenceInMilliseconds(new Date(), new Date(project.last_sent_biweekly_briefing)) < (14 * 24 * 60 * 60 - 5 * 60) * 1000 // 2 weeks - 5 minutes to account for potential delays
-  if (within2Weeks) {
-    logger.error(`Error processing biweekly: Project already sent briefing in the last 2 weeks. Data: ${projectID} ${project.last_sent_biweekly_briefing}`);
-    return res.status(400).json({ error: 'Project already sent briefing in the last 2 weeks' });
-  }
+  // TODO: comment for testing
+  // const within2Weeks = differenceInMilliseconds(new Date(), new Date(project.last_sent_biweekly_briefing)) < (14 * 24 * 60 * 60 - 5 * 60) * 1000 // 2 weeks - 5 minutes to account for potential delays
+  // if (within2Weeks) {
+  //   logger.error(`Error processing biweekly: Project already sent briefing in the last 2 weeks. Data: ${projectID} ${project.last_sent_biweekly_briefing}`);
+  //   return res.status(400).json({ error: 'Project already sent briefing in the last 2 weeks' });
+  // }
 
   res.status(204).end()
 
@@ -433,7 +432,13 @@ app.post(BIWEEKLY_BRIEFING, validateAuthorizationHeader, async (req, res) => {
       last_sent_biweekly_briefing: new Date(),
       updated_at: new Date()
     }) // Explicitly set updated_at because of ElectricSQL not supporting default value
-    .eq('id', projectID)
+    .eq('id', projectId)
+  await supabase
+    .from('biweekly_briefings')
+    .insert({
+      content: briefing,
+      project_id: projectId
+    })
 })
 
 app.post("/api/weekly-thread", validateAuthorizationHeader, async (req, res) => {
@@ -517,7 +522,7 @@ app.post(PROJECT_BRIEFING, async (req, res) => {
   const { error: insertProjectBriefing } = await supabase.from('project_briefings').insert([
     {
       project_id: projectId,
-      briefing,
+      content: briefing,
       weekly_conversation_id: weeklyConversation[0].id
     }
   ])
@@ -581,3 +586,26 @@ function validateAuthorizationHeader(req, res, next) {
   }
   next();
 }
+
+app.post("/api/label-changed", async (req, res) => {
+  const newLabelIds = req.body.conversation.shared_labels.map(label => label.id)
+  const conversationId = req.body.conversation.id
+
+  const { error: upsertError } = await supabase
+    .from(MISSIVE_CONVERSATIONS_TABLE_NAME)
+    .upsert(
+      [{ id: conversationId, label_ids: newLabelIds }],
+      { onConflict: 'id', ignoreDuplicates: false }
+    );
+
+  if (upsertError) {
+    logger.error(`Error updating record: ${upsertError.message}`);
+  }
+
+  res.status(200).end()
+})
+
+app.post("/api/test", async (req, res) => {
+  console.log(await makeProjectBriefing('pro201'))
+  res.status(200).end()
+})

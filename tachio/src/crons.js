@@ -1,5 +1,5 @@
 const { createJob } = require('../capabilities/pgcron')
-const { BIWEEKLY_BRIEFING, PROJECT_BRIEFING } = require("./paths")
+const { BIWEEKLY_BRIEFING, PROJECT_BRIEFING } = require("./constants")
 
 const invokeWeeklyBriefing = async (projectId) => {
   const now = new Date();

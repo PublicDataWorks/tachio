@@ -189,7 +189,8 @@ function extractCalendarData(event) {
     status: event.status,
     summary: event.summary,
     start: event.start,
-    end: event.end
+    end: event.end,
+    attendees: event.attendees
   };
 }
 

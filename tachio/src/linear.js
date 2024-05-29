@@ -1,5 +1,5 @@
 const { supabase } = require("./supabaseclient");
-const { PROJECT_TABLE_NAME } = require("../capabilities/manageprojects");
+const { PROJECT_TABLE_NAME } = require("./constants");
 
 const WEBHOOK_TABLE_NAME = "linear_webhooks";
 const LINEAR_PROJECT_TABLE_NAME = "linear_projects";

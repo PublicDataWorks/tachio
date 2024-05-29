@@ -1,12 +1,11 @@
 const { JSDOM } = require('jsdom')
 const { supabase } = require('./supabaseclient')
 const { anthropicThinkingRegex, notificationRegex } = require('../helpers')
+const { PROJECT_TABLE_NAME, DAILY_REPORT_TABLE_NAME } = require("./constants");
 const logger = require('./logger.js')('missive')
 const DAILY_REPORT_REGEX = /Hi.*What has the team done since the last call\/email regarding this project\??(.*)What will the team do between now and the next call\/email regarding this project\??(.*)What impedes the team from performing their work as effectively as possible\??(.*)How much time have we spent today\??(.*)How much time have we spent this week.*How much time have we spent this month.*Our team today:?(.*)Regards/
 const DESIGN_REGEX = /\[Design].*?billable (?:hour|day)\(s\)/
 const DONE_TODAY_DESIGN_REGEX = /(?:\[?Design]?|\[?Designer]?).*/
-const DAILY_REPORT_TABLE_NAME = 'daily_reports'
-const PROJECT_TABLE_NAME = 'projects'
 /*
 
 You must transmit your Missive user token as a Bearer token in the Authorization HTTP header.
@@ -528,6 +527,26 @@ async function sendMissiveResponse({ message, conversationId, notificationTitle,
   return response
 }
 
+async function draftResponse({ message, subject }) {
+  const responsePost = await fetch(`${apiFront}/drafts/`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      drafts: {
+        subject,
+        body: message
+      }
+    })
+  })
+  const response = await responsePost.json()
+  logger.info(`Response draft status: ${responsePost.status}`)
+  logger.info(`Response draft body: ${JSON.stringify(response)}`)
+  return response
+}
+
 function missiveOptions(body = undefined, method = 'GET') {
   return {
     body,
@@ -540,7 +559,5 @@ function missiveOptions(body = undefined, method = 'GET') {
 }
 
 module.exports = {
-  createSharedLabel, createPost, processDailyReport, sendMissiveResponse,
-  DAILY_REPORT_TABLE_NAME,
-  PROJECT_TABLE_NAME
+  createSharedLabel, createPost, processDailyReport, sendMissiveResponse, draftResponse
 }

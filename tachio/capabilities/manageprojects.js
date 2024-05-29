@@ -1,10 +1,11 @@
 const { parseJSONArg } = require('../helpers')
-const { createSharedLabel, createPost, PROJECT_TABLE_NAME } = require('../src/missive')
+const { createSharedLabel, createPost } = require('../src/missive')
 const { ORG_TABLE_NAME } = require('./manageorgs')
 const { supabase } = require('../src/supabaseclient')
 const { supabase: supabaseCron } = require('./pgcron')
 const { invokeWeeklyBriefing, generateWeeklyBriefingJobName, invokeProjectBriefing } = require('../src/crons')
 const { updateJob } = require('./pgcron')
+const { PROJECT_TABLE_NAME } = require("../src/constants");
 require('dotenv').config()
 
 /**
@@ -209,6 +210,5 @@ module.exports = {
       throw new Error(`Invalid method: ${method}`)
     }
   },
-  PROJECT_TABLE_NAME,
   getActiveProjects,
 }

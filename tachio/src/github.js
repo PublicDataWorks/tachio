@@ -1,6 +1,4 @@
 const { supabase } = require("./supabaseclient");
-const { PROJECT_TABLE_NAME } = require("../capabilities/manageprojects")
-const dateFns = require("date-fns")
 
 const WEBHOOK_TABLE_NAME = "github_webhooks";
 
