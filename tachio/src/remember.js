@@ -108,7 +108,7 @@ async function storeUserMemory(
   { username, guild, conversationId, relatedMessageId },
   value,
   memoryType = "user",
-  resourceId = null,
+  resourceId = null
 ) {
   // first we do some checks to make sure we have the right types of data
   if (!username) {
@@ -125,19 +125,19 @@ async function storeUserMemory(
     logger.info("value provided to storeUserMemory is not a string");
   }
 
-  if(!conversationId) {
+  if (!conversationId) {
     logger.info("No conversationId provided to storeUserMemory");
   }
 
-  if(!guild) {
+  if (!guild) {
     logger.info("No guild provided to storeUserMemory");
   }
 
-  if(!relatedMessageId) {
+  if (!relatedMessageId) {
     logger.info("No relatedMessageId provided to storeUserMemory");
   }
 
-  if(!memoryType) {
+  if (!memoryType) {
     logger.info("No memoryType provided to storeUserMemory");
   }
 
@@ -161,7 +161,7 @@ async function storeUserMemory(
   // }
 
   logger.info(
-    `Storing memory for ${username}: ${value} in ${memoryType} memory`,
+    `Storing memory for ${username}: ${value} in ${memoryType} memory`
   );
 
   // const { embedding1: embedding, embedding2, embedding3, embedding4 } = embeddings;
@@ -195,7 +195,7 @@ async function storeUserMemory(
       memory_type: memoryType,
       resource_id: resourceId,
       conversation_id: conversationId,
-      related_message_id: validatedRelatedMessageId,
+      related_message_id: validatedRelatedMessageId
     });
 
   // logger.info(
@@ -331,14 +331,14 @@ async function deleteMemoriesOfResource(resourceId) {
  */
 async function storeUserMessage({ username, guild, conversationId }, value) {
   const { supabase } = require("./supabaseclient.js");
-  const {data, error } = await supabase
+  const { data, error } = await supabase
     // .from("messages")
     .from(MESSAGES_TABLE_NAME)
     .insert({
       user_id: username,
       guild_id: guild,
       conversation_id: conversationId,
-      value,
+      value
     })
     .select()
 
@@ -410,7 +410,8 @@ async function voyageEmbedding(input, model = "voyage-large-2-instruct") {
     },
     body: JSON.stringify({
       input,
-      model
+      model,
+      input_type: 'query'
     })
   })
   logger.info(`Voyage response post status: ${response.status}`)
@@ -544,7 +545,7 @@ async function getRelevantMemories(queryString, limit = 5) {
     query_embedding: embedding,
     // match_threshold: 0.78,
     match_threshold: 0.85,
-    match_count: limit,
+    match_count: limit
   });
 
   if (error) {
