@@ -6,6 +6,7 @@ dotenv.config();
 
 const { MEMORIES_TABLE_NAME, MESSAGES_TABLE_NAME } = require("../config");
 const { supabase } = require("./supabaseclient.js");
+const VOYAGE_AI = 'https://api.voyageai.com/v1/embeddings'
 
 /**
  * Retrieves user memories from the database.
@@ -107,7 +108,7 @@ async function storeUserMemory(
   { username, guild, conversationId, relatedMessageId },
   value,
   memoryType = "user",
-  resourceId = null,
+  resourceId = null
 ) {
   // first we do some checks to make sure we have the right types of data
   if (!username) {
@@ -124,19 +125,19 @@ async function storeUserMemory(
     logger.info("value provided to storeUserMemory is not a string");
   }
 
-  if(!conversationId) {
+  if (!conversationId) {
     logger.info("No conversationId provided to storeUserMemory");
   }
 
-  if(!guild) {
+  if (!guild) {
     logger.info("No guild provided to storeUserMemory");
   }
 
-  if(!relatedMessageId) {
+  if (!relatedMessageId) {
     logger.info("No relatedMessageId provided to storeUserMemory");
   }
 
-  if(!memoryType) {
+  if (!memoryType) {
     logger.info("No memoryType provided to storeUserMemory");
   }
 
@@ -160,20 +161,17 @@ async function storeUserMemory(
   // }
 
   logger.info(
-    `Storing memory for ${username}: ${value} in ${memoryType} memory`,
+    `Storing memory for ${username}: ${value} in ${memoryType} memory`
   );
 
   // const { embedding1: embedding, embedding2, embedding3, embedding4 } = embeddings;
   let embedding;
   try {
-    const openAiEmbeddingResponse = await openai.embeddings.create({
-      model: "text-embedding-ada-002",
-      input: value,
-    });
+    const embeddingResponse = await voyageEmbedding(value)
 
-    const [{ embedding: fetchedEmbedding }] = openAiEmbeddingResponse.data;
-    embedding = fetchedEmbedding; // Assign the fetched embedding to the outer scope variable
-    logger.info(`Embedding length: ${embedding.length}`);
+    const [{ embedding: fetchedEmbedding }] = embeddingResponse.data
+    embedding = fetchedEmbedding // Assign the fetched embedding to the outer scope variable
+    logger.info(`Embedding length: ${embedding.length}`)
   } catch (error) {
     logger.info(`Error fetching embedding: ${error.message}`);
     embedding = null; // Ensure embedding is null if there was an error
@@ -197,7 +195,7 @@ async function storeUserMemory(
       memory_type: memoryType,
       resource_id: resourceId,
       conversation_id: conversationId,
-      related_message_id: validatedRelatedMessageId,
+      related_message_id: validatedRelatedMessageId
     });
 
   // logger.info(
@@ -333,14 +331,14 @@ async function deleteMemoriesOfResource(resourceId) {
  */
 async function storeUserMessage({ username, guild, conversationId }, value) {
   const { supabase } = require("./supabaseclient.js");
-  const {data, error } = await supabase
+  const { data, error } = await supabase
     // .from("messages")
     .from(MESSAGES_TABLE_NAME)
     .insert({
       user_id: username,
       guild_id: guild,
       conversation_id: conversationId,
-      value,
+      value
     })
     .select()
 
@@ -397,28 +395,28 @@ async function getChannelMessageHistory(channelId, limit = 5) {
   return data;
 }
 
-// /**
-//  * Embeds a string using the Voyage AI API.
-//  * @param {string} string - The input string to embed.
-//  * @param {string} [model="voyage-large-2"] - The model to use for embedding (default: "voyage-large-2").
-//  * @returns {Promise<object>} - A promise that resolves to the response data from the API.
-//  */
-// async function voyageEmbedding(string, model = "voyage-large-2") {
-//   const response = await axios.post(
-//     "https://api.voyageai.com/v1/embeddings",
-//     {
-//       input: string,
-//       model,
-//     },
-//     {
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${process.env.VOYAGE_API_KEY}`,
-//       },
-//     },
-//   );
-//   return response.data;
-// }
+/**
+ * Embeds a string using the Voyage AI API.
+ * @param {string} input - The input string to embed.
+ * @param {string} [model="voyage-large-2-instruct"] - The model to use for embedding (default: "voyage-large-2-instruct").
+ * @returns {Promise<object>} - A promise that resolves to the response data from the API.
+ */
+async function voyageEmbedding(input, model = "voyage-large-2-instruct") {
+  const response = await fetch(VOYAGE_AI, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${process.env.VOYAGE_API_KEY}`
+    },
+    body: JSON.stringify({
+      input,
+      model,
+      input_type: 'query'
+    })
+  })
+  logger.info(`Voyage response post status: ${response.status}`)
+  return response.json()
+}
 
 // /**
 //  * Converts a string into three different embeddings using different models.
@@ -539,18 +537,15 @@ async function getRelevantMemories(queryString, limit = 5) {
   }
 
   // const { embedding1: embedding } = await stringToEmbedding(queryString);
-  const openAiEmbeddingResponse = await openai.embeddings.create({
-    model: "text-embedding-ada-002",
-    input: queryString,
-  });
-  const [{ embedding }] = openAiEmbeddingResponse.data;
+  const embeddingResponse = await voyageEmbedding(queryString)
+  const [{ embedding }] = embeddingResponse.data
 
   // query the database for the most relevant memories, currently this is only supported on the openai embeddings
   const { data, error } = await supabase.rpc("match_memories", {
     query_embedding: embedding,
     // match_threshold: 0.78,
     match_threshold: 0.85,
-    match_count: limit,
+    match_count: limit
   });
 
   if (error) {
