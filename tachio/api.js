@@ -273,31 +273,31 @@ async function processMissiveRequest(body, query) {
 }
 
 app.post('/api/missive-reply', async (req, res) => {
-  // const passphrase = process.env.MISSIVE_WEBHOOK_SECRET // Assuming PASSPHRASE is the environment variable name
-  // // Generate HMAC hash of the request body to verify authenticity
-  // const hmac = createHmac('sha256', passphrase)
-  // const reqBodyString = JSON.stringify(req.body)
-  // hmac.update(reqBodyString)
-  // const hash = hmac.digest('hex')
-  //
-  // // log the headers
-  // logger.info('Request headers:' + JSON.stringify(req.headers))
-  // const signature = `${req.headers['x-hook-signature']}`
-  // // logger.info("HMAC signature:" + signature);
-  // // logger.info("Computed HMAC hash:" + hash);
-  //
-  // const hashString = `sha256=${hash}`
-  // // Compare our hash with the signature provided in the request
-  // if (hashString !== signature) {
-  //   logger.info('HMAC signature check failed')
-  //   return res.status(401).send('Unauthorized request')
-  // } else {
-  //   logger.info('HMAC signature check passed')
-  // }
-  //
-  // // missive spams us if we take longer than 15 seconds to respond
-  // // so here you go
-  // logger.info(`Sending 200 response`)
+  const passphrase = process.env.MISSIVE_WEBHOOK_SECRET // Assuming PASSPHRASE is the environment variable name
+  // Generate HMAC hash of the request body to verify authenticity
+  const hmac = createHmac('sha256', passphrase)
+  const reqBodyString = JSON.stringify(req.body)
+  hmac.update(reqBodyString)
+  const hash = hmac.digest('hex')
+
+  // log the headers
+  logger.info('Request headers:' + JSON.stringify(req.headers))
+  const signature = `${req.headers['x-hook-signature']}`
+  // logger.info("HMAC signature:" + signature);
+  // logger.info("Computed HMAC hash:" + hash);
+
+  const hashString = `sha256=${hash}`
+  // Compare our hash with the signature provided in the request
+  if (hashString !== signature) {
+    logger.info('HMAC signature check failed')
+    return res.status(401).send('Unauthorized request')
+  } else {
+    logger.info('HMAC signature check passed')
+  }
+
+  // missive spams us if we take longer than 15 seconds to respond
+  // so here you go
+  logger.info(`Sending 200 response`)
 
   res.status(200).end()
 
