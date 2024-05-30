@@ -529,26 +529,6 @@ async function sendMissiveResponse({ message, conversationId, notificationTitle,
   return response
 }
 
-async function draftResponse({ message, subject }) {
-  const responsePost = await fetch(`${apiFront}/drafts/`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`
-    },
-    body: JSON.stringify({
-      drafts: {
-        subject,
-        body: message
-      }
-    })
-  })
-  const response = await responsePost.json()
-  logger.info(`Response draft status: ${responsePost.status}`)
-  logger.info(`Response draft body: ${JSON.stringify(response)}`)
-  return response
-}
-
 function missiveOptions(body = undefined, method = 'GET') {
   return {
     body,
@@ -561,5 +541,5 @@ function missiveOptions(body = undefined, method = 'GET') {
 }
 
 module.exports = {
-  createSharedLabel, createPost, processDailyReport, sendMissiveResponse, draftResponse
+  createSharedLabel, createPost, processDailyReport, sendMissiveResponse
 }

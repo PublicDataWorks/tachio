@@ -197,7 +197,7 @@ function extractCalendarData(event) {
 module.exports = {
   handleCapabilityMethod: async (method, args) => {
     const jsonArgs = parseJSONArg(args)
-    logger.info(`⚡️ Calling capability method: calendar.${method} \n ${jsonArgs}`);
+    logger.info(`⚡️ Calling capability method: calendar.${method} \n ${JSON.stringify(jsonArgs)}`);
 
     switch (method) {
       case "listAllCalendars":
