@@ -3,15 +3,28 @@ import IssueList from './IssueList'
 import { Issues, useElectric } from '../../electric'
 import { useLiveQuery } from 'electric-sql/react'
 import { useFilterState, filterStateToWhere } from '../../utils/filterState'
-import { useContext } from 'react'
-import { SupabaseContext } from '../../SupabaseContext.ts'
 
-function List({ showSearch = true }) {
+interface ListProps {
+  showSearch?: boolean
+  labels?: string[]
+}
+
+function List({ showSearch = true, labels }: ListProps) {
   const [filterState] = useFilterState()
   const { db } = useElectric()!
-  const { session } = useContext(SupabaseContext)
   const where = filterStateToWhere(filterState)
-  where.username = session?.user ? session.user.email : undefined
+  const { results: projects } = useLiveQuery(
+    db.projects.liveMany({
+      select: {
+        id: true
+      },
+      where: {
+        missive_label_id: labels ? { in: labels } : undefined
+      }
+    })
+  )
+  where.project_id = { in: projects?.map(project => project.id) ?? [] }
+
   const { results } = useLiveQuery(
     db.issues.liveMany({
       orderBy: { [filterState.orderBy]: filterState.orderDirection },
@@ -19,7 +32,6 @@ function List({ showSearch = true }) {
     })
   )
   const issues: Issues[] = results ?? []
-
   return (
     <div className="flex flex-col flex-grow">
       <TopFilter issues={issues} showSearch={showSearch} />
