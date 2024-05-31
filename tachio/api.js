@@ -421,13 +421,13 @@ app.post(BIWEEKLY_BRIEFING, async (req, res) => {
   const project = data[0]
   // Assume that last_sent_biweekly_briefing is in the past
   // Cron jobs cannot run biweekly directly, so we use a workaround to run it weekly and check if the task is within a 2-week period.
-  // TODO: comment for testing, add back later
+  // TODO: commented out for testing, add back later
+  // TODO: do nothing if last_sent_biweekly_briefing is null
   // const within2Weeks = differenceInMilliseconds(new Date(), new Date(project.last_sent_biweekly_briefing)) < (14 * 24 * 60 * 60 - 5 * 60) * 1000 // 2 weeks - 5 minutes to account for potential delays
   // if (within2Weeks) {
   //   logger.error(`Error processing biweekly: Project already sent briefing in the last 2 weeks. Data: ${projectID} ${project.last_sent_biweekly_briefing}`);
   //   return res.status(400).json({ error: 'Project already sent briefing in the last 2 weeks' });
   // }
-
   res.status(204).end()
 
   const briefing = await makeBiweeklyProjectBriefing(project.name)
@@ -564,6 +564,11 @@ app.post('/api/daily-briefing', async (req, res) => {
     conversationId: weeklyConversation[0].conversation_id,
     notificationTitle: `Daily briefing for ${today}`
   })
+  await supabase
+    .from('daily_briefings')
+    .insert({
+      content: briefing
+    })
 })
 
 function jsonToMarkdownList(jsonObj, indentLevel = 0) {
