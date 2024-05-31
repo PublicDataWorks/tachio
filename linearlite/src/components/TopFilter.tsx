@@ -9,6 +9,9 @@ import FilterMenu from './contextmenu/FilterMenu'
 import { useFilterState } from '../utils/filterState'
 import { PriorityDisplay, StatusDisplay } from '../types/issue'
 import { MenuContext } from '../MainRoutes.tsx'
+import { useQuery } from '../hooks/useQuery.ts'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { RxSwitch } from 'react-icons/rx'
 
 interface Props {
   issues: Issues[]
@@ -30,6 +33,12 @@ export default function TopFilter ({
   const [showViewOption, setShowViewOption] = useState(false)
   const { showMenu, setShowMenu } = useContext(MenuContext)!
   const [searchQuery, setSearchQuery] = useState('')
+  const navigate = useNavigate()
+  const query = useQuery()
+  const isMissve = query.get('missive') === 'true'
+  const location = useLocation()
+  // Missive sidebar only see /board or /
+  const isBoardView = location.pathname.includes('/board')
 
   // We don't yet have a DAL for counts, so we use raw SQL
   const totalIssuesCount: number =
@@ -41,7 +50,7 @@ export default function TopFilter ({
   const handleSearchInner = debounce((query: string) => {
     setFilterState({
       ...filterState,
-      query: query,
+      query: query
     })
   }, 500)
 
@@ -71,13 +80,27 @@ export default function TopFilter ({
       <div className="flex justify-between flex-shrink-0 pl-2 pr-6 border-b border-gray-200 h-14 lg:pl-9">
         {/* left section */}
         <div className="flex items-center">
-          <button
-            className="flex-shrink-0 h-full px-5 lg:hidden"
-            onClick={() => setShowMenu(!showMenu)}
-          >
-            <MenuIcon className="w-3.5 text-gray-500 hover:text-gray-800" />
-          </button>
-
+          {isMissve ? (
+            <button
+              className="flex-shrink-0 h-full px-5 lg:hidden"
+              onClick={() => {
+                if (isBoardView) {
+                  navigate(`/?missive=true`)
+                } else {
+                  navigate(`/board?missive=true`)
+                }
+              }}
+            >
+              <RxSwitch className="w-3.5 text-gray-500 hover:text-gray-800" />
+            </button>
+          ) : (
+            <button
+              className="flex-shrink-0 h-full px-5 lg:hidden"
+              onClick={() => setShowMenu(!showMenu)}
+            >
+              <MenuIcon className="w-3.5 text-gray-500 hover:text-gray-800" />
+            </button>
+          )}
           <div className="p-1 font-semibold me-1">{title}</div>
           <span>
             {filteredIssuesCount}
@@ -124,7 +147,7 @@ export default function TopFilter ({
                 onClick={() => {
                   setFilterState({
                     ...filterState,
-                    priority: undefined,
+                    priority: undefined
                   })
                 }}
               >
@@ -145,7 +168,7 @@ export default function TopFilter ({
                 onClick={() => {
                   setFilterState({
                     ...filterState,
-                    status: undefined,
+                    status: undefined
                   })
                 }}
               >
@@ -157,7 +180,8 @@ export default function TopFilter ({
       )}
 
       {showSearch && (
-        <div className="flex items-center justify-between flex-shrink-0 pl-2 pr-6 border-b border-gray-200 lg:pl-9 py-2">
+        <div
+          className="flex items-center justify-between flex-shrink-0 pl-2 pr-6 border-b border-gray-200 lg:pl-9 py-2">
           <SearchIcon className="w-3.5 h-3.5 ms-3 absolute" />
           <input
             type="search"
