@@ -1,7 +1,5 @@
-const { encode } = require("@nem035/gpt-3-encoder");
 const { describe, it, expect } = require("@jest/globals");
 const { capabilityRegex, callCapabilityMethod } = require("./capabilities");
-const { TOKEN_LIMIT } = require("../helpers");
 
 describe("Capabilities", () => {
   it("should handle errors gracefully", async () => {
