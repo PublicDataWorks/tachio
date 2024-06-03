@@ -1,5 +1,5 @@
-const { PROJECT_TABLE_NAME } = require("../capabilities/manageprojects");
 const { supabase } = require('./supabaseclient')
+const { PROJECT_TABLE_NAME } = require("./constants");
 
 const WEBHOOK_TABLE_NAME = "pivotal_tracker_webhooks";
 

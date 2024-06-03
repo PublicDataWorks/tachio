@@ -14,10 +14,21 @@ const { processGithubRequest, verifyGithubSignature } = require('./src/github')
 const { PROJECT_TABLE_NAME } = require('./capabilities/manageprojects')
 const { processDailyReport, sendMissiveResponse } = require('./src/missive')
 const { supabase } = require('./src/supabaseclient')
+const {
+  makeBiweeklyProjectBriefing,
+  makeWeeklyBriefing,
+  makeProjectBriefing,
+  makeDailyBriefing
+} = require('./capabilities/briefing')
+const { differenceInMilliseconds, getWeek } = require('date-fns')
+const {
+  BIWEEKLY_BRIEFING,
+  PROJECT_BRIEFING,
+  PROJECT_TABLE_NAME,
+  MISSIVE_CONVERSATIONS_TABLE_NAME
+} = require('./src/constants')
 require('dotenv').config()
 
-const apiFront = 'https://public.missiveapp.com/v1'
-const apiKey = process.env.MISSIVE_API_KEY
 let port = process.env.EXPRESS_PORT
 
 app.use(
@@ -41,27 +52,27 @@ server.on('error', (err) => {
   }
 })
 
-async function listMessages(emailMessageId) {
-  let url = `${apiFront}/conversations/${emailMessageId}/messages`
-
-  logger.info(`Fetching messages from ${url}`)
-
-  const options = {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`
-    }
-  }
-
-  const response = await fetch(url, options)
-  const data = await response.json()
-
-
-  // logger.info(`Data: ${JSON.stringify(data)}`);
-
-  return data.messages
-}
+// async function listMessages(emailMessageId) {
+//   let url = `${apiFront}/conversations/${emailMessageId}/messages`
+//
+//   logger.info(`Fetching messages from ${url}`)
+//
+//   const options = {
+//     method: 'GET',
+//     headers: {
+//       'Content-Type': 'application/json',
+//       Authorization: `Bearer ${apiKey}`
+//     }
+//   }
+//
+//   const response = await fetch(url, options)
+//   const data = await response.json()
+//
+//
+//   // logger.info(`Data: ${JSON.stringify(data)}`);
+//
+//   return data.messages
+// }
 
 function processWebhookPayload(payload) {
   const userMessage = payload.comment.body
@@ -120,13 +131,13 @@ async function processMissiveRequest(body, query) {
 
   // Extract the conversation ID from the request body
   const conversationId = body.conversation.id
+  const sharedLabelIDs = body.conversation.shared_labels?.map(label => label.id)
   const { data } = await supabase
     .from(PROJECT_TABLE_NAME)
     .select('id')
-    .in('missive_label_id', body.conversation.shared_labels)
+    .in('missive_label_id', sharedLabelIDs)
     .limit(1)
   let projectId = (data?.length > 0) ? `Project ID: ${data[0].id}. \n` : ''
-
   const task = body.comment.task
   // Used for directing the LLM based on specific context:
   // - Record a new todo if task is presented
@@ -135,8 +146,8 @@ async function processMissiveRequest(body, query) {
   if (task) {
     contextPrompt = 'I want to record this as a todo (no further action needed beyond that). '
       + (task.completed_at ? `This todo is already completed at ${new Date(task.completed_at * 1000)}. \n` : `This todo is not completed yet. \n`)
-  } else if (body.comment.attachment?.media_type === 'text')  {
-    contextPrompt = `ingest:deepDocumentIngest(${body.comment.attachment.url})`
+  } else if (body.comment.attachment?.media_type === 'text') {
+    contextPrompt = `ingest:deepDocumentIngest(${body.comment.attachment.url}, ${conversationId})`
   }
   // Process the webhook payload using the processWebhookPayload function
   const simplifiedPayload = processWebhookPayload(body)
@@ -144,8 +155,8 @@ async function processMissiveRequest(body, query) {
   // Check if there are any attachments in the comment
   const attachment = body.comment.attachment
 
-  // TODO: Add a check for the attachment type
-  if (attachment) {
+  // text memory is handled by deepDocumentIngest
+  if (attachment && body.comment.attachment?.media_type !== 'text') {
     // Extract the resource ID from the attachment
     const resourceId = attachment.id
 
@@ -205,7 +216,7 @@ async function processMissiveRequest(body, query) {
   }
 
   // Fetch the context messages for the conversation from the database
-  const contextMessages = await getChannelMessageHistory(conversationId)
+  const contextMessages = await getChannelMessageHistory({ channelId: conversationId })
   // Add the context messages to the formatted messages array
   formattedMessages.push(
     ...contextMessages.map((m) => ({
@@ -259,7 +270,7 @@ async function processMissiveRequest(body, query) {
     logger.error(`Error processing message chain: ${error.message}, ${error.stack}`)
   }
   const lastMessage = processedMessage[processedMessage.length - 1]
-  await sendMissiveResponse(lastMessage, query, conversationId)
+  await sendMissiveResponse({ message: lastMessage.content, conversationId, requestQuery: query })
 }
 
 app.post('/api/missive-reply', async (req, res) => {
@@ -363,7 +374,7 @@ app.post('/api/linear', async (req, res) => {
     return
   }
   processLinearRequest(req.body).then(() => logger.info('Linear webhook processed'))
-    .catch((error) => logger.error(`Error processing Linear webhook: ${error.message}`))
+    .catch((error) => logger.error(`Error processing Linear webhook: ${error.message} ${error.stack}`))
   logger.info(`Sending 200 response`)
   res.status(200).end()
 })
@@ -375,7 +386,7 @@ app.post('/api/github', async (req, res) => {
     return
   }
   processGithubRequest(req).then(() => logger.info('Github webhook processed'))
-    .catch((error) => logger.error(`Error processing Github webhook: ${error.message}`))
+    .catch((error) => logger.error(`Error processing Github webhook: ${error.message} ${error.stack}`))
   logger.info(`Sending 200 response`)
   res.status(200).end()
 })
@@ -388,10 +399,178 @@ app.post('/api/missive-daily-report', async (req, res) => {
       logger.info(`Daily report message processed`)
     })
     .catch((error) => {
-      logger.error(`Error processing daily report message: ${error.message}`)
+      logger.error(`Error processing daily report message: ${error.message} ${error.stack}`)
     })
 })
 
+// TODO: Add back validateAuthorizationHeader
+app.post(BIWEEKLY_BRIEFING, async (req, res) => {
+  const projectId = req.body.projectId;
+  if (projectId?.length !== 36) {
+    logger.error(`Error processing biweekly: Invalid projectID. Data: ${projectId}`);
+    return res.status(400).json({ error: 'Invalid projectID' });
+  }
+
+  const { data, error } = await supabase
+    .from(PROJECT_TABLE_NAME)
+    .select('name, last_sent_biweekly_briefing, missive_conversation_id')
+    .eq('id', projectId)
+  if (error || !data || data.length === 0) {
+    logger.error(`Error processing biweekly: Project not found. Data: ${projectId} ${error?.message}`);
+    return res.status(400).json({ error: 'Invalid projectID' });
+  }
+  const project = data[0]
+  // Assume that last_sent_biweekly_briefing is in the past
+  // Cron jobs cannot run biweekly directly, so we use a workaround to run it weekly and check if the task is within a 2-week period.
+  // TODO: commented out for testing, add back later
+  // TODO: do nothing if last_sent_biweekly_briefing is null
+  // const within2Weeks = differenceInMilliseconds(new Date(), new Date(project.last_sent_biweekly_briefing)) < (14 * 24 * 60 * 60 - 5 * 60) * 1000 // 2 weeks - 5 minutes to account for potential delays
+  // if (within2Weeks) {
+  //   logger.error(`Error processing biweekly: Project already sent briefing in the last 2 weeks. Data: ${projectID} ${project.last_sent_biweekly_briefing}`);
+  //   return res.status(400).json({ error: 'Project already sent briefing in the last 2 weeks' });
+  // }
+  res.status(204).end()
+
+  const briefing = await makeBiweeklyProjectBriefing(project.name)
+  await sendMissiveResponse({
+    message: briefing,
+    notificationTitle: `Biweekly briefing for ${project.name}`,
+    conversationSubject: `Biweekly briefing for ${project.name}`,
+    organization: process.env.MISSIVE_ORGANIZATION,
+    addToInbox: true
+  })
+  await supabase
+    .from(PROJECT_TABLE_NAME)
+    .update({
+      last_sent_biweekly_briefing: new Date(),
+      updated_at: new Date()
+    }) // Explicitly set updated_at because of ElectricSQL not supporting default value
+    .eq('id', projectId)
+  await supabase
+    .from('biweekly_briefings')
+    .insert({
+      content: briefing,
+      project_id: projectId
+    })
+})
+
+// TODO: Add back validateAuthorizationHeader
+app.post("/api/weekly-briefing", async (req, res) => {
+  // Call by pg_cron, so we need to return 2xx to avoid spamming
+  res.status(204).end()
+  const today = new Date();
+  const weekOfYear = `${getWeek(today)}_${today.getFullYear()}`;
+  // const { data, error } = await supabase
+  //   .from('weekly_conversations')
+  //   .select("id")
+  //   .limit(1)
+  //   .eq("week_of_year", weekOfYear)
+  // TODO: Add back later
+  // if (error || data?.length !== 0) {
+  //   logger.error(`Error processing weekly: ${error?.message} ${JSON.stringify(data)} ${weekOfYear}`);
+  //   return
+  // }
+  const briefing = await makeWeeklyBriefing()
+  const title = `Weekly conversation for week ${getWeek(today)} of ${today.getFullYear()}`
+  const newPost = await sendMissiveResponse({
+    message: briefing,
+    notificationTitle: title,
+    conversationSubject: title,
+    organization: process.env.MISSIVE_ORGANIZATION,
+    addToInbox: true
+  })
+  const conversationId = newPost?.posts?.conversation
+  if (!conversationId) {
+    logger.error(`Error creating new thread for weekly conversation: ${JSON.stringify(newPost)}`);
+    return
+  }
+  // TODO: Revert to insert later
+  const { error: errorNewWeekly } = await supabase
+    .from("weekly_conversations")
+    .upsert(
+      { conversation_id: conversationId, week_of_year: weekOfYear, briefing },
+      { onConflict: 'week_of_year', ignoreDuplicates: false }
+    );
+  // if (errorNewWeekly) logger.error(`Error insert new weekly conversation: ${errorNewWeekly.message}, ${weekOfYear}, ${conversationId}`);
+})
+
+
+app.post(PROJECT_BRIEFING, async (req, res) => {
+  res.status(204).end()
+  const projectId = req.body.projectId
+  if (!projectId) {
+    logger.error('Error processing project-briefing: Missing projectId')
+    return
+  }
+  const { data, error: fetchProjectError } = await supabase
+    .from(PROJECT_TABLE_NAME)
+    .select('name, missive_conversation_id')
+    .eq('id', projectId)
+    .limit(1)
+  if (fetchProjectError || !data || data?.length === 0) {
+    logger.error(`Error occurred while trying to fetch project in making project briefing ${projectId}: ${fetchProjectError?.message} ${JSON.stringify(data)}`)
+    return
+  }
+
+  const today = new Date();
+  const weekOfYear = `${getWeek(today)}_${today.getFullYear()}`;
+  const { data: weeklyConversation, error } = await supabase
+    .from("weekly_conversations")
+    .select('id, conversation_id')
+    .eq('week_of_year', weekOfYear)
+  if (error || weeklyConversation?.length === 0) {
+    logger.error(`Error processing project-briefing: ${error?.message} ${JSON.stringify(data)} ${weekOfYear}`);
+    return
+  }
+
+  const briefing = await makeProjectBriefing(data[0].name)
+  await sendMissiveResponse({
+    message: briefing,
+    conversationId: weeklyConversation[0].conversation_id,
+    notificationTitle: `Project briefing for ${data[0].name}`
+  })
+  await sendMissiveResponse({
+    message: briefing,
+    conversationId: data[0].missive_conversation_id,
+    notificationTitle: `Project briefing for ${data[0].name}`
+  })
+  const { error: insertProjectBriefing } = await supabase.from('project_briefings').insert([
+    {
+      project_id: projectId,
+      content: briefing,
+      weekly_conversation_id: weeklyConversation[0].id
+    }
+  ])
+  if (insertProjectBriefing)
+    logger.error(`Error insert new project briefing: ${insertProjectBriefing.message}, ${projectId}, ${weeklyConversation[0].id}`);
+})
+
+
+app.post('/api/daily-briefing', async (req, res) => {
+  res.status(204).end()
+  const today = new Date()
+  const weekOfYear = `${getWeek(today)}_${today.getFullYear()}`;
+  const { data: weeklyConversation, error } = await supabase
+    .from("weekly_conversations")
+    .select('conversation_id')
+    .eq('week_of_year', weekOfYear)
+  if (error || weeklyConversation?.length === 0) {
+    logger.error(`Error processing project-briefing: ${error?.message} ${JSON.stringify(data)} ${weekOfYear}`);
+    return
+  }
+  const briefing = await makeDailyBriefing()
+
+  await sendMissiveResponse({
+    message: briefing,
+    conversationId: weeklyConversation[0].conversation_id,
+    notificationTitle: `Daily briefing for ${today}`
+  })
+  await supabase
+    .from('daily_briefings')
+    .insert({
+      content: briefing
+    })
+})
 
 function jsonToMarkdownList(jsonObj, indentLevel = 0) {
   let str = ''
@@ -412,3 +591,36 @@ function jsonToMarkdownList(jsonObj, indentLevel = 0) {
 
   return str
 }
+
+function validateAuthorizationHeader(req, res, next) {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Missing or invalid Authorization header' });
+  }
+
+  const token = authHeader.split(' ')[1];
+
+  if (token !== process.env.SUPABASE_API_KEY) {
+    return res.status(401).json({ error: 'Invalid token' });
+  }
+  next();
+}
+
+app.post("/api/label-changed", async (req, res) => {
+  const newLabelIds = req.body.conversation.shared_labels.map(label => label.id)
+  const conversationId = req.body.conversation.id
+
+  const { error: upsertError } = await supabase
+    .from(MISSIVE_CONVERSATIONS_TABLE_NAME)
+    .upsert(
+      [{ id: conversationId, label_ids: newLabelIds }],
+      { onConflict: 'id', ignoreDuplicates: false }
+    );
+
+  if (upsertError) {
+    logger.error(`Error updating record: ${upsertError.message}`);
+  }
+
+  res.status(200).end()
+})

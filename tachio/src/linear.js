@@ -1,5 +1,5 @@
 const { supabase } = require("./supabaseclient");
-const { PROJECT_TABLE_NAME } = require("../capabilities/manageprojects");
+const { PROJECT_TABLE_NAME } = require("./constants");
 
 const WEBHOOK_TABLE_NAME = "linear_webhooks";
 const LINEAR_PROJECT_TABLE_NAME = "linear_projects";
@@ -45,6 +45,19 @@ function processWebhookPayload(payload) {
   }
 }
 
+async function getLinearWebhooks(teamId, startDate, endDate) {
+  if (!teamId) return []
+  const { data, error } = await supabase
+    .from(WEBHOOK_TABLE_NAME)
+    .select('type, data, url, updated_from, action, actor')
+    .eq('team_id', teamId)
+    .gte('created_at', startDate.toISOString())
+    .lte('created_at', endDate.toISOString())
+  if (error) throw new Error(`Error occurred while trying to fetch linear webhook ${error.message}, ${startDate}`)
+  return data || []
+}
+
 module.exports = {
   processLinearRequest,
+  getLinearWebhooks
 };

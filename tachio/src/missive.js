@@ -1,6 +1,7 @@
 const { JSDOM } = require('jsdom')
 const { supabase } = require('./supabaseclient')
 const { anthropicThinkingRegex, notificationRegex } = require('../helpers')
+const { PROJECT_TABLE_NAME, DAILY_REPORT_TABLE_NAME } = require("./constants");
 const logger = require('./logger.js')('missive')
 const DAILY_REPORT_REGEX = /Hi.*What has the team done since the last call\/email regarding this project\??(.*)What will the team do between now and the next call\/email regarding this project\??(.*)What impedes the team from performing their work as effectively as possible\??(.*)How much time have we spent today\??(.*)How much time have we spent this week.*How much time have we spent this month.*Our team today:?(.*)Regards/
 const DESIGN_REGEX = /\[Design].*?billable (?:hour|day)\(s\)/
@@ -157,16 +158,7 @@ Fetch messages matching an email Message-ID.
 
 async function listConversationMessages(emailMessageId) {
   let url = `${apiFront}/conversations/${emailMessageId}/messages`
-
-  const options = {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`
-    }
-  }
-
-  const response = await fetch(url, options)
+  const response = await fetch(url, missiveOptions())
   const data = await response.json()
   // add a 1ms delay to avoid rate limiting
   await new Promise((resolve) => setTimeout(resolve, 1000))
@@ -295,14 +287,7 @@ Fetch a specific message headers, body and attachments using the message id.
 
 async function getMessage(messageId) {
   const url = `${apiFront}/messages/${messageId}`
-  const options = {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`
-    }
-  }
-  const response = await fetch(url, options)
+  const response = await fetch(url, missiveOptions())
   return response.json()
 }
 
@@ -325,43 +310,29 @@ List shared labels in organizations the authenticated user is part of.
 */
 async function listSharedLabels() {
   const url = `${apiFront}/shared_labels`
-  const options = {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`
-    }
-  }
-
-  const response = await fetch(url, options)
+  const response = await fetch(url, missiveOptions())
   return response.json()
 }
 
 async function createSharedLabel({ name, organization, parent, shareWithOrganization }) {
   const url = `${apiFront}/shared_labels`
-  const options = {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`
-    },
-    body: JSON.stringify({
-      shared_labels: [{
-        name,
-        organization,
-        parent,
-        share_with_organization: shareWithOrganization
-      }]
-    })
-  }
-
-  const response = await fetch(url, options)
+  const body = JSON.stringify({
+    shared_labels: [{
+      name,
+      organization,
+      parent,
+      share_with_organization: shareWithOrganization
+    }]
+  })
+  const response = await fetch(url, missiveOptions(body, 'POST'))
   if (!response.ok) {
     const errorBody = await response.text()
     throw new Error(`Error creating shared label. HTTP status: ${response.status}, status text: ${response.statusText}, body: ${errorBody}`)
-  } else {
-    return response.json()
   }
+  const responseBody = await response.json()
+  logger.info(`Response createPost status: ${response.status}`)
+  logger.info(`Response createPost body: ${JSON.stringify(responseBody)}`)
+  return responseBody
 }
 
 
@@ -372,42 +343,41 @@ async function createPost({
                             organization,
                             addSharedLabels,
                             notificationTitle,
-                            notificationBody,
+                            notificationBody = '',
                             text,
                             markdown,
-                            conversation
+                            conversation,
+                            add_users,
+                            add_assignees
                           }) {
   const url = `${apiFront}/posts`
-  const options = {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`
-    },
-    body: JSON.stringify({
-      posts: {
-        conversation_subject: conversationSubject,
-        username,
-        organization,
-        username_icon: usernameIcon,
-        add_shared_labels: addSharedLabels,
-        text,
-        markdown,
-        conversation,
-        notification: {
-          title: notificationTitle,
-          body: notificationBody
-        }
+  const body = JSON.stringify({
+    posts: {
+      conversation_subject: conversationSubject,
+      username,
+      organization,
+      username_icon: usernameIcon,
+      add_shared_labels: addSharedLabels,
+      text,
+      markdown,
+      conversation,
+      add_users,
+      add_assignees,
+      notification: {
+        title: notificationTitle,
+        body: notificationBody
       }
-    })
-  }
-  const response = await fetch(url, options)
+    }
+  })
+  const response = await fetch(url, missiveOptions(body, 'POST'))
   if (!response.ok) {
     const errorBody = await response.text()
     throw new Error(`Error creating post. HTTP status: ${response.status}, status text: ${response.statusText}, body: ${errorBody}`)
-  } else {
-    return response.json()
   }
+  const responseBody = await response.json()
+  logger.info(`Response createPost status: ${response.status}`)
+  logger.info(`Response createPost body: ${JSON.stringify(responseBody)}`)
+  return responseBody
 }
 
 /*
@@ -432,15 +402,7 @@ Response example:
 
 async function listUsers() {
   const url = `${apiFront}/users`
-  const options = {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`
-    }
-  }
-
-  const response = await fetch(url, options)
+  const response = await fetch(url, missiveOptions())
   return response.json()
 }
 
@@ -448,10 +410,12 @@ async function processDailyReport(payload) {
   if (!payload.rule.description.toLowerCase().includes('daily report')) return
 
   const { id: messageId, subject } = payload.message
+  // Body payload is only a summary of the content, we need to fetch the full message
   const message = await getMessage(messageId)
+  // It's in HTML format
   const dom = new JSDOM(message.messages.body)
   const listItems = dom.window.document.querySelectorAll('li')
-  // Append a space after each list item
+  // Append a space after each list item, otherwise the text will be concatenated
   listItems.forEach(li => {
     const space = dom.window.document.createTextNode('. ')
     li.appendChild(space)
@@ -477,7 +441,15 @@ async function processDailyReport(payload) {
   const designerTimeSpentToday = designMatch ? designMatch[0] : ''
   const developerTimeSpentToday = timeSpentToday.replace(designerTimeSpentToday, '')
 
-  const { error } = await supabase.from('daily_reports').insert([
+  const sharedLabelIDs = payload.conversation.shared_labels?.map(label => label.id)
+  const { data } = await supabase
+    .from(PROJECT_TABLE_NAME)
+    .select('id')
+    .in('missive_label_id', sharedLabelIDs)
+    .limit(1)
+  const projectId = data?.[0]?.id
+
+  const { error } = await supabase.from(DAILY_REPORT_TABLE_NAME).insert([
     {
       subject,
       developer_done_today: otherDoneToday,
@@ -488,18 +460,18 @@ async function processDailyReport(payload) {
       developer_time_spent_today: developerTimeSpentToday,
       designer_time_spent_today: designerTimeSpentToday,
       team_today: teamToday,
-      content: text
+      content: text,
+      project_id: projectId
     }
   ])
   if (error) throw new Error(error.message)
 }
 
-async function sendMissiveResponse(lastMessage, requestQuery, conversationId) {
-  const content = lastMessage?.content || 'No content found. Check the log for more information.'
+async function sendMissiveResponse({ message, conversationId, notificationTitle, conversationSubject, organization, addToInbox, requestQuery }) {
   // Separate thinking part out of result part of Claude's message
-  const messageMatches = content.match(anthropicThinkingRegex)
+  const messageMatches = message.match(anthropicThinkingRegex)
   let notification = {
-    title: BOT_NAME,
+    title: notificationTitle || BOT_NAME,
     body: ''
   }
   const attachments = []
@@ -525,13 +497,12 @@ async function sendMissiveResponse(lastMessage, requestQuery, conversationId) {
       .forEach((paragraph, index) => {
         attachments.push({
           'color': '#2266ED',
-          'text': paragraph.trim(),
-          'timestamp': Math.floor(Date.now() / 1000) + 1 + index // Add index to avoid duplicate timestamps
+          'text': paragraph.trim(), // TODO: replace with markdown
+          'timestamp': Math.floor(Date.now() / 1000) + 1 + index // Add index to avoid duplicate timestamps // TODO: removeme
         })
       })
   }
   const token = (requestQuery?.token?.length === 36) ? requestQuery.token : apiKey
-  // POST the response back to the Missive API using the conversation ID
   const responsePost = await fetch(`${apiFront}/posts/`, {
     method: 'POST',
     headers: {
@@ -540,18 +511,33 @@ async function sendMissiveResponse(lastMessage, requestQuery, conversationId) {
     },
     body: JSON.stringify({
       posts: {
+        conversation_subject: conversationSubject,
         conversation: conversationId,
         notification,
         username: BOT_NAME,
         attachments,
-        markdown: attachments.length > 0 ? undefined : content
+        markdown: attachments.length > 0 ? undefined : message,
+        organization,
+        add_to_inbox: addToInbox
       }
     })
   })
-
+  const response = await responsePost.json()
   // Log the response status and body from the Missive API
   logger.info(`Response post status: ${responsePost.status}`)
-  logger.info(`Response post body: ${JSON.stringify(await responsePost.json())}`)
+  logger.info(`Response post body: ${JSON.stringify(response)}`)
+  return response
+}
+
+function missiveOptions(body = undefined, method = 'GET') {
+  return {
+    body,
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`
+    }
+  }
 }
 
 module.exports = {

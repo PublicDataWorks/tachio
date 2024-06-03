@@ -16,23 +16,27 @@ const logger = require("../src/logger")('capability-supabasetodo')
  * @param {string} status - The status of the todo item. The value is one of 'icebox', 'todo', 'in_progress', 'done'.
  * @param {string} priority - The priority of the todo item. The value is one of 'now', 'next', 'later'.
  * @param {string} externalUrls - A newline-delimited string to represent external URLs (e.g., linear or github issue or pull request).
+ * @param {string} username - Email of the user creating the todo.
  * @returns {Promise<string>} A promise that resolves to a success message.
  */
-async function createTodo({ projectId, title, status = "todo", priority = "later", description = "", externalUrls = '' }) {
+async function createTodo({ projectId, title, username, status = "todo", priority = "later", description = "", externalUrls = '' }) {
   if (!title) throw new Error("A title is required to create a todo");
   const { error } = await supabase.from(TODO_TABLE_NAME).insert([
     {
+      id: crypto.randomUUID(),
       project_id: projectId,
       title,
       status,
       priority,
       external_urls: externalUrls,
       description,
+      username,
+      created_at: new Date(),
     },
   ]);
 
   if (error) throw new Error(error.message);
-  return `Successfully added todo: ${name}`;
+  return `Successfully added todo: ${title}`;
 }
 
 // deleteTodo.js
@@ -129,7 +133,7 @@ module.exports = {
     } else if (method === "updateTodo") {
       const { todoId } = jsonArgs
       delete jsonArgs.todoId;
-      return await updateTodo(todoId, jsonArgs);
+      return await updateTodo(todoId, jsonArgs.updates);
     } else if (method === "listTodos") {
       return await listTodos();
     } else {

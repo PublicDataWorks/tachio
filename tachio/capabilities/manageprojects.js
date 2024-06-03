@@ -2,9 +2,11 @@ const { parseJSONArg } = require('../helpers')
 const { createSharedLabel, createPost } = require('../src/missive')
 const { ORG_TABLE_NAME } = require('./manageorgs')
 const { supabase } = require('../src/supabaseclient')
+const { supabase: supabaseCron } = require('./pgcron')
+const { invokeWeeklyBriefing, generateWeeklyBriefingJobName, invokeProjectBriefing } = require('../src/crons')
+const { updateJob } = require('./pgcron')
+const { PROJECT_TABLE_NAME } = require("../src/constants");
 require('dotenv').config()
-
-const PROJECT_TABLE_NAME = 'projects'
 
 /**
  * Creates a new project of an organization
@@ -70,10 +72,10 @@ async function createProject({
     text: projectName
   })
   const conversationId = newPost.posts.conversation
-
+  const newProjectID = crypto.randomUUID()
   const { error: errAddProject } = await supabase.from(PROJECT_TABLE_NAME).insert([
     {
-      id: crypto.randomUUID(),
+      id: newProjectID,
       name: projectName,
       org_id: org.id,
       shortname: shortname || projectName.replace(/\s/g, '-'),
@@ -90,6 +92,8 @@ async function createProject({
     }
   ])
   if (errAddProject) throw new Error(errAddProject.message)
+  await invokeWeeklyBriefing(newProjectID)
+  await invokeProjectBriefing(newProjectID)
   return `Successfully added project: ${projectName}`
 }
 
@@ -153,24 +157,45 @@ async function updateProject({
   return `Successfully updated project: ${projectName}`
 }
 
-async function updateProjectStatus({ name, shortname, alias, endDate, newStatus }) {
-  if (!name && !shortname && !alias) throw new Error('Missing required fields')
-
-  let newValue = { status: newStatus }
-  if (endDate) newValue.end_date = endDate
-  let query = supabase
+async function updateProjectStatus({ name, newStatus }) {
+  if (!name || !newStatus) throw new Error('Missing required fields')
+  const { data: existingProject, error } = await supabase
     .from(PROJECT_TABLE_NAME)
-    .update(newValue)
-  if (name) query = query.eq('name', name)
-  if (shortname) query = query.eq('shortname', shortname)
-  if (alias) query = query.contains('aliases', [alias])
-
-  const { error } = await query
-
+    .select('id, status')
+    .eq('name', name)
   if (error) throw new Error(error.message)
-  return `Successfully ${newStatus} project: ${name || shortname || alias}`
+  if (existingProject.length === 0) throw new Error('Project not found')
+  if (existingProject[0].status === newStatus) throw new Error(`Project already ${newStatus}`)
+
+  const { error: errorUpdate } = await supabase
+    .from(PROJECT_TABLE_NAME)
+    .update({ status: newStatus })
+    .eq('name', name)
+
+  if (error) throw new Error(errorUpdate.message)
+  if (newStatus === 'paused') {
+    const { data, error } = await supabaseCron
+      .from('job')
+      .select('jobid')
+      .eq('jobname', generateWeeklyBriefingJobName(existingProject[0].id))
+    if (error) throw new Error(error.message)
+    if (data.length === 0) throw new Error('Job not found')
+
+    await updateJob(data[0].jobid, undefined, undefined, false)
+  }
+  return `Successfully ${newStatus} project: ${name}`
 }
 
+// Helper functions
+async function getActiveProjects() {
+  // Do not add JSdoc here, as this function is not exposed
+  const { data, error } = await supabase
+    .from(PROJECT_TABLE_NAME)
+    .select('name, issues (*)')
+    .eq('status', 'active')
+  if (error) throw new Error(error.message)
+  return data
+}
 module.exports = {
   handleCapabilityMethod: async (method, args) => {
     console.log(`⚡️ Calling capability method: manageprojects.${method}`)
@@ -179,16 +204,11 @@ module.exports = {
       return await createProject(arg)
     } else if (method === 'updateProject') {
       return await updateProject(arg)
-    } else if (method === 'completeProject') {
-      arg.newStatus = 'completed'
-      return await updateProjectStatus(arg)
-    } else if (method === 'archiveProject') {
-      arg.newStatus = 'archived'
-      delete arg.endDate
+    } else if (method === 'updateProjectStatus') {
       return await updateProjectStatus(arg)
     } else {
       throw new Error(`Invalid method: ${method}`)
     }
   },
-  PROJECT_TABLE_NAME
+  getActiveProjects,
 }

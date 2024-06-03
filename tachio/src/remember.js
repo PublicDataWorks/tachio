@@ -15,7 +15,6 @@ const VOYAGE_AI = 'https://api.voyageai.com/v1/embeddings'
  * @returns {Promise<Array>} - A promise that resolves to an array of user memories.
  */
 async function getUserMemory(userId, limit = 5) {
-  const { supabase } = require("./supabaseclient.js");
   if (!userId) {
     logger.info("No userId provided to getUserMemory");
     return [];
@@ -38,40 +37,39 @@ async function getUserMemory(userId, limit = 5) {
   return data;
 }
 
-// /**
-//  * Retrieves memories between two dates.
-//  * @param {Date} startDate - The start date.
-//  * @param {Date} endDate - The end date.
-//  * @returns {Promise<Array<Object>>} - A promise that resolves to an array of memory objects.
-//  */
-// async function getMemoriesBetweenDates(startDate, endDate) {
-//   if (!(startDate instanceof Date) || !(endDate instanceof Date)) {
-//     logger.info("Invalid dates provided to getMemoriesBetweenDates");
-//     return [];
-//   }
-//
-//   logger.info(`Looking for memories between ${startDate} and ${endDate}`);
-//   logger.info(
-//     `Looking for memories between ${startDate.toISOString()} and ${endDate.toISOString()}`,
-//   );
-//
-//   const { supabase } = require("./supabaseclient.js");
-//   const response = await supabase
-//     .from(MEMORIES_TABLE_NAME)
-//     .select("*")
-//     .gte("created_at", startDate.toISOString())
-//     .lte("created_at", endDate.toISOString())
-//     .order("created_at", { ascending: true });
-//
-//   const { data, error } = response;
-//
-//   if (error) {
-//     logger.info("Error fetching memories between dates:", error);
-//     return [];
-//   }
-//
-//   return data;
-// }
+/**
+ * Retrieves memories between two dates.
+ * @param {Date} startDate - The start date.
+ * @param {Date} endDate - The end date.
+ * @returns {Promise<Array<Object>>} - A promise that resolves to an array of memory objects.
+ */
+async function getMemoriesBetweenDates(startDate, endDate) {
+  if (!(startDate instanceof Date) || !(endDate instanceof Date)) {
+    logger.info("Invalid dates provided to getMemoriesBetweenDates");
+    return [];
+  }
+
+  logger.info(`Looking for memories between ${startDate} and ${endDate}`);
+  logger.info(
+    `Looking for memories between ${startDate.toISOString()} and ${endDate.toISOString()}`
+  );
+
+  const response = await supabase
+    .from(MEMORIES_TABLE_NAME)
+    .select("*")
+    .gte("created_at", startDate.toISOString())
+    .lte("created_at", endDate.toISOString())
+    .order("created_at", { ascending: true });
+
+  const { data, error } = response;
+
+  if (error) {
+    logger.info("Error fetching memories between dates:", error);
+    return [];
+  }
+
+  return data;
+}
 
 /**
  * Retrieves a specified number of memories from the database.
@@ -80,7 +78,6 @@ async function getUserMemory(userId, limit = 5) {
  * @returns {Promise<Array<Object>>} - A promise that resolves to an array of memory objects.
  */
 async function getAllMemories(limit = 5) {
-  const { supabase } = require("./supabaseclient.js");
   const { data, error } = await supabase
     .from(MEMORIES_TABLE_NAME)
     .select("*")
@@ -167,6 +164,7 @@ async function storeUserMemory(
   // const { embedding1: embedding, embedding2, embedding3, embedding4 } = embeddings;
   let embedding;
   try {
+
     const embeddingResponse = await voyageEmbedding(value)
 
     const [{ embedding: fetchedEmbedding }] = embeddingResponse.data
@@ -182,7 +180,6 @@ async function storeUserMemory(
     validatedRelatedMessageId = parseInt(relatedMessageId);
   }
 
-  const { supabase } = require("./supabaseclient.js");
   const { data, error } = await supabase
     // .from("storage")
     .from(MEMORIES_TABLE_NAME)
@@ -208,6 +205,8 @@ async function storeUserMemory(
   if (error) {
     logger.info(`Error storing user memory: ${error.message}`);
   }
+  
+  // TODO: Call LLM to generate 3 suggestions and store in db
 }
 
 
@@ -218,7 +217,6 @@ async function storeUserMemory(
  * @returns {Promise<Array<Object>>} - A promise that resolves to an array of memory objects.
  **/
 async function getResourceMemories(resourceId, limit = 5) {
-  const { supabase } = require("./supabaseclient.js");
   const { data, error } = await supabase
     .from(MEMORIES_TABLE_NAME)
     .select("*")
@@ -241,7 +239,6 @@ async function getResourceMemories(resourceId, limit = 5) {
  * @returns {Promise<boolean>} - True if there is a memory of the file, false otherwise.
  */
 async function hasMemoryOfResource(resourceId) {
-  const { supabase } = require("./supabaseclient.js");
   const { data, error } = await supabase
     .from(MEMORIES_TABLE_NAME)
     .select("created_at")
@@ -306,7 +303,6 @@ async function hasMemoryOfResource(resourceId) {
  * @throws {Error} - If there is an error deleting the memories.
  **/
 async function deleteMemoriesOfResource(resourceId) {
-  const { supabase } = require("./supabaseclient.js");
   const { error } = await supabase
     .from(MEMORIES_TABLE_NAME)
     .delete()
@@ -375,17 +371,26 @@ async function getUserMessageHistory(userId, limit = 5) {
 /**
  * Retrieves message history for a specific channel_id
  * @param {string} channelId - The ID of the channel.
- * @param {number} [limit=5] - The maximum number of messages to retrieve. Default is 5.
+ * @param {number} [limit=20] - The maximum number of messages to retrieve. Default is 20.
+ * @param {Date | undefined} startDate - A optional start date for the retrieval.
+ * @param {Date | undefined} endDate - A optional end date for the retrieval.
  * @returns {Promise<Array<Object>>} - A promise that resolves to an array of message objects.
  */
-async function getChannelMessageHistory(channelId, limit = 5) {
-  const { data, error } = await supabase
-    // .from("messages")
+async function getChannelMessageHistory({ channelId, limit = 30, startDate, endDate }) {
+  const query = supabase
     .from(MESSAGES_TABLE_NAME)
     .select("*")
     .limit(limit)
     .order("created_at", { ascending: false })
     .eq("conversation_id", channelId);
+
+  if (startDate && endDate) {
+    query
+      .gte("created_at", startDate.toISOString())
+      .lte("created_at", endDate.toISOString());
+  }
+
+  const { data, error } = await query
 
   if (error) {
     logger.info("Error fetching channel message:", error);
@@ -510,11 +515,10 @@ async function voyageEmbedding(input, model = "voyage-large-2-instruct") {
 /**
  * Retrieves relevant memories based on a query string.
  * @param {string} queryString - The query string to search for relevant memories.
- * @param {number} [limit=5] - The maximum number of memories to retrieve (default: 5).
+ * @param {number} [limit=20] - The maximum number of memories to retrieve (default: 5).
  * @returns {Promise<Array>} - A promise that resolves to an array of relevant memories.
  */
-async function getRelevantMemories(queryString, limit = 5) {
-  const { supabase } = require("./supabaseclient.js");
+async function getRelevantMemories(queryString, limit = 20) {
   // make sure queryString is a string
   if (typeof queryString !== "string") {
     logger.info("No query string provided to getRelevantMemories");
@@ -537,8 +541,10 @@ async function getRelevantMemories(queryString, limit = 5) {
   }
 
   // const { embedding1: embedding } = await stringToEmbedding(queryString);
+
   const embeddingResponse = await voyageEmbedding(queryString)
   const [{ embedding }] = embeddingResponse.data
+
 
   // query the database for the most relevant memories, currently this is only supported on the openai embeddings
   const { data, error } = await supabase.rpc("match_memories", {
@@ -550,7 +556,7 @@ async function getRelevantMemories(queryString, limit = 5) {
 
   if (error) {
     logger.error(`Error fetching relevant user memory: ${error.message}`);
-    return null;
+    return [];
   }
 
   // if data is an empty object, make it an empty array
@@ -561,27 +567,53 @@ async function getRelevantMemories(queryString, limit = 5) {
   return data;
 }
 
-// /**
-//  * A plain old string search across memories
-//  * @param {string} queryString - The query string to search for relevant memories.
-//  */
-// async function getMemoriesByString(queryString) {
-//   const { supabase } = require("./supabaseclient.js");
-//   if (typeof queryString !== "string") {
-//     return logger.info("No query string provided to getRelevantMemories");
-//   }
-//   const { data, error } = await supabase
-//     .from(MEMORIES_TABLE_NAME)
-//     .select("*")
-//     .ilike("value", `%${queryString}%`);
-//
-//   if (error) {
-//     logger.error(`Error fetching relevant user memory: ${error.message}`);
-//     return null;
-//   }
-//
-//   return data;
-// }
+/**
+ * A plain old string search across memories
+ * @param {string} queryString - The query string to search for relevant memories.
+ */
+async function getMemoriesByString(queryString) {
+  if (typeof queryString !== "string") {
+    return logger.info("No query string provided to getRelevantMemories");
+  }
+  const { data, error } = await supabase
+    .from(MEMORIES_TABLE_NAME)
+    .select("*")
+    .ilike("value", `%${queryString}%`);
+
+  if (error) {
+    logger.error(`Error fetching relevant user memory: ${error.message}`);
+    return null;
+  }
+
+  return data;
+}
+
+/**
+ * Search for memories of a specific conversation
+ * @param {string} conversationID - The conversationID to search for relevant memories.
+ * @param {Date | undefined} startDate - A optional start date for the retrieval.
+ * @param {Date | undefined} endDate - A optional end date for the retrieval.
+ */
+async function getMemoriesByConversationID({ conversationID, startDate, endDate }) {
+  const query = supabase
+    .from(MEMORIES_TABLE_NAME)
+    .select("*")
+    .eq("conversation_id", conversationID);
+  if (startDate && endDate) {
+    query
+      .gte("created_at", startDate.toISOString())
+      .lte("created_at", endDate.toISOString());
+  }
+
+  const { data, error } = await query
+
+  if (error) {
+    logger.error(`Error fetching relevant user memory: ${error.message}`);
+    return null;
+  }
+
+  return data;
+}
 
 module.exports = {
   getUserMemory,
@@ -593,5 +625,8 @@ module.exports = {
   getChannelMessageHistory,
   getResourceMemories,
   hasMemoryOfResource,
-  deleteMemoriesOfResource
+  deleteMemoriesOfResource,
+  getMemoriesBetweenDates,
+  getMemoriesByString,
+  getMemoriesByConversationID
 };

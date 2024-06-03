@@ -141,7 +141,7 @@ module.exports = (async () => {
         );
       } catch (error) {
         logger.error(
-          `${chainId} - Process message chain: error processing message: ${error} ${error.stack}`,
+          `${chainId} - Process message chain: error processing message: ${error.message} ${error.stack}`,
         );
         messages.push({
           role: "assistant",

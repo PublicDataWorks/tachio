@@ -9,6 +9,7 @@
     "player": "nodemon capability-player.js",
     "manifest": "node capabilities/_generate-manifest.js",
     "test": "jest",
+    "dev": "node --watch api.js",
     "linearlite:migrate": "npx pg-migrations apply --database postgresql://electric:${PROXY_PASSWORD}@localhost:65432/postgres --directory db/linearlite/migrations",
     "linearlite:migrate:docker": "npx pg-migrations apply --database postgresql://electric:${PROXY_PASSWORD}@electric:65432/postgres --directory db/linearlite/migrations",
     "tachio:migrate": "npx supabase --db-url postgresql://postgres:${POSTGRES_PASSWORD}@localhost:5432/postgres migration up",
