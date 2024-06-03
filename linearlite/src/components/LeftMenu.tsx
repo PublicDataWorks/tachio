@@ -79,11 +79,11 @@ function LeftMenu() {
                 />
                 <ExpandMore size={13} className="ml-2" />
               </button>
-              <ProfileMenu
+              {/*<ProfileMenu
                 isOpen={showProfileMenu}
                 onDismiss={() => setShowProfileMenu(false)}
                 className="absolute top-10"
-              />
+              />*/}
             </div>
           </div>
 
