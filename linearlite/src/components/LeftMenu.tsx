@@ -2,29 +2,22 @@ import { ReactComponent as MenuIcon } from '../assets/icons/menu.svg'
 import { ReactComponent as BacklogIcon } from '../assets/icons/circle-dot.svg'
 import classnames from 'classnames'
 import { memo, RefObject, useRef, useState, useContext } from 'react'
-import { useConnectivityState, useLiveQuery } from 'electric-sql/react'
+import { useLiveQuery } from 'electric-sql/react'
 import { BsPencilSquare as AddIcon } from 'react-icons/bs'
 import { BsSearch as SearchIcon } from 'react-icons/bs'
 import { BsFillGrid3X3GapFill as BoardIcon } from 'react-icons/bs'
 import { BsCollectionFill as IssuesIcon } from 'react-icons/bs'
-import { MdKeyboardArrowDown as ExpandMore } from 'react-icons/md'
 import { Link } from 'react-router-dom'
-import Avatar from './Avatar'
 import IssueModal from './IssueModal'
 import ItemGroup from './ItemGroup'
-import ProfileMenu from './ProfileMenu'
 import { MenuContext } from '../MainRoutes.tsx'
 import { AiOutlineTeam } from 'react-icons/ai'
-import { SupabaseContext } from '../SupabaseContext.ts'
 import { useElectric } from '../electric.ts'
 
 function LeftMenu() {
   const ref = useRef<HTMLDivElement>() as RefObject<HTMLDivElement>
-  const [showProfileMenu, setShowProfileMenu] = useState(false)
   const [showIssueModal, setShowIssueModal] = useState(false)
   const { showMenu, setShowMenu } = useContext(MenuContext)!
-  const { status } = useConnectivityState()
-  const { session } = useContext(SupabaseContext)
   const { db } = useElectric()!
   const { results: projects } = useLiveQuery(
     db.projects.liveMany({
