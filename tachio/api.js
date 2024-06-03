@@ -11,6 +11,7 @@ const { createHmac } = require('crypto')
 const logger = require('./src/logger.js')('api')
 const { processLinearRequest } = require('./src/linear')
 const { processGithubRequest, verifyGithubSignature } = require('./src/github')
+const { PROJECT_TABLE_NAME } = require('./capabilities/manageprojects')
 const { processDailyReport, sendMissiveResponse } = require('./src/missive')
 const { supabase } = require('./src/supabaseclient')
 const {
