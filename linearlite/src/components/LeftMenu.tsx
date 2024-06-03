@@ -68,7 +68,7 @@ function LeftMenu() {
 
             {/* User avatar  */}
             <div className="relative">
-              <button
+            {/*   <button
                 className="flex items-center justify-center p-2 rounded cursor-pointer hover:bg-gray-100"
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
               >
@@ -78,7 +78,7 @@ function LeftMenu() {
                   showOffline={true}
                 />
                 <ExpandMore size={13} className="ml-2" />
-              </button>
+              </button>*/}
               {/*<ProfileMenu
                 isOpen={showProfileMenu}
                 onDismiss={() => setShowProfileMenu(false)}
