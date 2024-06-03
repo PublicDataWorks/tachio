@@ -13,7 +13,7 @@
     "linearlite:migrate": "npx pg-migrations apply --database postgresql://electric:${PROXY_PASSWORD}@localhost:65432/postgres --directory db/linearlite/migrations",
     "linearlite:migrate:docker": "npx pg-migrations apply --database postgresql://electric:${PROXY_PASSWORD}@electric:65432/postgres --directory db/linearlite/migrations",
     "tachio:migrate": "npx supabase --db-url postgresql://postgres:${POSTGRES_PASSWORD}@localhost:5432/postgres migration up",
-    "tachio:migrate:docker": "npx supabase --workdir ./db --db-url postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/postgres migration up"
+    "tachio:migrate:docker": "npx supabase --include-all --workdir ./db --db-url postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/postgres migration up"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.20.1",

@@ -11,7 +11,6 @@ const { createHmac } = require('crypto')
 const logger = require('./src/logger.js')('api')
 const { processLinearRequest } = require('./src/linear')
 const { processGithubRequest, verifyGithubSignature } = require('./src/github')
-const { PROJECT_TABLE_NAME } = require('./capabilities/manageprojects')
 const { processDailyReport, sendMissiveResponse } = require('./src/missive')
 const { supabase } = require('./src/supabaseclient')
 const {
@@ -20,7 +19,7 @@ const {
   makeProjectBriefing,
   makeDailyBriefing
 } = require('./capabilities/briefing')
-const { differenceInMilliseconds, getWeek } = require('date-fns')
+const { getWeek } = require('date-fns')
 const {
   BIWEEKLY_BRIEFING,
   PROJECT_BRIEFING,
