@@ -36,7 +36,7 @@ export default function IssueBoard({ issues }: IssueBoardProps) {
       if (movedIssues[issue.id]) {
         issue = {
           ...issue,
-          ...movedIssues[issue.id],
+          ...movedIssues[issue.id]
         }
       }
       const status = issue.status.toLowerCase()
@@ -127,18 +127,18 @@ export default function IssueBoard({ issues }: IssueBoardProps) {
     setMovedIssues((prev) => ({
       ...prev,
       [issue.id]: {
-        kanbanorder: kanbanorder,
-      },
+        kanbanorder: kanbanorder
+      }
     }))
 
     // Update the issue in the database
     db.issues.update({
       data: {
-        kanbanorder: kanbanorder,
+        kanbanorder: kanbanorder
       },
       where: {
-        id: issue.id,
-      },
+        id: issue.id
+      }
     })
 
     // Return the new kanbanorder
@@ -184,19 +184,19 @@ export default function IssueBoard({ issues }: IssueBoardProps) {
         [draggableId]: {
           status: destination.droppableId,
           kanbanorder,
-          updated_at: updatedAt,
-        },
+          updated_at: updatedAt
+        }
       }))
       // Update the issue in the database
       db.issues.update({
         data: {
           status: destination.droppableId,
           kanbanorder,
-          updated_at: updatedAt,
+          updated_at: updatedAt
         },
         where: {
-          id: draggableId,
-        },
+          id: draggableId
+        }
       })
     }
   }
@@ -204,11 +204,6 @@ export default function IssueBoard({ issues }: IssueBoardProps) {
   return (
     <DragDropContext onDragEnd={onDragEnd}>
       <div className="flex flex-1 pt-6 pl-8 overflow-scroll bg-gray-100">
-        <IssueCol
-          title={StatusDisplay[Status.BACKLOG]}
-          status={Status.BACKLOG}
-          issues={issuesByStatus[Status.BACKLOG]}
-        />
         <IssueCol
           title={StatusDisplay[Status.TODO]}
           status={Status.TODO}
@@ -218,6 +213,11 @@ export default function IssueBoard({ issues }: IssueBoardProps) {
           title={StatusDisplay[Status.IN_PROGRESS]}
           status={Status.IN_PROGRESS}
           issues={issuesByStatus[Status.IN_PROGRESS]}
+        />
+        <IssueCol
+          title={StatusDisplay[Status.BACKLOG]}
+          status={Status.BACKLOG}
+          issues={issuesByStatus[Status.BACKLOG]}
         />
         <IssueCol
           title={StatusDisplay[Status.DONE]}

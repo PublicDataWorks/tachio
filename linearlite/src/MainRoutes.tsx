@@ -122,6 +122,7 @@ export const MainRoutes = ({ onElectricLoaded }: MainRoutesProps) => {
   return (
     <ElectricProvider db={electric}>
       <MenuContext.Provider value={{ showMenu, setShowMenu }}>
+        <BrowserRouter>
           <div className="flex w-full h-screen overflow-y-hidden">
             <LeftMenu />
             {router}
