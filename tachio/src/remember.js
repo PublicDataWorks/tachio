@@ -39,8 +39,8 @@ async function getUserMemory(userId, limit = 5) {
 
 /**
  * Retrieves memories between two dates.
- * @param {Date} startDate - The start date.
- * @param {Date} endDate - The end date.
+ * @param {string} startDate - The start date.
+ * @param {string} endDate - The end date.
  * @returns {Promise<Array<Object>>} - A promise that resolves to an array of memory objects.
  */
 async function getMemoriesBetweenDates(startDate, endDate) {
@@ -205,7 +205,7 @@ async function storeUserMemory(
   if (error) {
     logger.info(`Error storing user memory: ${error.message}`);
   }
-  
+
   // TODO: Call LLM to generate 3 suggestions and store in db
 }
 
@@ -372,8 +372,8 @@ async function getUserMessageHistory(userId, limit = 5) {
  * Retrieves message history for a specific channel_id
  * @param {string} channelId - The ID of the channel.
  * @param {number} [limit=20] - The maximum number of messages to retrieve. Default is 20.
- * @param {Date | undefined} startDate - A optional start date for the retrieval.
- * @param {Date | undefined} endDate - A optional end date for the retrieval.
+ * @param {string} startDate - A optional start date for the retrieval.
+ * @param {string} endDate - A optional end date for the retrieval.
  * @returns {Promise<Array<Object>>} - A promise that resolves to an array of message objects.
  */
 async function getChannelMessageHistory({ channelId, limit = 30, startDate, endDate }) {
@@ -591,8 +591,8 @@ async function getMemoriesByString(queryString) {
 /**
  * Search for memories of a specific conversation
  * @param {string} conversationID - The conversationID to search for relevant memories.
- * @param {Date | undefined} startDate - A optional start date for the retrieval.
- * @param {Date | undefined} endDate - A optional end date for the retrieval.
+ * @param {string} startDate - A optional start date for the retrieval.
+ * @param {string} endDate - A optional end date for the retrieval.
  */
 async function getMemoriesByConversationID({ conversationID, startDate, endDate }) {
   const query = supabase

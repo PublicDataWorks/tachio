@@ -23,10 +23,10 @@ if (!fs.existsSync(cacheDir)) {
 }
 
 async function handleCapabilityMethod(method, args) {
-  const [arg1] = destructureArgs(args);
+  const [arg1, arg2] = destructureArgs(args);
 
   if (method === "deepDocumentIngest") {
-    return await deepDocumentIngest(arg1);
+    return await deepDocumentIngest(arg1, arg2);
   } else {
     throw new Error(`Method ${method} not supported by this capability.`);
   }

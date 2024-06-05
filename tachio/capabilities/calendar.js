@@ -167,8 +167,8 @@ async function listEventsPrevWeek(calendarId) {
 /**
  * Retrieves a list of events occurring between the specified dates for the specified calendar.
  * @param {string} calendarId - The ID (email address) of the calendar to retrieve events from.
- * @param {string | Date} startDate - The start date of the range.
- * @param {string | Date} endDate - The end date of the range.
+ * @param {string} startDate - The start date of the range.
+ * @param {string} endDate - The end date of the range.
  * @returns {Promise<string>} - A promise that resolves to the list of events.
  */
 async function listEventsBetweenDates(calendarId, startDate, endDate) {
