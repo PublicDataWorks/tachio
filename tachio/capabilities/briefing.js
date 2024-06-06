@@ -113,7 +113,8 @@ async function makeProjectBriefing(projectName) {
   const conversationMessages = await getChannelMessageHistory({
     channelId: project.missive_conversation_id,
     startDate,
-    endDate
+    endDate,
+    limit: 30
   })
   const importedConversationIds = conversationMessages.map(message => {
     const match = message.value.match(MISSIVE_CONVERSATION_URL_REGEX);
@@ -181,7 +182,8 @@ async function makeBiweeklyProjectBriefing(projectName) {
   const conversationMessages = await getChannelMessageHistory({
     channelId: project.missive_conversation_id,
     startDate,
-    endDate
+    endDate,
+    limit: 30
   })
   let projectAliases
   try {
@@ -717,7 +719,7 @@ async function processImportedConversations(uuids, startDate, endDate) {
   const memories = [];
   for (const uuid of uniqueIds) {
     try {
-      const channelMessageHistory = await getChannelMessageHistory({ channelId: uuid, startDate, endDate });
+      const channelMessageHistory = await getChannelMessageHistory({ channelId: uuid, startDate, endDate, limit: 30 });
       const memoryHistory = await getMemoriesByConversationID({ conversationID: uuid, startDate, endDate });
       channelMessageHistory.length > 0 && messages.push(`ConversationID ${uuid}. Message history: ${JSON.stringify(channelMessageHistory.map(message => ({ value: message.value })))}`)
       memoryHistory.length > 0 && memories.push(`ConversationID ${uuid}. Memories: ${JSON.stringify(memoryHistory.map(message => ({ value: message.value })))}`)

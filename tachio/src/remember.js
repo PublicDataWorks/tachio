@@ -164,9 +164,7 @@ async function storeUserMemory(
   // const { embedding1: embedding, embedding2, embedding3, embedding4 } = embeddings;
   let embedding;
   try {
-
     const embeddingResponse = await voyageEmbedding(value)
-
     const [{ embedding: fetchedEmbedding }] = embeddingResponse.data
     embedding = fetchedEmbedding // Assign the fetched embedding to the outer scope variable
     logger.info(`Embedding length: ${embedding.length}`)
@@ -322,10 +320,11 @@ async function deleteMemoriesOfResource(resourceId) {
  * @param {string} username - The ID of the user who sent the message.
  * @param {string} value - The content of the message.
  * @param {string} conversationId - The ID of the conversation where the message was sent.
+ * @param {string | undefined} response - The assistant response to the message.
  * @param {string} guild - The ID of the guild where the message was sent.
  * @returns {Promise<string>} - A promise that resolves to the stored message data.
  */
-async function storeUserMessage({ username, guild, conversationId }, value) {
+async function storeUserMessage({ username, guild, conversationId, response }, value) {
   const { supabase } = require("./supabaseclient.js");
   const { data, error } = await supabase
     // .from("messages")
@@ -334,6 +333,7 @@ async function storeUserMessage({ username, guild, conversationId }, value) {
       user_id: username,
       guild_id: guild,
       conversation_id: conversationId,
+      assistant_response: response,
       value
     })
     .select()
@@ -371,19 +371,23 @@ async function getUserMessageHistory(userId, limit = 5) {
 /**
  * Retrieves message history for a specific channel_id
  * @param {string} channelId - The ID of the channel.
+
  * @param {number} [limit=20] - The maximum number of messages to retrieve. Default is 20.
  * @param {string} startDate - A optional start date for the retrieval.
  * @param {string} endDate - A optional end date for the retrieval.
+
  * @returns {Promise<Array<Object>>} - A promise that resolves to an array of message objects.
  */
-async function getChannelMessageHistory({ channelId, limit = 30, startDate, endDate }) {
+async function getChannelMessageHistory({ channelId, limit, startDate, endDate }) {
   const query = supabase
     .from(MESSAGES_TABLE_NAME)
     .select("*")
-    .limit(limit)
     .order("created_at", { ascending: false })
     .eq("conversation_id", channelId);
 
+  if (limit) {
+    query.limit(limit);
+  }
   if (startDate && endDate) {
     query
       .gte("created_at", startDate.toISOString())

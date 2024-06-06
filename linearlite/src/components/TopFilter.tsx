@@ -9,9 +9,6 @@ import FilterMenu from './contextmenu/FilterMenu'
 import { useFilterState } from '../utils/filterState'
 import { PriorityDisplay, StatusDisplay } from '../types/issue'
 import { MenuContext } from '../MainRoutes.tsx'
-import { useQuery } from '../hooks/useQuery.ts'
-import { useLocation, useNavigate } from 'react-router-dom'
-import { RxSwitch } from 'react-icons/rx'
 
 interface Props {
   issues: Issues[]
@@ -21,24 +18,18 @@ interface Props {
   showProjects: boolean
 }
 
-export default function TopFilter ({
-  issues,
-  hideSort,
-  showSearch,
-  showProjects,
-  title,
-}: Props) {
+export default function TopFilter({
+                                    issues,
+                                    hideSort,
+                                    showSearch,
+                                    showProjects,
+                                    title
+                                  }: Props) {
   const { db } = useElectric()!
   const [filterState, setFilterState] = useFilterState()
   const [showViewOption, setShowViewOption] = useState(false)
   const { showMenu, setShowMenu } = useContext(MenuContext)!
   const [searchQuery, setSearchQuery] = useState('')
-  const navigate = useNavigate()
-  const query = useQuery()
-  const isMissve = query.get('missive') === 'true'
-  const location = useLocation()
-  // Missive sidebar only see /board or /
-  const isBoardView = location.pathname.includes('/board')
 
   // We don't yet have a DAL for counts, so we use raw SQL
   const totalIssuesCount: number =
@@ -80,27 +71,12 @@ export default function TopFilter ({
       <div className="flex justify-between flex-shrink-0 pl-2 pr-6 border-b border-gray-200 h-14 lg:pl-9">
         {/* left section */}
         <div className="flex items-center">
-          {isMissve ? (
-            <button
-              className="flex-shrink-0 h-full px-5 lg:hidden"
-              onClick={() => {
-                if (isBoardView) {
-                  navigate(`/?missive=true`)
-                } else {
-                  navigate(`/board?missive=true`)
-                }
-              }}
-            >
-              <RxSwitch className="w-3.5 text-gray-500 hover:text-gray-800" />
-            </button>
-          ) : (
-            <button
-              className="flex-shrink-0 h-full px-5 lg:hidden"
-              onClick={() => setShowMenu(!showMenu)}
-            >
-              <MenuIcon className="w-3.5 text-gray-500 hover:text-gray-800" />
-            </button>
-          )}
+          <button
+            className="flex-shrink-0 h-full px-5 lg:hidden"
+            onClick={() => setShowMenu(!showMenu)}
+          >
+            <MenuIcon className="w-3.5 text-gray-500 hover:text-gray-800" />
+          </button>
           <div className="p-1 font-semibold me-1">{title}</div>
           <span>
             {filteredIssuesCount}
@@ -110,7 +86,8 @@ export default function TopFilter ({
           </span>
           <FilterMenu
             button={
-              <button className="px-1 py-0.5 ml-3 border border-gray-300 border-dashed rounded text-gray-500 hover:border-gray-400 hover:text-gray-800 flex items-center">
+              <button
+                className="px-1 py-0.5 ml-3 border border-gray-300 border-dashed rounded text-gray-500 hover:border-gray-400 hover:text-gray-800 flex items-center">
                 <BsPlus className="inline" size="16" />
                 Filter
               </button>
