@@ -45,7 +45,7 @@ function IssueRow({ issue, style }: Props) {
   return (
     <div
       key={issue.id}
-      className="flex items-center flex-grow w-full min-w-0 pl-2 pr-8 text-sm border-b border-gray-100 hover:bg-gray-100 h-11 shrink-0"
+      className="flex items-center flex-grow w-full min-w-0 pl-2 pr-8 text-sm border-b border-gray-100 dark:border-border-color hover:bg-gray-100 dark:hover:bg-hover-color h-11 shrink-0"
       id={issue.id}
       onClick={() => navigate(`/issue/${issue.id}`)}
       style={style}
@@ -55,6 +55,7 @@ function IssueRow({ issue, style }: Props) {
           id={'r-priority-' + issue.id}
           button={<PriorityIcon priority={issue.priority} />}
           onSelect={handleChangePriority}
+          className={'dark:bg-context-bg-color border dark:border-context-border-color'}
         />
       </div>
       <div className="flex-shrink-0 ml-3">

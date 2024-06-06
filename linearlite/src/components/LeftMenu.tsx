@@ -27,7 +27,7 @@ function LeftMenu() {
     })
   )
   const classes = classnames(
-    'absolute z-40 lg:static inset-0 transform duration-300 lg:relative lg:translate-x-0 bg-white flex flex-col flex-shrink-0 w-56 font-sans text-sm text-gray-700 border-r border-gray-100 lg:shadow-none justify-items-start',
+    'absolute z-40 lg:static inset-0 transform duration-300 lg:relative lg:translate-x-0 bg-white dark:bg-dark-bg-color flex flex-col flex-shrink-0 w-56 font-sans text-sm text-gray-700 dark:text-light-text border-r border-gray-100 lg:shadow-none justify-items-start',
     {
       '-translate-x-full ease-out shadow-none': !showMenu,
       'translate-x-0 ease-in shadow-xl': showMenu
@@ -56,7 +56,7 @@ function LeftMenu() {
                 src="/pdw-icon.png"
                 className="w-4.5 h-auto mr-2.5 rounded-sm"
               />
-              <span className="flex text-sm font-medium">LinearLite</span>
+              <span className="flex text-sm font-medium dark:text-while">LinearLite</span>
             </Link>
 
             {/* User avatar  */}
