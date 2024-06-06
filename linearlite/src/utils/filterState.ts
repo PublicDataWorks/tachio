@@ -80,8 +80,9 @@ export function useFilterState(): [
 interface FilterStateWhere {
   status?: { in: string[] }
   priority?: { in: string[] }
-  title?: { contains: string },
-  project_id?: string
+  title?: { contains: string }
+  project_id?: string | { in: string[] }
+  projects?: { missive_label_id: { in: string[] } }
   username?: string
   OR?: [{ title: { contains: string } }, { description: { contains: string } }]
 }
