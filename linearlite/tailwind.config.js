@@ -84,6 +84,8 @@ export default {
         'border-color': '#23252a',
         'context-border-color': '#383b41',
         'left-menu-bg-color': '#080808',
+        'input-border-color': '#2563eb',
+        'scrollbar-color': '#5a5b5d',
       }
     }
   },

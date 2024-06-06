@@ -1,11 +1,11 @@
-import { memo, useContext, useEffect, useRef, useState } from 'react'
-import { v4 as uuidv4 } from 'uuid'
-import { generateKeyBetween } from 'fractional-indexing'
-import { useElectric } from '../electric'
+import {memo, useContext, useEffect, useRef, useState} from 'react'
+import {v4 as uuidv4} from 'uuid'
+import {generateKeyBetween} from 'fractional-indexing'
+import {useElectric} from '../electric'
 
-import { BsChevronRight as ChevronRight } from 'react-icons/bs'
-import { ReactComponent as CloseIcon } from '../assets/icons/close.svg'
-import { ReactComponent as ElectricIcon } from '../assets/images/icon.inverse.svg'
+import {BsChevronRight as ChevronRight} from 'react-icons/bs'
+import {ReactComponent as CloseIcon} from '../assets/icons/close.svg'
+import {ReactComponent as HighPriorityIcon} from '../assets/icons/signal-strong.svg'
 
 import Modal from '../components/Modal'
 import Editor from '../components/editor/Editor'
@@ -14,11 +14,10 @@ import StatusIcon from './StatusIcon'
 import PriorityMenu from './contextmenu/PriorityMenu'
 import StatusMenu from './contextmenu/StatusMenu'
 
-import { Priority, Status, PriorityDisplay } from '../types/issue'
-import { showInfo, showWarning } from '../utils/notification'
+import {Priority, Status, PriorityDisplay} from '../types/issue'
+import {showInfo, showWarning} from '../utils/notification'
 import ProjectMenu from './contextmenu/ProjectMenu.tsx'
-import { GrProjects } from 'react-icons/gr'
-import { SupabaseContext } from '../SupabaseContext.ts'
+import {SupabaseContext} from '../SupabaseContext.ts'
 
 interface Props {
   isOpen: boolean
@@ -97,23 +96,23 @@ function IssueModal({ isOpen, onDismiss }: Props) {
   }, [isOpen])
 
   const body = (
-    <div className="flex flex-col w-full py-4 overflow-hidden">
+    <div className="flex flex-col w-full py-4 overflow-hidden dark:bg-black-bg-color">
       {/* header */}
       <div className="flex items-center justify-between flex-shrink-0 px-4">
         <div className="flex items-center">
-          <span className="inline-flex items-center p-1 px-2 text-gray-400 bg-gray-100 rounded">
-            <ElectricIcon className="w-3 h-3 scale-150 mr-1" />
-            <span>electric</span>
+          <span
+            className="inline-flex items-center p-1 px-2 text-gray-400 bg-gray-100 rounded dark:bg-black-bg-color dark:text-almost-white-color">
+            LinearLite
           </span>
-          <ChevronRight className="ml-1" />
-          <span className="ml-1 font-normal text-gray-700">New Issue</span>
+          <ChevronRight className="ml-1 fill-white"/>
+          <span className="ml-1 font-normal text-gray-700 dark:text-almost-white-color">New Issue</span>
         </div>
         <div className="flex items-center">
           <button
             className="inline-flex rounded items-center justify-center ml-2 text-gray-500 h-7 w-7 hover:bg-gray-100 rouned hover:text-gray-700"
             onClick={handleClickCloseBtn}
           >
-            <CloseIcon className="w-4" />
+            <CloseIcon className="w-4"/>
           </button>
         </div>
       </div>
@@ -124,7 +123,7 @@ function IssueModal({ isOpen, onDismiss }: Props) {
             id="status-menu"
             button={
               <button className="flex items-center justify-center w-6 h-6 border-none rounded hover:bg-gray-100">
-                <StatusIcon status={status} />
+                <StatusIcon status={status}/>
               </button>
             }
             onSelect={(st) => {
@@ -132,7 +131,7 @@ function IssueModal({ isOpen, onDismiss }: Props) {
             }}
           />
           <input
-            className="w-full ml-1.5 text-lg font-semibold placeholder-gray-400 border-none h-7 focus:border-none focus:outline-none focus:ring-0"
+            className="w-full ml-1.5 text-lg font-semibold placeholder-gray-400 border-none h-7 focus:border-none focus:outline-none focus:ring-0 dark:bg-black-bg-color dark:text-almost-white-color"
             placeholder="Issue title"
             value={title}
             ref={ref}
@@ -143,7 +142,7 @@ function IssueModal({ isOpen, onDismiss }: Props) {
         {/* Issue description editor */}
         <div className="w-full px-4">
           <Editor
-            className="prose w-full max-w-full mt-2 font-normal appearance-none min-h-12 p-1 text-md editor border border-transparent focus:outline-none focus:ring-0"
+            className="prose w-full max-w-full mt-2 font-normal appearance-none min-h-12 p-1 text-md editor border border-transparent focus:outline-none focus:ring-0 dark:text-almost-white-color"
             value={description || ''}
             onChange={(val) => setDescription(val)}
             placeholder="Add description..."
@@ -155,23 +154,25 @@ function IssueModal({ isOpen, onDismiss }: Props) {
         <div className="pl-4 pb-3 mt-1 border-b border-gray-200">
           <ProjectMenu
             id="project-menu"
+            className='dark:bg-context-bg-color border dark:border-context-border-color'
             button={
               <button
-                className="inline-flex items-center h-6 px-2 text-gray-500 bg-gray-200 border-none rounded hover:bg-gray-100 hover:text-gray-700 w-max">
-                <GrProjects size={13} className="mr-2" />
+                className="inline-flex items-center h-6 px-2 text-gray-500 bg-gray-200 border-none rounded hover:bg-gray-100 hover:text-gray-700 w-max dark:text-white dark:bg-hover-bg-color dark:hover:text-white">
+                <HighPriorityIcon className="mr-2 dark:fill-white"/>
                 <span className="overflow-hidden">{project.name || 'Not selected'}</span>
               </button>
             }
-            onSelect={val => setProject(val)} />
+            onSelect={val => setProject(val)}/>
         </div>
         {/* Issue labels & priority */}
         <div className="flex items-center px-4 pb-3 mt-1 border-b border-gray-200">
           <PriorityMenu
             id="priority-menu"
+            className='dark:bg-context-bg-color border dark:border-context-border-color'
             button={
               <button
-                className="inline-flex items-center h-6 px-2 text-gray-500 bg-gray-200 border-none rounded hover:bg-gray-100 hover:text-gray-700">
-                <PriorityIcon priority={priority} className="mr-1" />
+                className="inline-flex items-center h-6 px-2 text-gray-500 bg-gray-200 border-none rounded hover:bg-gray-100 hover:text-gray-700 dark:text-white dark:bg-hover-bg-color dark:hover:text-white">
+                <PriorityIcon priority={priority} className="mr-1"/>
                 <span>{PriorityDisplay[priority]}</span>
               </button>
             }

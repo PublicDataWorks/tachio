@@ -203,13 +203,13 @@ function IssuePage() {
 
             <div className="flex items-center">
               <button
-                className="p-2 rounded hover:bg-gray-100"
+                className="p-2 rounded hover:bg-gray-100 dark:hover:bg-hover-bg-color"
                 onClick={() => setShowDeleteModal(true)}
               >
                 <DeleteIcon size={14} />
               </button>
               <button
-                className="ms-2 p-2 rounded hover:bg-gray-100"
+                className="ms-2 p-2 rounded hover:bg-gray-100 dark:hover:bg-hover-bg-color"
                 onClick={handleClose}
               >
                 <CloseIcon size={14} />
@@ -296,14 +296,14 @@ function IssuePage() {
           <div
             className="flex flex-col md:flex-[3_0_0] md:p-3 border-gray-200 md:border-r dark:border-border-color min-h-0 min-w-0 overflow-auto">
             <input
-              className="w-full px-3 py-1 text-lg font-semibold placeholder-gray-400 border-transparent rounded dark:bg-hover-bg-color"
+              className="w-full px-3 py-1 text-lg font-semibold placeholder-gray-400 border-transparent rounded dark:bg-black-bg-color focus:border-white focus:outline-none focus:ring-0"
               placeholder="Issue title"
               value={titleIsDirty.current ? dirtyTitle! : issue.title}
               onChange={(e) => handleTitleChange(e.target.value)}
             />
 
             <Editor
-              className="prose w-full max-w-full mt-2 font-normal appearance-none min-h-12 p-3 text-md rounded editor dark:ring-gray-100 dark:text-white"
+              className="prose w-full max-w-full mt-2 font-normal appearance-none min-h-12 p-3 text-md rounded editor dark:text-white dark:focus:border dark:focus:border-white focus:outline-none focus:ring-0"
               value={
                 descriptionIsDirty.current
                   ? dirtyDescription || ''

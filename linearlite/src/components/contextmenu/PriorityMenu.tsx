@@ -55,7 +55,7 @@ function PriorityMenu({
         <Menu
           id={id}
           size="small"
-          filterKeyword={filterKeyword}
+          filterKeyword={false}
           searchPlaceholder="Set priority..."
           onKeywordChange={(kw) => setKeyword(kw)}
           className={className}

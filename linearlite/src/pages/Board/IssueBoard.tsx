@@ -203,7 +203,7 @@ export default function IssueBoard({ issues }: IssueBoardProps) {
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-      <div className="flex flex-1 pt-6 pl-8 overflow-scroll bg-gray-100">
+      <div className="flex flex-1 pt-6 pl-8 overflow-scroll bg-gray-100 dark:bg-black-bg-color dark:text-almost-white-color">
         <IssueCol
           title={StatusDisplay[Status.TODO]}
           status={Status.TODO}
