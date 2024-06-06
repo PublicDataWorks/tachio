@@ -26,6 +26,7 @@ const {
   PROJECT_TABLE_NAME,
   MISSIVE_CONVERSATIONS_TABLE_NAME
 } = require('./src/constants')
+const { getConfigFromSupabase } = require("./helpers");
 require('dotenv').config()
 
 let port = process.env.EXPRESS_PORT
@@ -214,16 +215,21 @@ async function processMissiveRequest(body, query) {
     // logger.info(`No attachment found in body.comment`);
   }
 
-  // Fetch the context messages for the conversation from the database
+  const { TOKEN_LIMIT } = await getConfigFromSupabase();
+  let cumulativeLength = 0;
   const contextMessages = await getChannelMessageHistory({ channelId: conversationId })
-  // Add the context messages to the formatted messages array
-  formattedMessages.push(
-    ...contextMessages.map((m) => ({
+  contextMessages.forEach(m => {
+    const messageContent = `#### Contextual message in conversation ${m.conversation_id}:\n ${m.created_at} ${m.value}`;
+    // Leave space for other messages
+    if (cumulativeLength + messageContent.length <= TOKEN_LIMIT / 2) {
+      formattedMessages.push({
         role: 'user',
-        content: `#### Contextual message in conversation ${m.conversation_id}:\n ${m.created_at} ${m.value}`
-      })
-    )
-  )
+        content: messageContent
+      });
+      cumulativeLength += messageContent.length;
+    }
+  });
+
   // Add the webhook description to the formatted messages array as a system message
   formattedMessages.push({
     role: 'system',

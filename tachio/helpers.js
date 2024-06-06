@@ -31,7 +31,6 @@ const anthropic = new Anthropic();
 
 const capabilityRegex = /(\w+):(\w+)\(([^]*?)\)/; // captures newlines in the third argument
 const toolUseCapabilityRegex = /(toolu_[a-zA-Z0-9_-]{1,64})-(\w+)-(\w+)\(([^]*?)\)/;
-const anthropicThinkingRegex = /<thinking>(.*?)<\/thinking>\s*(?:<result>)?(.*?)(?:(?=<\/result>)|$)/s;
 const notificationRegex = /<notification>(.*?)<\/notification>/s;
 
 const TODO_TABLE_NAME = 'issues'
@@ -504,7 +503,7 @@ function setTypingInterval(message) {
  * @param {string} username - The username associated with the AI completion.
  * @param {Array} messages - The array of messages.
  * @param {Object} config - The configuration object containing temperature and presence_penalty.
- * @returns {Object} - An object containing the updated messages array and the AI response.
+ * @returns {Promise<{ messages: Array<Object>, aiResponse: string }>} - An object containing the updated messages array and the AI response.
  */
 async function generateAiCompletion(prompt, username, messages, config) {
   const { temperature, presence_penalty } = config;
@@ -1448,7 +1447,6 @@ module.exports = {
   sleep,
   capabilityRegex,
   toolUseCapabilityRegex,
-  anthropicThinkingRegex,
   notificationRegex,
   lastUserMessage,
   TODO_TABLE_NAME

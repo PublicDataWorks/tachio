@@ -1,6 +1,6 @@
 const { JSDOM } = require('jsdom')
 const { supabase } = require('./supabaseclient')
-const { anthropicThinkingRegex, notificationRegex } = require('../helpers')
+const { notificationRegex } = require('../helpers')
 const { PROJECT_TABLE_NAME, DAILY_REPORT_TABLE_NAME } = require("./constants");
 const logger = require('./logger.js')('missive')
 const DAILY_REPORT_REGEX = /Hi.*What has the team done since the last call\/email regarding this project\??(.*)What will the team do between now and the next call\/email regarding this project\??(.*)What impedes the team from performing their work as effectively as possible\??(.*)How much time have we spent today\??(.*)How much time have we spent this week.*How much time have we spent this month.*Our team today:?(.*)Regards/
@@ -467,41 +467,34 @@ async function processDailyReport(payload) {
   if (error) throw new Error(error.message)
 }
 
-async function sendMissiveResponse({ message, conversationId, notificationTitle, conversationSubject, organization, addToInbox, requestQuery }) {
+async function sendMissiveResponse({
+                                     message,
+                                     conversationId,
+                                     notificationTitle,
+                                     conversationSubject,
+                                     organization,
+                                     addToInbox,
+                                     requestQuery
+                                   }) {
   // Separate thinking part out of result part of Claude's message
-  const messageMatches = message.match(anthropicThinkingRegex)
-  let notification = {
+  let notification
+  const notificationContent = extractTagContent(message, 'notification') || {
     title: notificationTitle || BOT_NAME,
     body: ''
   }
-  const attachments = []
-  if (messageMatches && messageMatches.length > 2) {
-    // Thinking part is always presented
-    attachments.push({
-      'text': messageMatches[1].trim(),
-      'timestamp': Math.floor(Date.now() / 1000)
-    })
-    let resultPart = messageMatches[2]
-    const notificationMatches = resultPart.match(notificationRegex)
-    if (notificationMatches) {
-      resultPart = resultPart.replace(notificationMatches[0], '').trim()
-      try {
-        notification = JSON.parse(notificationMatches[1])
-      } catch (error) {
-        logger.error('Error parsing notification:', error, notificationMatches[1])
-      }
-    }
-    // Add result part
-    resultPart.trim().split('---')
-      .filter(paragraph => paragraph.trim())
-      .forEach((paragraph, index) => {
-        attachments.push({
-          'color': '#2266ED',
-          'text': paragraph.trim(), // TODO: replace with markdown
-          'timestamp': Math.floor(Date.now() / 1000) + 1 + index // Add index to avoid duplicate timestamps // TODO: removeme
-        })
-      })
+  try {
+    notification = JSON.parse(notificationContent)
+  } catch (error) {
+    logger.error('Error parsing notification:', error, notificationContent)
   }
+  const result = removeTagAndContent(message, ['notification', 'thinking', 'memories']);
+  const attachments = splitIntoParagraphs(result.trim(), 5)
+    .map(paragraph => ({
+        color: '#2266ED',
+        text: paragraph.trim() // TODO: replace with markdown if send draft
+      })
+    )
+
   const token = (requestQuery?.token?.length === 36) ? requestQuery.token : apiKey
   const responsePost = await fetch(`${apiFront}/posts/`, {
     method: 'POST',
@@ -538,6 +531,46 @@ function missiveOptions(body = undefined, method = 'GET') {
       Authorization: `Bearer ${apiKey}`
     }
   }
+}
+
+function removeTagAndContent(text, tags) {
+  tags.forEach(tag => {
+    while (text.includes(`<${tag}>`)) {
+      const start = text.indexOf(`<${tag}>`);
+      const end = text.indexOf(`</${tag}>`, start) + `</${tag}>`.length;
+      if (start !== -1 && end !== -1) {
+        text = text.slice(0, start) + text.slice(end);
+      } else break;
+    }
+  })
+  return text
+}
+
+function extractTagContent(text, tag) {
+  const start = text.indexOf(`<${tag}>`);
+  const end = text.indexOf(`</${tag}>`, start);
+  if (start !== -1 && end !== -1) {
+    return text.slice(start + `<${tag}>`.length, end).trim();
+  }
+  return null;
+}
+
+function splitIntoParagraphs(text, maxLines) {
+  const normalizedText = text.replace(/\n\s*\n/g, '\n');
+  const lines = normalizedText.split('\n');
+  const paragraphs = [];
+  let currentParagraph = [];
+  for (const line of lines) {
+    currentParagraph.push(line);
+    if (currentParagraph.length >= maxLines) {
+      paragraphs.push(currentParagraph.join('\n'));
+      currentParagraph = [];
+    }
+  }
+  if (currentParagraph.length > 0) {
+    paragraphs.push(currentParagraph.join('\n'));
+  }
+  return paragraphs
 }
 
 module.exports = {
