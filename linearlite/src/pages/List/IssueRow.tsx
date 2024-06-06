@@ -45,7 +45,7 @@ function IssueRow({ issue, style }: Props) {
   return (
     <div
       key={issue.id}
-      className="flex items-center flex-grow w-full min-w-0 pl-2 pr-8 text-sm border-b border-gray-100 dark:border-border-color hover:bg-gray-100 dark:hover:bg-hover-color h-11 shrink-0"
+      className="flex items-center flex-grow w-full min-w-0 pl-2 pr-8 text-sm border-b border-gray-100 dark:border-border-color hover:bg-gray-100 dark:hover:bg-hover-bg-color h-11 shrink-0"
       id={issue.id}
       onClick={() => navigate(`/issue/${issue.id}`)}
       style={style}

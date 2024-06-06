@@ -160,7 +160,7 @@ export default function TopFilter({
       {showSearch && (
         <div
           className="flex items-center justify-between flex-shrink-0 pl-2 pr-6 border-b border-gray-200 lg:pl-9 py-2 dark:border-border-color">
-          <SearchIcon className="w-3.5 h-3.5 ms-3 absolute fill-white" />
+          <SearchIcon className="w-3.5 h-3.5 ms-3 absolute dark:fill-white" />
           <input
             type="search"
             className="w-full bg-gray-100 border-0 rounded px-2 py-1.5 ps-9 dark:text-almost-white-color dark:bg-transparent dark:border-none"

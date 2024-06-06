@@ -123,7 +123,7 @@ export const MainRoutes = ({ onElectricLoaded }: MainRoutesProps) => {
     <ElectricProvider db={electric}>
       <MenuContext.Provider value={{ showMenu, setShowMenu }}>
         <BrowserRouter>
-          <div className="flex w-full h-screen overflow-y-hidden dark:bg-black-color">
+          <div className="flex w-full h-screen overflow-y-hidden dark:bg-black-bg-color">
             <LeftMenu />
             {router}
           </div>

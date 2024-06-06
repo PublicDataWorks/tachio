@@ -77,14 +77,13 @@ export default {
         100: 100
       },
       colors: {
-        'black-color': '#0f1011',
-        'gray-color': '#969799',
-        'hover-color': '#141518',
-        'context-hover-color': '#1c2029',
+        'black-bg-color': '#0f1011',
+        'hover-bg-color': '#1c2029',
         'context-bg-color': '#1b1c1f',
-        'almost-white-color': '#e4e5e9',
+        'almost-white-color': '#e4e5e9', // text color
         'border-color': '#23252a',
         'context-border-color': '#383b41',
+        'left-menu-bg-color': '#080808',
       }
     }
   },

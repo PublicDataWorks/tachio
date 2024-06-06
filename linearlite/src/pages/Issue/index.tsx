@@ -296,7 +296,7 @@ function IssuePage() {
           <div
             className="flex flex-col md:flex-[3_0_0] md:p-3 border-gray-200 md:border-r dark:border-border-color min-h-0 min-w-0 overflow-auto">
             <input
-              className="w-full px-3 py-1 text-lg font-semibold placeholder-gray-400 border-transparent rounded dark:bg-hover-color"
+              className="w-full px-3 py-1 text-lg font-semibold placeholder-gray-400 border-transparent rounded dark:bg-hover-bg-color"
               placeholder="Issue title"
               value={titleIsDirty.current ? dirtyTitle! : issue.title}
               onChange={(e) => handleTitleChange(e.target.value)}
