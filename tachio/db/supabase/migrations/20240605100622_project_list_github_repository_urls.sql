@@ -1,8 +1,6 @@
 alter table "public"."messages" add column "assistant_response" text;
 
-alter table "public"."projects" drop column "github_repository_url";
-
-alter table "public"."projects" add column "github_repository_urls" text[];
+ALTER TABLE "public"."projects" RENAME COLUMN "github_repository_url" TO "github_repository_urls";
 
 grant delete on table "public"."biweekly_briefings" to "postgres";
 

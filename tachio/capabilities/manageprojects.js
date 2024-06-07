@@ -89,7 +89,7 @@ async function createProject({
       start_date: startDate || new Date(),
       end_date: endDate,
       linear_team_id: linearTeamId,
-      github_repository_urls: githubRepositoryUrls ? JSON.parse(githubRepositoryUrls) : undefined,
+      github_repository_urls: githubRepositoryUrls,
       created_at: new Date() // ElectricSQL does not support default values
     }
   ])
@@ -147,7 +147,7 @@ async function updateProject({
       start_date: newStartDate,
       end_date: newEndDate,
       updated_at: new Date(),
-      github_repository_urls: githubRepositoryUrls ? JSON.parse(githubRepositoryUrls) : undefined
+      github_repository_urls: githubRepositoryUrls
     })
     .match({ name: projectName })
   if (errUpdateProject) throw new Error(errUpdateProject.message)

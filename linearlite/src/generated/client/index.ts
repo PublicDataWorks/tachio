@@ -57,7 +57,7 @@ export const NullableJsonNullValueInputSchema = z.enum(['DbNull','JsonNull',])
 
 export const OrgsScalarFieldEnumSchema = z.enum(['id','created_at','name','shortname','aliases','first_contact','updated_at','website','primary_email_address_id','primary_slack_channel_id','summary','note','missive_conversation_id','missive_label_id','history','github_id','linear_id','pivotal_tracker_id']);
 
-export const ProjectsScalarFieldEnumSchema = z.enum(['id','created_at','name','shortname','aliases','summary','note','org_id','missive_conversation_id','missive_label_id','start_date','end_date','updated_at','history','status','linear_team_id','pivotal_tracker_id']);
+export const ProjectsScalarFieldEnumSchema = z.enum(['id','created_at','name','shortname','aliases','summary','note','org_id','missive_conversation_id','missive_label_id','start_date','end_date','updated_at','history','status','linear_team_id','pivotal_tracker_id','last_sent_biweekly_briefing','github_repository_urls']);
 
 export const QueryModeSchema = z.enum(['default','insensitive']);
 
@@ -110,7 +110,7 @@ export const IssuesSchema = z.object({
   title: z.string(),
   description: z.string(),
   created_at: z.coerce.date(),
-  kanbanorder: z.string(),
+  kanbanorder: z.string().nullable(),
   username: z.string(),
   external_urls: z.string().nullable(),
   completed_at: z.coerce.date().nullable(),
@@ -171,6 +171,8 @@ export const ProjectsSchema = z.object({
   history: NullableJsonValue.optional(),
   linear_team_id: z.string().uuid().nullable(),
   pivotal_tracker_id: z.bigint().nullable(),
+  last_sent_biweekly_briefing: z.coerce.date().nullable(),
+  github_repository_urls: z.string().nullable(),
 })
 
 export type Projects = z.infer<typeof ProjectsSchema>
@@ -368,6 +370,8 @@ export const ProjectsSelectSchema: z.ZodType<Prisma.ProjectsSelect> = z.object({
   status: z.boolean().optional(),
   linear_team_id: z.boolean().optional(),
   pivotal_tracker_id: z.boolean().optional(),
+  last_sent_biweekly_briefing: z.boolean().optional(),
+  github_repository_urls: z.boolean().optional(),
   issues: z.union([z.boolean(),z.lazy(() => IssuesFindManyArgsSchema)]).optional(),
   orgs: z.union([z.boolean(),z.lazy(() => OrgsArgsSchema)]).optional(),
   _count: z.union([z.boolean(),z.lazy(() => ProjectsCountOutputTypeArgsSchema)]).optional(),
@@ -500,7 +504,7 @@ export const IssuesWhereInputSchema: z.ZodType<Prisma.IssuesWhereInput> = z.obje
   title: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   description: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   created_at: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
-  kanbanorder: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  kanbanorder: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
   username: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   external_urls: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
   completed_at: z.union([ z.lazy(() => DateTimeNullableFilterSchema),z.coerce.date() ]).optional().nullable(),
@@ -559,7 +563,7 @@ export const IssuesScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.Issues
   title: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
   description: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
   created_at: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
-  kanbanorder: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
+  kanbanorder: z.union([ z.lazy(() => StringNullableWithAggregatesFilterSchema),z.string() ]).optional().nullable(),
   username: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
   external_urls: z.union([ z.lazy(() => StringNullableWithAggregatesFilterSchema),z.string() ]).optional().nullable(),
   completed_at: z.union([ z.lazy(() => DateTimeNullableWithAggregatesFilterSchema),z.coerce.date() ]).optional().nullable(),
@@ -693,6 +697,8 @@ export const ProjectsWhereInputSchema: z.ZodType<Prisma.ProjectsWhereInput> = z.
   status: z.union([ z.lazy(() => Enumproject_statusNullableFilterSchema),z.lazy(() => project_statusSchema) ]).optional().nullable(),
   linear_team_id: z.union([ z.lazy(() => UuidNullableFilterSchema),z.string() ]).optional().nullable(),
   pivotal_tracker_id: z.union([ z.lazy(() => BigIntNullableFilterSchema),z.union([ z.bigint().gte(-9223372036854775808n).lte(9223372036854775807n), z.number().int().gte(Number.MIN_SAFE_INTEGER).lte(Number.MAX_SAFE_INTEGER).transform(BigInt) ]) ]).optional().nullable(),
+  last_sent_biweekly_briefing: z.union([ z.lazy(() => DateTimeNullableFilterSchema),z.coerce.date() ]).optional().nullable(),
+  github_repository_urls: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
   issues: z.lazy(() => IssuesListRelationFilterSchema).optional(),
   orgs: z.union([ z.lazy(() => OrgsRelationFilterSchema),z.lazy(() => OrgsWhereInputSchema) ]).optional(),
 }).strict();
@@ -715,6 +721,8 @@ export const ProjectsOrderByWithRelationInputSchema: z.ZodType<Prisma.ProjectsOr
   status: z.lazy(() => SortOrderSchema).optional(),
   linear_team_id: z.lazy(() => SortOrderSchema).optional(),
   pivotal_tracker_id: z.lazy(() => SortOrderSchema).optional(),
+  last_sent_biweekly_briefing: z.lazy(() => SortOrderSchema).optional(),
+  github_repository_urls: z.lazy(() => SortOrderSchema).optional(),
   issues: z.lazy(() => IssuesOrderByRelationAggregateInputSchema).optional(),
   orgs: z.lazy(() => OrgsOrderByWithRelationInputSchema).optional()
 }).strict();
@@ -741,6 +749,8 @@ export const ProjectsOrderByWithAggregationInputSchema: z.ZodType<Prisma.Project
   status: z.lazy(() => SortOrderSchema).optional(),
   linear_team_id: z.lazy(() => SortOrderSchema).optional(),
   pivotal_tracker_id: z.lazy(() => SortOrderSchema).optional(),
+  last_sent_biweekly_briefing: z.lazy(() => SortOrderSchema).optional(),
+  github_repository_urls: z.lazy(() => SortOrderSchema).optional(),
   _count: z.lazy(() => ProjectsCountOrderByAggregateInputSchema).optional(),
   _avg: z.lazy(() => ProjectsAvgOrderByAggregateInputSchema).optional(),
   _max: z.lazy(() => ProjectsMaxOrderByAggregateInputSchema).optional(),
@@ -769,6 +779,8 @@ export const ProjectsScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.Proj
   status: z.union([ z.lazy(() => Enumproject_statusNullableWithAggregatesFilterSchema),z.lazy(() => project_statusSchema) ]).optional().nullable(),
   linear_team_id: z.union([ z.lazy(() => UuidNullableWithAggregatesFilterSchema),z.string() ]).optional().nullable(),
   pivotal_tracker_id: z.union([ z.lazy(() => BigIntNullableWithAggregatesFilterSchema),z.union([ z.bigint().gte(-9223372036854775808n).lte(9223372036854775807n), z.number().int().gte(Number.MIN_SAFE_INTEGER).lte(Number.MAX_SAFE_INTEGER).transform(BigInt) ]) ]).optional().nullable(),
+  last_sent_biweekly_briefing: z.union([ z.lazy(() => DateTimeNullableWithAggregatesFilterSchema),z.coerce.date() ]).optional().nullable(),
+  github_repository_urls: z.union([ z.lazy(() => StringNullableWithAggregatesFilterSchema),z.string() ]).optional().nullable(),
 }).strict();
 
 export const Slack_channelsWhereInputSchema: z.ZodType<Prisma.Slack_channelsWhereInput> = z.object({
@@ -912,7 +924,7 @@ export const IssuesCreateInputSchema: z.ZodType<Prisma.IssuesCreateInput> = z.ob
   title: z.string(),
   description: z.string(),
   created_at: z.coerce.date(),
-  kanbanorder: z.string(),
+  kanbanorder: z.string().optional().nullable(),
   username: z.string(),
   external_urls: z.string().optional().nullable(),
   completed_at: z.coerce.date().optional().nullable(),
@@ -928,7 +940,7 @@ export const IssuesUncheckedCreateInputSchema: z.ZodType<Prisma.IssuesUncheckedC
   title: z.string(),
   description: z.string(),
   created_at: z.coerce.date(),
-  kanbanorder: z.string(),
+  kanbanorder: z.string().optional().nullable(),
   username: z.string(),
   external_urls: z.string().optional().nullable(),
   completed_at: z.coerce.date().optional().nullable(),
@@ -944,7 +956,7 @@ export const IssuesUpdateInputSchema: z.ZodType<Prisma.IssuesUpdateInput> = z.ob
   title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   description: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  kanbanorder: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  kanbanorder: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   username: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   external_urls: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   completed_at: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
@@ -960,7 +972,7 @@ export const IssuesUncheckedUpdateInputSchema: z.ZodType<Prisma.IssuesUncheckedU
   title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   description: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  kanbanorder: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  kanbanorder: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   username: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   external_urls: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   completed_at: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
@@ -976,7 +988,7 @@ export const IssuesCreateManyInputSchema: z.ZodType<Prisma.IssuesCreateManyInput
   title: z.string(),
   description: z.string(),
   created_at: z.coerce.date(),
-  kanbanorder: z.string(),
+  kanbanorder: z.string().optional().nullable(),
   username: z.string(),
   external_urls: z.string().optional().nullable(),
   completed_at: z.coerce.date().optional().nullable(),
@@ -991,7 +1003,7 @@ export const IssuesUpdateManyMutationInputSchema: z.ZodType<Prisma.IssuesUpdateM
   title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   description: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  kanbanorder: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  kanbanorder: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   username: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   external_urls: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   completed_at: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
@@ -1005,7 +1017,7 @@ export const IssuesUncheckedUpdateManyInputSchema: z.ZodType<Prisma.IssuesUnchec
   title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   description: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  kanbanorder: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  kanbanorder: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   username: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   external_urls: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   completed_at: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
@@ -1181,6 +1193,8 @@ export const ProjectsCreateInputSchema: z.ZodType<Prisma.ProjectsCreateInput> = 
   status: z.lazy(() => project_statusSchema).optional().nullable(),
   linear_team_id: z.string().uuid().optional().nullable(),
   pivotal_tracker_id: z.union([ z.bigint().gte(-9223372036854775808n).lte(9223372036854775807n), z.number().int().gte(Number.MIN_SAFE_INTEGER).lte(Number.MAX_SAFE_INTEGER).transform(BigInt) ]).optional().nullable(),
+  last_sent_biweekly_briefing: z.coerce.date().optional().nullable(),
+  github_repository_urls: z.string().optional().nullable(),
   issues: z.lazy(() => IssuesCreateNestedManyWithoutProjectsInputSchema).optional(),
   orgs: z.lazy(() => OrgsCreateNestedOneWithoutProjectsInputSchema)
 }).strict();
@@ -1203,6 +1217,8 @@ export const ProjectsUncheckedCreateInputSchema: z.ZodType<Prisma.ProjectsUnchec
   status: z.lazy(() => project_statusSchema).optional().nullable(),
   linear_team_id: z.string().uuid().optional().nullable(),
   pivotal_tracker_id: z.union([ z.bigint().gte(-9223372036854775808n).lte(9223372036854775807n), z.number().int().gte(Number.MIN_SAFE_INTEGER).lte(Number.MAX_SAFE_INTEGER).transform(BigInt) ]).optional().nullable(),
+  last_sent_biweekly_briefing: z.coerce.date().optional().nullable(),
+  github_repository_urls: z.string().optional().nullable(),
   issues: z.lazy(() => IssuesUncheckedCreateNestedManyWithoutProjectsInputSchema).optional()
 }).strict();
 
@@ -1223,6 +1239,8 @@ export const ProjectsUpdateInputSchema: z.ZodType<Prisma.ProjectsUpdateInput> = 
   status: z.union([ z.lazy(() => project_statusSchema),z.lazy(() => NullableEnumproject_statusFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   linear_team_id: z.union([ z.string().uuid(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   pivotal_tracker_id: z.union([ z.union([ z.bigint().gte(-9223372036854775808n).lte(9223372036854775807n), z.number().int().gte(Number.MIN_SAFE_INTEGER).lte(Number.MAX_SAFE_INTEGER).transform(BigInt) ]),z.lazy(() => NullableBigIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  last_sent_biweekly_briefing: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  github_repository_urls: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   issues: z.lazy(() => IssuesUpdateManyWithoutProjectsNestedInputSchema).optional(),
   orgs: z.lazy(() => OrgsUpdateOneRequiredWithoutProjectsNestedInputSchema).optional()
 }).strict();
@@ -1245,6 +1263,8 @@ export const ProjectsUncheckedUpdateInputSchema: z.ZodType<Prisma.ProjectsUnchec
   status: z.union([ z.lazy(() => project_statusSchema),z.lazy(() => NullableEnumproject_statusFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   linear_team_id: z.union([ z.string().uuid(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   pivotal_tracker_id: z.union([ z.union([ z.bigint().gte(-9223372036854775808n).lte(9223372036854775807n), z.number().int().gte(Number.MIN_SAFE_INTEGER).lte(Number.MAX_SAFE_INTEGER).transform(BigInt) ]),z.lazy(() => NullableBigIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  last_sent_biweekly_briefing: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  github_repository_urls: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   issues: z.lazy(() => IssuesUncheckedUpdateManyWithoutProjectsNestedInputSchema).optional()
 }).strict();
 
@@ -1265,7 +1285,9 @@ export const ProjectsCreateManyInputSchema: z.ZodType<Prisma.ProjectsCreateManyI
   history: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValue ]).optional(),
   status: z.lazy(() => project_statusSchema).optional().nullable(),
   linear_team_id: z.string().uuid().optional().nullable(),
-  pivotal_tracker_id: z.union([ z.bigint().gte(-9223372036854775808n).lte(9223372036854775807n), z.number().int().gte(Number.MIN_SAFE_INTEGER).lte(Number.MAX_SAFE_INTEGER).transform(BigInt) ]).optional().nullable()
+  pivotal_tracker_id: z.union([ z.bigint().gte(-9223372036854775808n).lte(9223372036854775807n), z.number().int().gte(Number.MIN_SAFE_INTEGER).lte(Number.MAX_SAFE_INTEGER).transform(BigInt) ]).optional().nullable(),
+  last_sent_biweekly_briefing: z.coerce.date().optional().nullable(),
+  github_repository_urls: z.string().optional().nullable()
 }).strict();
 
 export const ProjectsUpdateManyMutationInputSchema: z.ZodType<Prisma.ProjectsUpdateManyMutationInput> = z.object({
@@ -1285,6 +1307,8 @@ export const ProjectsUpdateManyMutationInputSchema: z.ZodType<Prisma.ProjectsUpd
   status: z.union([ z.lazy(() => project_statusSchema),z.lazy(() => NullableEnumproject_statusFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   linear_team_id: z.union([ z.string().uuid(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   pivotal_tracker_id: z.union([ z.union([ z.bigint().gte(-9223372036854775808n).lte(9223372036854775807n), z.number().int().gte(Number.MIN_SAFE_INTEGER).lte(Number.MAX_SAFE_INTEGER).transform(BigInt) ]),z.lazy(() => NullableBigIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  last_sent_biweekly_briefing: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  github_repository_urls: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 }).strict();
 
 export const ProjectsUncheckedUpdateManyInputSchema: z.ZodType<Prisma.ProjectsUncheckedUpdateManyInput> = z.object({
@@ -1305,6 +1329,8 @@ export const ProjectsUncheckedUpdateManyInputSchema: z.ZodType<Prisma.ProjectsUn
   status: z.union([ z.lazy(() => project_statusSchema),z.lazy(() => NullableEnumproject_statusFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   linear_team_id: z.union([ z.string().uuid(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   pivotal_tracker_id: z.union([ z.union([ z.bigint().gte(-9223372036854775808n).lte(9223372036854775807n), z.number().int().gte(Number.MIN_SAFE_INTEGER).lte(Number.MAX_SAFE_INTEGER).transform(BigInt) ]),z.lazy(() => NullableBigIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  last_sent_biweekly_briefing: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  github_repository_urls: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 }).strict();
 
 export const Slack_channelsCreateInputSchema: z.ZodType<Prisma.Slack_channelsCreateInput> = z.object({
@@ -1799,7 +1825,9 @@ export const ProjectsCountOrderByAggregateInputSchema: z.ZodType<Prisma.Projects
   history: z.lazy(() => SortOrderSchema).optional(),
   status: z.lazy(() => SortOrderSchema).optional(),
   linear_team_id: z.lazy(() => SortOrderSchema).optional(),
-  pivotal_tracker_id: z.lazy(() => SortOrderSchema).optional()
+  pivotal_tracker_id: z.lazy(() => SortOrderSchema).optional(),
+  last_sent_biweekly_briefing: z.lazy(() => SortOrderSchema).optional(),
+  github_repository_urls: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
 export const ProjectsAvgOrderByAggregateInputSchema: z.ZodType<Prisma.ProjectsAvgOrderByAggregateInput> = z.object({
@@ -1822,7 +1850,9 @@ export const ProjectsMaxOrderByAggregateInputSchema: z.ZodType<Prisma.ProjectsMa
   updated_at: z.lazy(() => SortOrderSchema).optional(),
   status: z.lazy(() => SortOrderSchema).optional(),
   linear_team_id: z.lazy(() => SortOrderSchema).optional(),
-  pivotal_tracker_id: z.lazy(() => SortOrderSchema).optional()
+  pivotal_tracker_id: z.lazy(() => SortOrderSchema).optional(),
+  last_sent_biweekly_briefing: z.lazy(() => SortOrderSchema).optional(),
+  github_repository_urls: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
 export const ProjectsMinOrderByAggregateInputSchema: z.ZodType<Prisma.ProjectsMinOrderByAggregateInput> = z.object({
@@ -1841,7 +1871,9 @@ export const ProjectsMinOrderByAggregateInputSchema: z.ZodType<Prisma.ProjectsMi
   updated_at: z.lazy(() => SortOrderSchema).optional(),
   status: z.lazy(() => SortOrderSchema).optional(),
   linear_team_id: z.lazy(() => SortOrderSchema).optional(),
-  pivotal_tracker_id: z.lazy(() => SortOrderSchema).optional()
+  pivotal_tracker_id: z.lazy(() => SortOrderSchema).optional(),
+  last_sent_biweekly_briefing: z.lazy(() => SortOrderSchema).optional(),
+  github_repository_urls: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
 export const ProjectsSumOrderByAggregateInputSchema: z.ZodType<Prisma.ProjectsSumOrderByAggregateInput> = z.object({
@@ -2463,7 +2495,7 @@ export const IssuesCreateWithoutCommentsInputSchema: z.ZodType<Prisma.IssuesCrea
   title: z.string(),
   description: z.string(),
   created_at: z.coerce.date(),
-  kanbanorder: z.string(),
+  kanbanorder: z.string().optional().nullable(),
   username: z.string(),
   external_urls: z.string().optional().nullable(),
   completed_at: z.coerce.date().optional().nullable(),
@@ -2478,7 +2510,7 @@ export const IssuesUncheckedCreateWithoutCommentsInputSchema: z.ZodType<Prisma.I
   title: z.string(),
   description: z.string(),
   created_at: z.coerce.date(),
-  kanbanorder: z.string(),
+  kanbanorder: z.string().optional().nullable(),
   username: z.string(),
   external_urls: z.string().optional().nullable(),
   completed_at: z.coerce.date().optional().nullable(),
@@ -2503,7 +2535,7 @@ export const IssuesUpdateWithoutCommentsInputSchema: z.ZodType<Prisma.IssuesUpda
   title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   description: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  kanbanorder: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  kanbanorder: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   username: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   external_urls: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   completed_at: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
@@ -2518,7 +2550,7 @@ export const IssuesUncheckedUpdateWithoutCommentsInputSchema: z.ZodType<Prisma.I
   title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   description: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  kanbanorder: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  kanbanorder: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   username: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   external_urls: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   completed_at: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
@@ -2661,6 +2693,8 @@ export const ProjectsCreateWithoutIssuesInputSchema: z.ZodType<Prisma.ProjectsCr
   status: z.lazy(() => project_statusSchema).optional().nullable(),
   linear_team_id: z.string().optional().nullable(),
   pivotal_tracker_id: z.union([ z.bigint().gte(-9223372036854775808n).lte(9223372036854775807n), z.number().int().gte(Number.MIN_SAFE_INTEGER).lte(Number.MAX_SAFE_INTEGER).transform(BigInt) ]).optional().nullable(),
+  last_sent_biweekly_briefing: z.coerce.date().optional().nullable(),
+  github_repository_urls: z.string().optional().nullable(),
   orgs: z.lazy(() => OrgsCreateNestedOneWithoutProjectsInputSchema)
 }).strict();
 
@@ -2681,7 +2715,9 @@ export const ProjectsUncheckedCreateWithoutIssuesInputSchema: z.ZodType<Prisma.P
   history: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValue ]).optional(),
   status: z.lazy(() => project_statusSchema).optional().nullable(),
   linear_team_id: z.string().optional().nullable(),
-  pivotal_tracker_id: z.union([ z.bigint().gte(-9223372036854775808n).lte(9223372036854775807n), z.number().int().gte(Number.MIN_SAFE_INTEGER).lte(Number.MAX_SAFE_INTEGER).transform(BigInt) ]).optional().nullable()
+  pivotal_tracker_id: z.union([ z.bigint().gte(-9223372036854775808n).lte(9223372036854775807n), z.number().int().gte(Number.MIN_SAFE_INTEGER).lte(Number.MAX_SAFE_INTEGER).transform(BigInt) ]).optional().nullable(),
+  last_sent_biweekly_briefing: z.coerce.date().optional().nullable(),
+  github_repository_urls: z.string().optional().nullable()
 }).strict();
 
 export const ProjectsCreateOrConnectWithoutIssuesInputSchema: z.ZodType<Prisma.ProjectsCreateOrConnectWithoutIssuesInput> = z.object({
@@ -2738,6 +2774,8 @@ export const ProjectsUpdateWithoutIssuesInputSchema: z.ZodType<Prisma.ProjectsUp
   status: z.union([ z.lazy(() => project_statusSchema),z.lazy(() => NullableEnumproject_statusFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   linear_team_id: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   pivotal_tracker_id: z.union([ z.union([ z.bigint().gte(-9223372036854775808n).lte(9223372036854775807n), z.number().int().gte(Number.MIN_SAFE_INTEGER).lte(Number.MAX_SAFE_INTEGER).transform(BigInt) ]),z.lazy(() => NullableBigIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  last_sent_biweekly_briefing: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  github_repository_urls: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   orgs: z.lazy(() => OrgsUpdateOneRequiredWithoutProjectsNestedInputSchema).optional()
 }).strict();
 
@@ -2759,6 +2797,8 @@ export const ProjectsUncheckedUpdateWithoutIssuesInputSchema: z.ZodType<Prisma.P
   status: z.union([ z.lazy(() => project_statusSchema),z.lazy(() => NullableEnumproject_statusFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   linear_team_id: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   pivotal_tracker_id: z.union([ z.union([ z.bigint().gte(-9223372036854775808n).lte(9223372036854775807n), z.number().int().gte(Number.MIN_SAFE_INTEGER).lte(Number.MAX_SAFE_INTEGER).transform(BigInt) ]),z.lazy(() => NullableBigIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  last_sent_biweekly_briefing: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  github_repository_urls: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 }).strict();
 
 export const EmailsCreateWithoutOrgsInputSchema: z.ZodType<Prisma.EmailsCreateWithoutOrgsInput> = z.object({
@@ -2810,6 +2850,8 @@ export const ProjectsCreateWithoutOrgsInputSchema: z.ZodType<Prisma.ProjectsCrea
   status: z.lazy(() => project_statusSchema).optional().nullable(),
   linear_team_id: z.string().optional().nullable(),
   pivotal_tracker_id: z.union([ z.bigint().gte(-9223372036854775808n).lte(9223372036854775807n), z.number().int().gte(Number.MIN_SAFE_INTEGER).lte(Number.MAX_SAFE_INTEGER).transform(BigInt) ]).optional().nullable(),
+  last_sent_biweekly_briefing: z.coerce.date().optional().nullable(),
+  github_repository_urls: z.string().optional().nullable(),
   issues: z.lazy(() => IssuesCreateNestedManyWithoutProjectsInputSchema).optional()
 }).strict();
 
@@ -2830,6 +2872,8 @@ export const ProjectsUncheckedCreateWithoutOrgsInputSchema: z.ZodType<Prisma.Pro
   status: z.lazy(() => project_statusSchema).optional().nullable(),
   linear_team_id: z.string().optional().nullable(),
   pivotal_tracker_id: z.union([ z.bigint().gte(-9223372036854775808n).lte(9223372036854775807n), z.number().int().gte(Number.MIN_SAFE_INTEGER).lte(Number.MAX_SAFE_INTEGER).transform(BigInt) ]).optional().nullable(),
+  last_sent_biweekly_briefing: z.coerce.date().optional().nullable(),
+  github_repository_urls: z.string().optional().nullable(),
   issues: z.lazy(() => IssuesUncheckedCreateNestedManyWithoutProjectsInputSchema).optional()
 }).strict();
 
@@ -2912,6 +2956,8 @@ export const ProjectsScalarWhereInputSchema: z.ZodType<Prisma.ProjectsScalarWher
   status: z.union([ z.lazy(() => Enumproject_statusNullableFilterSchema),z.lazy(() => project_statusSchema) ]).optional().nullable(),
   linear_team_id: z.union([ z.lazy(() => UuidNullableFilterSchema),z.string() ]).optional().nullable(),
   pivotal_tracker_id: z.union([ z.lazy(() => BigIntNullableFilterSchema),z.union([ z.bigint().gte(-9223372036854775808n).lte(9223372036854775807n), z.number().int().gte(Number.MIN_SAFE_INTEGER).lte(Number.MAX_SAFE_INTEGER).transform(BigInt) ]) ]).optional().nullable(),
+  last_sent_biweekly_briefing: z.union([ z.lazy(() => DateTimeNullableFilterSchema),z.coerce.date() ]).optional().nullable(),
+  github_repository_urls: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
 }).strict();
 
 export const IssuesCreateWithoutProjectsInputSchema: z.ZodType<Prisma.IssuesCreateWithoutProjectsInput> = z.object({
@@ -2919,7 +2965,7 @@ export const IssuesCreateWithoutProjectsInputSchema: z.ZodType<Prisma.IssuesCrea
   title: z.string(),
   description: z.string(),
   created_at: z.coerce.date(),
-  kanbanorder: z.string(),
+  kanbanorder: z.string().optional().nullable(),
   username: z.string(),
   external_urls: z.string().optional().nullable(),
   completed_at: z.coerce.date().optional().nullable(),
@@ -2934,7 +2980,7 @@ export const IssuesUncheckedCreateWithoutProjectsInputSchema: z.ZodType<Prisma.I
   title: z.string(),
   description: z.string(),
   created_at: z.coerce.date(),
-  kanbanorder: z.string(),
+  kanbanorder: z.string().optional().nullable(),
   username: z.string(),
   external_urls: z.string().optional().nullable(),
   completed_at: z.coerce.date().optional().nullable(),
@@ -3025,7 +3071,7 @@ export const IssuesScalarWhereInputSchema: z.ZodType<Prisma.IssuesScalarWhereInp
   title: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   description: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   created_at: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
-  kanbanorder: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  kanbanorder: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
   username: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   external_urls: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
   completed_at: z.union([ z.lazy(() => DateTimeNullableFilterSchema),z.coerce.date() ]).optional().nullable(),
@@ -3276,7 +3322,9 @@ export const ProjectsCreateManyOrgsInputSchema: z.ZodType<Prisma.ProjectsCreateM
   history: z.union([ z.lazy(() => NullableJsonNullValueInputSchema),InputJsonValue ]).optional(),
   status: z.lazy(() => project_statusSchema).optional().nullable(),
   linear_team_id: z.string().uuid().optional().nullable(),
-  pivotal_tracker_id: z.union([ z.bigint().gte(-9223372036854775808n).lte(9223372036854775807n), z.number().int().gte(Number.MIN_SAFE_INTEGER).lte(Number.MAX_SAFE_INTEGER).transform(BigInt) ]).optional().nullable()
+  pivotal_tracker_id: z.union([ z.bigint().gte(-9223372036854775808n).lte(9223372036854775807n), z.number().int().gte(Number.MIN_SAFE_INTEGER).lte(Number.MAX_SAFE_INTEGER).transform(BigInt) ]).optional().nullable(),
+  last_sent_biweekly_briefing: z.coerce.date().optional().nullable(),
+  github_repository_urls: z.string().optional().nullable()
 }).strict();
 
 export const ProjectsUpdateWithoutOrgsInputSchema: z.ZodType<Prisma.ProjectsUpdateWithoutOrgsInput> = z.object({
@@ -3296,6 +3344,8 @@ export const ProjectsUpdateWithoutOrgsInputSchema: z.ZodType<Prisma.ProjectsUpda
   status: z.union([ z.lazy(() => project_statusSchema),z.lazy(() => NullableEnumproject_statusFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   linear_team_id: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   pivotal_tracker_id: z.union([ z.union([ z.bigint().gte(-9223372036854775808n).lte(9223372036854775807n), z.number().int().gte(Number.MIN_SAFE_INTEGER).lte(Number.MAX_SAFE_INTEGER).transform(BigInt) ]),z.lazy(() => NullableBigIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  last_sent_biweekly_briefing: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  github_repository_urls: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   issues: z.lazy(() => IssuesUpdateManyWithoutProjectsNestedInputSchema).optional()
 }).strict();
 
@@ -3316,6 +3366,8 @@ export const ProjectsUncheckedUpdateWithoutOrgsInputSchema: z.ZodType<Prisma.Pro
   status: z.union([ z.lazy(() => project_statusSchema),z.lazy(() => NullableEnumproject_statusFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   linear_team_id: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   pivotal_tracker_id: z.union([ z.union([ z.bigint().gte(-9223372036854775808n).lte(9223372036854775807n), z.number().int().gte(Number.MIN_SAFE_INTEGER).lte(Number.MAX_SAFE_INTEGER).transform(BigInt) ]),z.lazy(() => NullableBigIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  last_sent_biweekly_briefing: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  github_repository_urls: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   issues: z.lazy(() => IssuesUncheckedUpdateManyWithoutProjectsNestedInputSchema).optional()
 }).strict();
 
@@ -3336,6 +3388,8 @@ export const ProjectsUncheckedUpdateManyWithoutProjectsInputSchema: z.ZodType<Pr
   status: z.union([ z.lazy(() => project_statusSchema),z.lazy(() => NullableEnumproject_statusFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   linear_team_id: z.union([ z.string().uuid(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   pivotal_tracker_id: z.union([ z.union([ z.bigint().gte(-9223372036854775808n).lte(9223372036854775807n), z.number().int().gte(Number.MIN_SAFE_INTEGER).lte(Number.MAX_SAFE_INTEGER).transform(BigInt) ]),z.lazy(() => NullableBigIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  last_sent_biweekly_briefing: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  github_repository_urls: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 }).strict();
 
 export const IssuesCreateManyProjectsInputSchema: z.ZodType<Prisma.IssuesCreateManyProjectsInput> = z.object({
@@ -3343,7 +3397,7 @@ export const IssuesCreateManyProjectsInputSchema: z.ZodType<Prisma.IssuesCreateM
   title: z.string(),
   description: z.string(),
   created_at: z.coerce.date(),
-  kanbanorder: z.string(),
+  kanbanorder: z.string().optional().nullable(),
   username: z.string(),
   external_urls: z.string().optional().nullable(),
   completed_at: z.coerce.date().optional().nullable(),
@@ -3357,7 +3411,7 @@ export const IssuesUpdateWithoutProjectsInputSchema: z.ZodType<Prisma.IssuesUpda
   title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   description: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  kanbanorder: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  kanbanorder: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   username: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   external_urls: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   completed_at: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
@@ -3372,7 +3426,7 @@ export const IssuesUncheckedUpdateWithoutProjectsInputSchema: z.ZodType<Prisma.I
   title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   description: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  kanbanorder: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  kanbanorder: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   username: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   external_urls: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   completed_at: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
@@ -3387,7 +3441,7 @@ export const IssuesUncheckedUpdateManyWithoutIssuesInputSchema: z.ZodType<Prisma
   title: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   description: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   created_at: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  kanbanorder: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  kanbanorder: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   username: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   external_urls: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   completed_at: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
@@ -4455,6 +4509,14 @@ export const tableSchemas = {
       [
         "pivotal_tracker_id",
         "INT8"
+      ],
+      [
+        "last_sent_biweekly_briefing",
+        "TIMESTAMPTZ"
+      ],
+      [
+        "github_repository_urls",
+        "TEXT"
       ]
     ]),
     relations: [

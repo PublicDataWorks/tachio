@@ -61,12 +61,15 @@ function hexToBytes(hex) {
   return bytes;
 }
 
-async function getGithubWebhooks(repositoryUrl, startDate, endDate) {
-  if (!repositoryUrl) return []
+async function getGithubWebhooks(repositoryUrls, startDate, endDate) {
+  if (!repositoryUrls) return []
+  if (!Array.isArray(repositoryUrls)) {
+    repositoryUrls = [repositoryUrls];
+  }
   const { data, error } = await supabase
     .from(WEBHOOK_TABLE_NAME)
     .select('type, action, target_type, repository_url, title, body')
-    .eq('repository_url', repositoryUrl)
+    .in('repository_url', repositoryUrls)
     .gte('created_at', startDate)
     .lte('created_at', endDate)
   if (error) throw new Error(`Error occurred while trying to fetch github webhook ${error.message}, ${repositoryUrl}`)

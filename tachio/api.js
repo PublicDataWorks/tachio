@@ -437,6 +437,7 @@ app.post(BIWEEKLY_BRIEFING, async (req, res) => {
   res.status(204).end()
 
   const briefing = await makeBiweeklyProjectBriefing(project.name)
+  logger.info(`Biweekly briefing: \n ${briefing}`)
   await sendMissiveResponse({
     message: briefing,
     notificationTitle: `Biweekly briefing for ${project.name}`,
@@ -476,6 +477,7 @@ app.post("/api/weekly-briefing", async (req, res) => {
   //   return
   // }
   const briefing = await makeWeeklyBriefing()
+  logger.info(`Weekly briefing: \n ${briefing}`)
   const title = `Weekly conversation for week ${getWeek(today)} of ${today.getFullYear()}`
   const newPost = await sendMissiveResponse({
     message: briefing,
@@ -529,6 +531,7 @@ app.post(PROJECT_BRIEFING, async (req, res) => {
   }
 
   const briefing = await makeProjectBriefing(data[0].name)
+  logger.info(`Project briefing: \n ${briefing}`)
   await sendMissiveResponse({
     message: briefing,
     conversationId: weeklyConversation[0].conversation_id,
@@ -560,11 +563,11 @@ app.post('/api/daily-briefing', async (req, res) => {
     .select('conversation_id')
     .eq('week_of_year', weekOfYear)
   if (error || weeklyConversation?.length === 0) {
-    logger.error(`Error processing project-briefing: ${error?.message} ${JSON.stringify(data)} ${weekOfYear}`);
+    logger.error(`Error processing project-briefing: ${error?.message} ${JSON.stringify(weeklyConversation)} ${weekOfYear}`);
     return
   }
   const briefing = await makeDailyBriefing()
-
+  logger.info(`Daily briefing: \n ${briefing}`)
   await sendMissiveResponse({
     message: briefing,
     conversationId: weeklyConversation[0].conversation_id,
