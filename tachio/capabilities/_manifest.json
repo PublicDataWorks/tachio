@@ -575,7 +575,7 @@
   ],
   "ingest": [
     {
-      "name": "ingest:deepDocumentIngest()",
+      "name": "ingest:read()",
       "parameters": [
         {
           "name": "url",

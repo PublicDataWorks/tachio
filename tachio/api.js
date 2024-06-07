@@ -147,7 +147,7 @@ async function processMissiveRequest(body, query) {
     contextPrompt = 'I want to record this as a todo (no further action needed beyond that). '
       + (task.completed_at ? `This todo is already completed at ${new Date(task.completed_at * 1000)}. \n` : `This todo is not completed yet. \n`)
   } else if (body.comment.attachment?.media_type === 'text') {
-    contextPrompt = `ingest:deepDocumentIngest(${body.comment.attachment.url}, ${conversationId})`
+    contextPrompt = `ingest:read(${body.comment.attachment.url}, ${conversationId})`
   }
   // Process the webhook payload using the processWebhookPayload function
   const simplifiedPayload = processWebhookPayload(body)
@@ -155,7 +155,7 @@ async function processMissiveRequest(body, query) {
   // Check if there are any attachments in the comment
   const attachment = body.comment.attachment
 
-  // text memory is handled by deepDocumentIngest
+  // text memory is handled by ingest::read
   if (attachment && body.comment.attachment?.media_type !== 'text') {
     // Extract the resource ID from the attachment
     const resourceId = attachment.id
