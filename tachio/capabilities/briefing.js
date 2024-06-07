@@ -358,8 +358,8 @@ In the previous message I just sent, please identify any GitHub Repos, Issues, M
 
 /**
  * Lists all todo changes from this week (added, edited, deleted).
- * @param {Date | undefined} startDate - A optional start date for the todo changes. Leave it empty to default to the current week.
- * @param {Date | undefined} endDate - A optional end date for the todo changes. Leave it empty to default to the current week.
+ * @param {string} startDate - A optional start date for the todo changes. Leave it empty to default to the current week.
+ * @param {string} endDate - A optional end date for the todo changes. Leave it empty to default to the current week.
  * @returns {Promise<Array>} A promise that resolves to an array of todo changes.
  */
 async function listTodoChanges({ startDate, endDate } = {}) {
@@ -379,8 +379,8 @@ async function listTodoChanges({ startDate, endDate } = {}) {
 
 /**
  * Reads the calendar for the current week.
- * @param {Date | undefined} startDate - An optional start date for the calendar entries, leave it empty to default to the current week.
- * @param {Date | undefined} endDate - An optional end date for the calendar entries, leave it empty to default to the current week.
+ * @param {string} startDate - An optional start date for the calendar entries, leave it empty to default to the current week.
+ * @param {string} endDate - An optional end date for the calendar entries, leave it empty to default to the current week.
  *
  * @returns {Promise<array>} A promise that resolves to an object containing calendar entries.
  */
@@ -407,8 +407,8 @@ async function readCalendar({ startDate, endDate }) {
 /**
  * Generates summary by project.
  * @param {Array} projectName - The name of the project
- * @param {Date} startDate - The start date for the briefing period.
- * @param {Date} endDate - The end date for the briefing period.
+ * @param {string} startDate - The start date for the briefing period.
+ * @param {string} endDate - The end date for the briefing period.
  * @param {Array} todoChanges - An array of changes made to the project's to-do list. Each change could be an addition, deletion, or modification..
  * @param {Object} calendarEntries - An object that contains calendar entries related to the project.
  * @param {Object} memoriesMentioningProject - A list of memory objects that mention the project.

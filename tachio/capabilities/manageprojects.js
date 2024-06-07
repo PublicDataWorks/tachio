@@ -21,7 +21,7 @@ require('dotenv').config()
  * @param {string} startDate - The start date of the project.
  * @param {string} endDate - The end date of the project.
  * @param {string} linearTeamId - The Linear team ID of the project.
- *
+ * @param {string} githubRepositoryUrls - A string in JSON format of an array that represents a list of GitHub repository that is linked to the project.
  * @returns {Promise<string>} A promise that resolves to a string message indicating the result of the operation.
  *
  * @throws {Error} If there is an error with the Supabase operations.
@@ -36,7 +36,8 @@ async function createProject({
                                status,
                                startDate,
                                endDate,
-                               linearTeamId
+                               linearTeamId,
+                               githubRepositoryUrls
                              }) {
   if (!orgName || !projectName) throw new Error('Missing required fields')
 
@@ -88,6 +89,7 @@ async function createProject({
       start_date: startDate || new Date(),
       end_date: endDate,
       linear_team_id: linearTeamId,
+      github_repository_urls: githubRepositoryUrls ? JSON.parse(githubRepositoryUrls) : undefined,
       created_at: new Date() // ElectricSQL does not support default values
     }
   ])
@@ -106,6 +108,7 @@ async function createProject({
  * @param {string} newStatus - The new status of the project. Can be 'active', 'paused', 'completed', or 'archived'.
  * @param {string} newStartDate - The new start date of the project.
  * @param {string} newEndDate - The new end date of the project.
+ * @param {string} githubRepositoryUrls - A string in JSON format of an array that represents a list of GitHub repository that is linked to the project.
  *
  * @returns {Promise<string>} A promise that resolves to a string message indicating the result of the operation.
  *
@@ -117,9 +120,10 @@ async function updateProject({
                                newAliases,
                                newStatus,
                                newStartDate,
-                               newEndDate
+                               newEndDate,
+                               githubRepositoryUrls
                              }) {
-  if (!newProjectName && !newAliases && !newStatus && !newStartDate && !newEndDate) throw new Error('No changes made')
+  if (!newProjectName && !newAliases && !newStatus && !newStartDate && !newEndDate && !githubRepositoryUrls) throw new Error('No changes made')
 
   const { data: existingProject } = await supabase
     .from(PROJECT_TABLE_NAME)
@@ -134,14 +138,6 @@ async function updateProject({
     .match({ name: projectName })
   if (error) throw new Error(error.message)
   if (!projectBefore || projectBefore.length === 0) throw new Error('Project not found')
-  if (
-    (!newProjectName || newProjectName === projectName) &&
-    (!newAliases || JSON.stringify(newAliases) === JSON.stringify(projectBefore.aliases)) &&
-    (!newStatus || newStatus === projectBefore.status) &&
-    (!newStartDate || newStartDate === projectBefore.start_date) &&
-    (!newEndDate || newEndDate === projectBefore.end_date)
-  ) throw new Error('No changes made')
-
   const { error: errUpdateProject } = await supabase
     .from(PROJECT_TABLE_NAME)
     .update({
@@ -150,13 +146,24 @@ async function updateProject({
       status: newStatus,
       start_date: newStartDate,
       end_date: newEndDate,
-      updated_at: new Date()
+      updated_at: new Date(),
+      github_repository_urls: githubRepositoryUrls ? JSON.parse(githubRepositoryUrls) : undefined
     })
     .match({ name: projectName })
   if (errUpdateProject) throw new Error(errUpdateProject.message)
   return `Successfully updated project: ${projectName}`
 }
 
+/**
+ * Updates the status of a project.
+ *
+ * @param {string} name - The name of the project.
+ * @param {string} newStatus - The new status of the project.
+ *
+ * @throws {Error} If the required fields are missing.
+ *
+ * @returns {Promise<string>} A promise that resolves to a string message indicating the result of the operation.
+ */
 async function updateProjectStatus({ name, newStatus }) {
   if (!name || !newStatus) throw new Error('Missing required fields')
   const { data: existingProject, error } = await supabase
@@ -196,6 +203,7 @@ async function getActiveProjects() {
   if (error) throw new Error(error.message)
   return data
 }
+
 module.exports = {
   handleCapabilityMethod: async (method, args) => {
     console.log(`⚡️ Calling capability method: manageprojects.${method}`)
@@ -210,5 +218,5 @@ module.exports = {
       throw new Error(`Invalid method: ${method}`)
     }
   },
-  getActiveProjects,
+  getActiveProjects
 }
