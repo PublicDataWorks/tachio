@@ -3,7 +3,7 @@ const { createSharedLabel, createPost } = require('../src/missive')
 const { ORG_TABLE_NAME } = require('./manageorgs')
 const { supabase } = require('../src/supabaseclient')
 const { supabase: supabaseCron } = require('./pgcron')
-const { invokeWeeklyBriefing, generateWeeklyBriefingJobName, invokeProjectBriefing } = require('../src/crons')
+const { invokeBiWeeklyBriefing, generateBiWeeklyBriefingJobName, invokeProjectBriefing } = require('../src/cron-job')
 const { updateJob } = require('./pgcron')
 const { PROJECT_TABLE_NAME } = require("../src/constants");
 require('dotenv').config()
@@ -94,7 +94,7 @@ async function createProject({
     }
   ])
   if (errAddProject) throw new Error(errAddProject.message)
-  await invokeWeeklyBriefing(newProjectID)
+  await invokeBiWeeklyBriefing(newProjectID)
   await invokeProjectBriefing(newProjectID)
   return `Successfully added project: ${projectName}`
 }
@@ -184,7 +184,7 @@ async function updateProjectStatus({ name, newStatus }) {
     const { data, error } = await supabaseCron
       .from('job')
       .select('jobid')
-      .eq('jobname', generateWeeklyBriefingJobName(existingProject[0].id))
+      .eq('jobname', generateBiWeeklyBriefingJobName(existingProject[0].id))
     if (error) throw new Error(error.message)
     if (data.length === 0) throw new Error('Job not found')
 

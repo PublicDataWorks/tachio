@@ -229,3 +229,11 @@ $$;
 ### Mastodon
 
 - **MASTODON_API_URL** and **MASTODON_ACCESS_TOKEN**: Register your application with your Mastodon instance to receive the API URL, then follow the authentication process to obtain your access token.
+
+
+## Setup: Initialize Cron Jobs for Briefings
+
+Run the following command to set up the cron jobs for creating weekly and daily briefings:
+
+```sh
+npm run briefing:init
