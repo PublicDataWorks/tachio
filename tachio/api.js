@@ -27,6 +27,7 @@ const {
   MISSIVE_CONVERSATIONS_TABLE_NAME
 } = require('./src/constants')
 const { getConfigFromSupabase } = require("./helpers");
+const { processPTRequest } = require("./src/pivotal-tracker");
 require('dotenv').config()
 
 let port = process.env.EXPRESS_PORT
@@ -394,6 +395,13 @@ app.post('/api/github', async (req, res) => {
     .catch((error) => logger.error(`Error processing Github webhook: ${error.message} ${error.stack}`))
   logger.info(`Sending 200 response`)
   res.status(200).end()
+})
+
+app.post('/api/pivotal-tracker', async (req, res) => {
+  processPTRequest(req.body).then(() => logger.info('Pivotal tracker webhook processed'))
+    .catch((error) => logger.error(`Error processing Pivotal tracker webhook: ${error.message} ${error.stack}`))
+  logger.info(`Sending 200 response`)
+  res.status(204).end()
 })
 
 app.post('/api/missive-daily-report', async (req, res) => {
