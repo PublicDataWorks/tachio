@@ -31,8 +31,8 @@ const sizeClasses = {
 function Modal({
   title,
   isOpen,
-  center,
-  size,
+  center = true,
+  size = 'normal',
   className,
   onDismiss,
   children,
@@ -96,11 +96,6 @@ function Modal({
     modal,
     document.getElementById('root-modal') as Element
   )
-}
-
-Modal.defaultProps = {
-  size: 'normal',
-  center: true,
 }
 
 export default memo(Modal)

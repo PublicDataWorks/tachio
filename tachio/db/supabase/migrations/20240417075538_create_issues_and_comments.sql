@@ -32,5 +32,5 @@ CREATE TABLE  IF NOT EXISTS "comments" (
     "issue_id" UUID NOT NULL,
     "created_at" TIMESTAMPTZ NOT NULL,
     CONSTRAINT "comment_pkey" PRIMARY KEY ("id"),
-    FOREIGN KEY (issue_id) REFERENCES issues(id)
+    FOREIGN KEY (issue_id) REFERENCES issues(id) DEFERRABLE
 );
