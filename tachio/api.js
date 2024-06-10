@@ -11,7 +11,12 @@ const { createHmac } = require('crypto')
 const logger = require('./src/logger.js')('api')
 const { processLinearRequest } = require('./src/linear')
 const { processGithubRequest, verifyGithubSignature } = require('./src/github')
-const { processDailyReport, sendMissiveResponse } = require('./src/missive')
+const {
+  processDailyReport,
+  sendMissiveResponse,
+  processEmailMessage,
+  verifyMissiveSignature
+} = require('./src/missive')
 const { supabase } = require('./src/supabaseclient')
 const {
   makeBiweeklyProjectBriefing,
@@ -279,26 +284,8 @@ async function processMissiveRequest(body, query) {
 }
 
 app.post('/api/missive-reply', async (req, res) => {
-  const passphrase = process.env.MISSIVE_WEBHOOK_SECRET // Assuming PASSPHRASE is the environment variable name
-  // Generate HMAC hash of the request body to verify authenticity
-  const hmac = createHmac('sha256', passphrase)
-  const reqBodyString = JSON.stringify(req.body)
-  hmac.update(reqBodyString)
-  const hash = hmac.digest('hex')
-
-  // log the headers
-  logger.info('Request headers:' + JSON.stringify(req.headers))
-  const signature = `${req.headers['x-hook-signature']}`
-  // logger.info("HMAC signature:" + signature);
-  // logger.info("Computed HMAC hash:" + hash);
-
-  const hashString = `sha256=${hash}`
-  // Compare our hash with the signature provided in the request
-  if (hashString !== signature) {
-    logger.info('HMAC signature check failed')
+  if (!verifyMissiveSignature()) {
     return res.status(401).send('Unauthorized request')
-  } else {
-    logger.info('HMAC signature check passed')
   }
 
   // missive spams us if we take longer than 15 seconds to respond
@@ -313,6 +300,23 @@ app.post('/api/missive-reply', async (req, res) => {
     })
     .catch((error) => {
       logger.error(`Error processing message: ${error.message} ${error.stack}`)
+    })
+})
+
+app.post('/api/missive-email', async (req, res) => {
+  if (!verifyMissiveSignature()) {
+    return res.status(401).send('Unauthorized request')
+  }
+
+  logger.info(`Sending 200 response`)
+  res.status(200).end()
+
+  processEmailMessage(req.body, req.query)
+    .then(() => {
+      logger.info(`Email message processed`)
+    })
+    .catch((error) => {
+      logger.error(`Error processing email message: ${error.message} ${error.stack}`)
     })
 })
 
