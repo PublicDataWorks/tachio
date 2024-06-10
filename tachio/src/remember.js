@@ -415,7 +415,7 @@ async function voyageEmbedding(input, model = "voyage-large-2-instruct") {
     body: JSON.stringify({
       input,
       model,
-      input_type: 'query'
+      input_type: 'document'
     })
   })
   logger.info(`Voyage response post status: ${response.status}`)
