@@ -11,7 +11,7 @@ const {
   destructureArgs,
   countMessageTokens,
   lastUserMessage,
-  sleep,
+  sleep
 } = require("../helpers");
 const fs = require("fs");
 const path = require("path");
@@ -184,14 +184,14 @@ async function fetchAllLinks(url) {
   await sleep(2000);
 
   // get all the links and the link text
-  const links = await page.$$eval("a", function (elements) {
+  const links = await page.$$eval("a", function(elements) {
     return (
       elements
         .map((element) => {
           return {
             // href: trimHref(element.href),
             href: element.href,
-            text: element.textContent,
+            text: element.textContent
           };
         })
         // filter out any links that don't have text
@@ -257,13 +257,13 @@ async function fetchAllVisibleImages(url) {
   await sleep(2000);
 
   // get all the links and the link text
-  const images = await page.$$eval("img", function (elements) {
+  const images = await page.$$eval("img", function(elements) {
     return (
       elements
         .map((element) => {
           return {
             src: element.src,
-            alt: element.alt,
+            alt: element.alt
           };
         })
         // filter out any links that don't have text
@@ -319,14 +319,19 @@ async function processChunks(chunks, data, limit = 2, userPrompt = "") {
           presence_penalty: -0.05,
           // frequency_penalty: 0.1,
           messages: [
-            { role: "user", content: userPrompt },
+            {
+              role: "user",
+              content: userPrompt
+                ? `# User goal: ${userPrompt}`
+                : "Can you help me understand this chunk of a webpage please?"
+            },
             {
               role: "user",
               content: `${WEBPAGE_CHUNK_UNDERSTANDER_PROMPT}
 
-            ${chunk}`,
-            },
-          ],
+            ${chunk}`
+            }
+          ]
         });
         return completion.choices[0];
       });
@@ -430,9 +435,11 @@ async function fetchAndSummarizeUrl(url, userPrompt = "") {
     return error;
   }
 
-  logger.info(`📝  Generated ${factList.split("\n").length} fact summary.`);
-  logger.info(`📝  Generating summary of: ${factList}`);
-
+  logger.info(
+    `📝  Generated ${
+      factList.split("\n").length
+    } fact summary. Generating summary of: ${factList}`
+  );
   // use gpt-3.5-turbo-16k for the final summary
   const summaryCompletion = await openai.chat.completions.create({
     // model: "gpt-3.5-turbo-16k",
@@ -451,9 +458,9 @@ async function fetchAndSummarizeUrl(url, userPrompt = "") {
 ${WEBPAGE_UNDERSTANDER_PROMPT}
 
 ## Facts
-${factList}`,
-      },
-    ],
+${factList}`
+      }
+    ]
   });
 
   const summary = summaryCompletion.choices[0].message.content;
@@ -471,7 +478,7 @@ function randomUserAgent() {
     `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36`,
     `Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Safari/605.1.15`,
     `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36`,
-    `Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0`,
+    `Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0`
   ];
 
   const pickedUserAgent = chance.pickone(potentialUserAgents);
@@ -508,5 +515,5 @@ module.exports = {
   fetchAllLinks,
   handleCapabilityMethod,
   webPageToText,
-  webpageToHTML,
+  webpageToHTML
 };

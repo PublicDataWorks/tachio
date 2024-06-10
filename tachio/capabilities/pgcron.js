@@ -32,7 +32,7 @@ async function createJob(schedule, command, jobName) {
   });
 
   if (error) {
-    console.error('Error creating job with pg_cron:', error);
+    logger.error('Error creating job with pg_cron:', error);
     throw error;
   }
   return `Job created: ${data}`;
@@ -93,7 +93,7 @@ async function listWebhookJobs() {
   const { data, error } = await supabase.from('job').select('*').limit(100);
 
   if (error) {
-    console.error('Error listing webhook jobs with pg_cron:', error);
+    logger.error('Error listing webhook jobs with pg_cron:', error);
     throw error;
   }
 
@@ -110,14 +110,14 @@ async function listJobs() {
     const { data, error } = await supabase.from('job').select('*').limit(100);
 
     if (error) {
-      console.error('Error listing jobs with pg_cron:', error);
+      logger.error('Error listing jobs with pg_cron:', error);
       throw error;
     }
 
     logger.info('Jobs:', data);
     return JSON.stringify(data, null, 2);
   } catch (err) {
-    console.error('Failed to list jobs:', err.message);
+    logger.error('Failed to list jobs:', err.message);
     throw new Error('Failed to list jobs with pg_cron');
   }
 }
@@ -133,14 +133,14 @@ async function deleteJob(name) {
     const { data, error } = await supabase.rpc('cron.delete', { jobname: name });
 
     if (error) {
-      console.error('Error deleting job with pg_cron:', error.message);
+      logger.error('Error deleting job with pg_cron:', error.message);
       throw error;
     }
 
     logger.info('Successfully deleted job:', data);
     return `Successfully deleted job: ${name}`;
   } catch (err) {
-    console.error('Failed to delete job:', err.message);
+    logger.error('Failed to delete job:', err.message);
     throw new Error('Failed to delete job with pg_cron');
   }
 }

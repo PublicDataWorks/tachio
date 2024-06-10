@@ -1,6 +1,5 @@
 const dotenv = require("dotenv");
 
-const { openai } = require("./openai");
 const logger = require("../src/logger.js")("remember");
 dotenv.config();
 
@@ -104,33 +103,33 @@ async function storeUserMemory(
 ) {
   // first we do some checks to make sure we have the right types of data
   if (!username) {
-    logger.info("No username provided to storeUserMemory");
+    logger.warn("No username provided to storeUserMemory");
   }
 
   // if the user id is not a string, we need to error out
   if (typeof username !== "string") {
-    logger.info("username provided to storeUserMemory is not a string");
+    logger.warn("username provided to storeUserMemory is not a string");
   }
 
   // if the value is not a string, we need to error out
   if (typeof value !== "string") {
-    logger.info("value provided to storeUserMemory is not a string");
+    logger.warn("value provided to storeUserMemory is not a string");
   }
 
   if (!conversationId) {
-    logger.info("No conversationId provided to storeUserMemory");
+    logger.warn("No conversationId provided to storeUserMemory");
   }
 
   if (!guild) {
-    logger.info("No guild provided to storeUserMemory");
+    logger.warn("No guild provided to storeUserMemory");
   }
 
   if (!relatedMessageId) {
-    logger.info("No relatedMessageId provided to storeUserMemory");
+    logger.warn("No relatedMessageId provided to storeUserMemory");
   }
 
   if (!memoryType) {
-    logger.info("No memoryType provided to storeUserMemory");
+    logger.warn("No memoryType provided to storeUserMemory");
   }
 
   // TODO: Check .env for any non-openAI embedding models
@@ -162,7 +161,7 @@ async function storeUserMemory(
     const embeddingResponse = await voyageEmbedding(value)
     const [{ embedding: fetchedEmbedding }] = embeddingResponse.data
     embedding = fetchedEmbedding // Assign the fetched embedding to the outer scope variable
-    logger.info(`Embedding length: ${embedding.length}`)
+    // logger.info(`Embedding length: ${embedding.length}`)
   } catch (error) {
     logger.info(`Error fetching embedding: ${error.message}`);
     embedding = null; // Ensure embedding is null if there was an error
@@ -296,7 +295,7 @@ async function hasMemoryOfResource(resourceId) {
  * @throws {Error} - If there is an error deleting the memories.
  **/
 async function deleteMemoriesOfResource(resourceId) {
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from(MEMORIES_TABLE_NAME)
     .delete()
     .eq("resource_id", resourceId);

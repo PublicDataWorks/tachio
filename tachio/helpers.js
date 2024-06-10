@@ -12,7 +12,7 @@ const {
   getUserMemory,
   getUserMessageHistory,
   getAllMemories,
-  getRelevantMemories,
+  getRelevantMemories
 } = require("./src/remember.js");
 const logger = require("./src/logger.js")("helpers");
 
@@ -21,7 +21,7 @@ const completionLogger = process.env.COMPLETION_LOGGING_DISABLED
     info: () => {
     },
     error: () => {
-    },
+    }
   }
   : require("./src/logger.js")("completion");
 
@@ -216,7 +216,7 @@ function getHexNameMap() {
     61: "Inner Truth",
     62: "Preponderance of the Small",
     63: "After Completion",
-    64: "Before Completion",
+    64: "Before Completion"
   };
 }
 
@@ -282,7 +282,7 @@ function generateAiCompletionParams() {
   return {
     temperature: generateTemperature(),
     presence_penalty: generatePresencePenalty(),
-    frequency_penalty: generateFrequencyPenalty(),
+    frequency_penalty: generateFrequencyPenalty()
   };
 }
 
@@ -403,7 +403,6 @@ function isMessagesEmpty(messages) {
 /**
  * Trims a response by a certain percentage.
  * @param {array} response - The response to trim.
- * @param {number} lineCount - The number of lines in the response.
  * @param {number} trimAmount - The percentage to trim by.
  * @returns {array} - The trimmed response.
  */
@@ -414,18 +413,18 @@ function trimResponseByLineCount(response, trimAmount = 0.1) {
   return removeRandomLines(response, randomLines);
 }
 
-/**
- * Splits a response into lines.
- * @param {string} response - The response to split.
- * @returns {Array} - The lines of the response.
- */
-function splitResponseIntoLines(response) {
-  const parsed = JSON.parse(response)
-  if (Array.isArray(parsed)) {
-    return parsed;
-  }
-  return response.split("\n");
-}
+// /**
+//  * Splits a response into lines.
+//  * @param {string} response - The response to split.
+//  * @returns {Array} - The lines of the response.
+//  */
+// function splitResponseIntoLines(response) {
+//   const parsed = JSON.parse(response)
+//   if (Array.isArray(parsed)) {
+//     return parsed;
+//   }
+//   return response.split("\n");
+// }
 
 /**
  * Calculates the number of lines to remove.
@@ -503,10 +502,13 @@ function setTypingInterval(message) {
  * @param {string} username - The username associated with the AI completion.
  * @param {Array} messages - The array of messages.
  * @param {Object} config - The configuration object containing temperature and presence_penalty.
- * @returns {Promise<{ messages: Array<Object>, aiResponse: string }>} - An object containing the updated messages array and the AI response.
+ * @returns {Promise<{ messages: Array<Object>, aiResponse: string | null }>} - An object containing the updated messages array and the AI response.
  */
 async function generateAiCompletion(prompt, username, messages, config) {
-  const { temperature, presence_penalty } = config;
+  let { temperature, presence_penalty } = config;
+  if (!temperature) temperature = 1;
+  if (!presence_penalty) presence_penalty = 0;
+
 
   // if the last message has .image, delete it that property off it
   if (messages[messages.length - 1].image) {
@@ -515,6 +517,7 @@ async function generateAiCompletion(prompt, username, messages, config) {
 
   logger.info(`🤖 Generating AI completion for <${username}> ${prompt}`);
   logger.info(`${messages.length} messages`);
+
   messages = await addPreambleToMessages(username, messages);
   let completion = null;
 
@@ -522,11 +525,11 @@ async function generateAiCompletion(prompt, username, messages, config) {
   messages = messages.filter((message) => message.content);
 
   try {
-    // Do a verbose log of the chat completion parameters and messages
-    completionLogger.info("🔧 Chat completion created");
-    completionLogger.info("🔧 Temperature: " + temperature);
-    completionLogger.info("🔧 Presence Penalty: " + presence_penalty);
-    // completionLogger.info("🔧 Messages: " + JSON.stringify(messages));
+    logger.info(`🔧 Chat completion parameters:
+    - Temperature: ${temperature}
+    - Presence Penalty: ${presence_penalty}`);
+    logger.info("🔧 Messages:");
+    logger.info(`Creating chat completion with ${messages.length} messages`);
 
     completion = await createChatCompletion(
       messages,
@@ -535,6 +538,7 @@ async function generateAiCompletion(prompt, username, messages, config) {
         presence_penalty
       }
     );
+    logger.info(`🔧 Chat completion created:\n- Completion: ${completion}`);
   } catch (err) {
     logger.info(`Error creating chat completion ${err}`);
   }
@@ -561,47 +565,80 @@ async function createChatCompletion(
   const defaultConfig = {
     temperature: 0.5,
     presence_penalty: 0,
-    max_tokens: 800,
+    max_tokens: 800
   };
 
   config = Object.assign({}, defaultConfig, config);
+  // look through the messages and make sure they all have a content property
+  // and console.error if they don't
+  messages.forEach((message) => {
+    if (!message.content) {
+      logger.error(`Message is missing content: ${JSON.stringify(message)}`);
+    }
+  });
 
   const {
     CHAT_MODEL,
-    OPENAI_COMPLETION_MODEL,
+    OPENAI_COMPLETION_MODEL
   } = await getConfigFromSupabase();
   const completionModel = CHAT_MODEL || "openai";
   logger.info(`createChatCompletion Config: ${JSON.stringify(config, null, 2)}`);
 
   if (completionModel === "openai") {
-    logger.info("Using OpenAI for chat completion");
-
-    logger.info(` Model: gpt-4-turbo-preview
-    Temperature: ${config.temperature}
-    Presence Penalty: ${config.presence_penalty}
-    Max Tokens: ${config.max_tokens}
-    Message Count: ${messages.length}
-    `);
+    logger.info(
+      `Using OpenAI for chat completion\nModel: ${OPENAI_COMPLETION_MODEL}\nTemperature: ${config.temperature}\nPresence Penalty: ${config.presence_penalty}\nMax Tokens: ${config.max_tokens}\nMessage Count: ${messages.length}`
+    );
 
     try {
+      logger.info(
+        `Creating OpenAI chat completion with ${messages.length} messages`
+      );
       const res = await openai.chat.completions.create({
         model: OPENAI_COMPLETION_MODEL,
         temperature: config.temperature,
         presence_penalty: config.presence_penalty,
         // max_tokens,
         max_tokens: config.max_tokens,
-        messages,
+        messages
       });
-      return res.choices[0].message.content;
+      // OpenAI's responses contain the tokens used in the response, we should log that
+      logger.log(JSON.stringify(res));
+      const promptTokens = res.usage.prompt_tokens;
+      const completionTokens = res.usage.completion_tokens;
+      const totalTokens = res.usage.total_tokens;
+      logger.info(
+        `Completion used ${totalTokens} tokens (${promptTokens} prompt tokens, ${completionTokens} completion tokens)`
+      );
+
+      if (res.choices && res.choices.length > 0) {
+        const completion = res.choices[0].message.content;
+        if (completion) {
+          // If everything has gone properly, log the completion and return it
+          logger.info(`Chat completion response: ${completion}`);
+          return completion;
+        } else {
+          logger.info(
+            `Chat completion response is missing content: ${JSON.stringify(
+              res
+            )}`
+          );
+          return null;
+        }
+      } else {
+        logger.info(
+          `Chat completion response is missing choices: ${JSON.stringify(res)}`
+        );
+        return null;
+      }
     } catch (error) {
-      logger.error("Error creating chat completion:", error);
+      logger.error("Error creating chat completion:", error.message);
       // return `Error creating chat completion: ${error}`;
-      throw new Error(`Error creating chat completion: ${error}`);
+      throw new Error(`Error creating chat completion: ${error.message}`);
     }
   } else if (completionModel === "claude") {
     const res = await createClaudeCompletion(messages, {
       temperature: config.temperature,
-      max_tokens: +config.max_tokens,
+      max_tokens: +config.max_tokens
     });
     if (res.content.length > 1 && res.content[1].type === 'tool_use') {
       const toolUse = res.content[1];
@@ -626,7 +663,7 @@ async function createClaudeCompletion(messages, config) {
     model: CLAUDE_COMPLETION_MODEL,
     max_tokens: config.max_tokens,
     tools: JSON.parse(data[0].config_value),
-    messages: [{ role: "user", content: xmlMessages }],
+    messages: [{ role: "user", content: xmlMessages }]
   });
 }
 
@@ -681,7 +718,7 @@ async function addTodosToMessages(messages) {
   messages.push({
     role: "system",
     content: `Here are your todos:
-${todoString}`,
+${todoString}`
   });
 }
 
@@ -693,7 +730,7 @@ ${todoString}`,
 function addCurrentDateTime(messages) {
   messages.push({
     role: "system",
-    content: `Today is ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}`,
+    content: `Today is ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}`
   });
 }
 
@@ -704,13 +741,12 @@ function addCurrentDateTime(messages) {
  */
 async function addHexagramPrompt(messages) {
   if (chance.bool({ likelihood: 50 })) {
-    logger.info("🔧 Adding hexagram prompt to messages");
     const hexagram = generateHexagram();
     logger.info(`🔧 Adding hexagram prompt to message ${hexagram}`);
     const hexagramPrompt = `Let this hexagram from the I Ching guide this interaction: ${hexagram}`;
     messages.push({
       role: "system",
-      content: hexagramPrompt,
+      content: hexagramPrompt
     });
   }
 }
@@ -723,7 +759,7 @@ async function addSystemPrompt(messages) {
   const { PROMPT_SYSTEM } = await getPromptsFromSupabase();
   messages.push({
     role: "user",
-    content: PROMPT_SYSTEM,
+    content: PROMPT_SYSTEM
   });
 }
 
@@ -736,7 +772,7 @@ async function addCapabilityPromptIntro(messages) {
 
   messages.push({
     role: "user",
-    content: CAPABILITY_PROMPT_INTRO,
+    content: CAPABILITY_PROMPT_INTRO
   });
 }
 
@@ -770,7 +806,7 @@ async function addCapabilityManifestMessage(messages) {
       // content: `Capability manifest: ${JSON.stringify(manifest)}`,
       content: `## CAPABILITY MANIFEST\n\n${formatCapabilityManifest(
         manifest
-      )}`,
+      )}`
     });
   }
   return messages;
@@ -855,10 +891,14 @@ function convertCapabilityManifestToXML(manifest) {
  * Retrieves previous messages for a user and adds them to the messages array.
  * @param {string} username - The username of the user.
  * @param {Array} messages - The array to which the user messages will be added.
+ * @param {Object} options - The options for generating user messages.
+ * @param {number} [options.minCount=1] - The minimum number of user messages to retrieve.
+ * @param {number} [options.maxCount=10] - The maximum number of user messages to retrieve.
  * @returns {Promise<void>} - A promise that resolves when the user messages have been added to the array.
  */
-async function addUserMessages(username, messages) {
-  const userMessageCount = chance.integer({ min: 10, max: 32 });
+async function addUserMessages(username, messages, options = {}) {
+  const { minCount = 4, maxCount = 24 } = options;
+  const userMessageCount = chance.integer({ min: minCount, max: maxCount });
   logger.info(
     `🔧 Retrieving ${userMessageCount} previous messages for ${username}`
   );
@@ -875,7 +915,7 @@ async function addUserMessages(username, messages) {
     userMessages.forEach((message) => {
       messages.push({
         role: "user",
-        content: `${message.created_at}, in conversation ${message.conversation_id}: ${message.value}`,
+        content: `${message.created_at}, in conversation ${message.conversation_id}: ${message.value}`
       });
     });
   } catch (error) {
@@ -887,17 +927,21 @@ async function addUserMessages(username, messages) {
  * Adds user memories to the messages array.
  * @param {string} username - The username of the user.
  * @param {Array} messages - The array of messages to add user memories to.
+ * @param {Object} options - The options for retrieving user memories.
+ * @param {number} [options.minCount=8] - The minimum number of user memories to retrieve.
+ * @param {number} [options.maxCount=32] - The maximum number of user memories to retrieve.
  * @returns {Promise<void>} - A promise that resolves when the user memories are added to the messages array.
  */
-async function addUserMemories(username, messages) {
-  const userMemoryCount = chance.integer({ min: 8, max: 32 });
+async function addUserMemories(username, messages, options = {}) {
+  const { minCount = 4, maxCount = 24 } = options;
+  const userMemoryCount = chance.integer({ min: minCount, max: maxCount });
   try {
     const userMemories = await getUserMemory(username, userMemoryCount);
     logger.info(`🔧 Retrieving ${userMemoryCount} memories for ${username}`);
     userMemories.forEach((memory) => {
       messages.push({
         role: "system",
-        content: `You remember from a previous interaction on ${memory.created_at}, in conversation: ${memory.conversation_id}: ${memory.value}`,
+        content: `You remember from a previous interaction on ${memory.created_at}, in conversation: ${memory.conversation_id}: ${memory.value}`
       });
     });
   } catch (err) {
@@ -909,10 +953,14 @@ async function addUserMemories(username, messages) {
  * Adds relevant memories to the messages array.
  * @param {string} username - The username of the user.
  * @param {Array} messages - The array of messages to add relevant memories to.
+ * @param {Object} options - The options for retrieving relevant memories.
+ * @param {number} [options.minCount=6] - The minimum number of relevant memories to retrieve.
+ * @param {number} [options.maxCount=32] - The maximum number of relevant memories to retrieve.
  * @returns {Promise<void>} - A promise that resolves when the relevant memories are added to the messages array.
  */
-async function addRelevantMemories(username, messages) {
-  const relevantMemoryCount = chance.integer({ min: 6, max: 32 });
+async function addRelevantMemories(username, messages, options = {}) {
+  const { minCount = 1, maxCount = 16 } = options;
+  const relevantMemoryCount = chance.integer({ min: minCount, max: maxCount });
 
   // get the last user message to use as the query for relevant memories
   const lastUserMessage = messages
@@ -955,17 +1003,21 @@ async function addRelevantMemories(username, messages) {
 /**
  * Adds general memories to the messages array.
  * @param {Array} messages - The array of messages to add general memories to.
+ * @param {Object} options - The options for retrieving general memories.
+ * @param {number} [options.minCount=2] - The minimum number of general memories to retrieve.
+ * @param {number} [options.maxCount=8] - The maximum number of general memories to retrieve.
  * @returns {Promise<void>} - A promise that resolves when the general memories are added to the messages array.
  */
-async function addGeneralMemories(messages) {
-  const generalMemoryCount = chance.integer({ min: 2, max: 8 });
+async function addGeneralMemories(messages, options = {}) {
+  const { minCount = 3, maxCount = 20 } = options;
+  const generalMemoryCount = chance.integer({ min: minCount, max: maxCount });
   try {
     const generalMemories = await getAllMemories(generalMemoryCount);
     logger.info(`🔧 Retrieving ${generalMemoryCount} general memories`);
     generalMemories.forEach((memory) => {
       messages.push({
         role: "system",
-        content: `${memory.created_at} in conversation: ${memory.conversation_id}: ${memory.value}`,
+        content: `${memory.created_at} in conversation: ${memory.conversation_id}: ${memory.value}`
       });
     });
   } catch (err) {
@@ -1072,7 +1124,7 @@ function createTokenLimitWarning() {
   return {
     role: "user",
     content:
-      "It looks like you are reaching the token limit. In the next response, please do not use a capability. Use all of this information to summarize a response.",
+      "It looks like you are reaching the token limit. In the next response, please do not use a capability. Use all of this information to summarize a response."
   };
 }
 
@@ -1180,7 +1232,7 @@ function getHexagram() {
     61: "Inner Truth",
     62: "Preponderance of the Small",
     63: "After Completion",
-    64: "Before Completion",
+    64: "Before Completion"
   };
 
   return `${hexagramNumber}. ${hexNameMap[hexagramNumber]}`;
@@ -1326,7 +1378,7 @@ const emojis = [
   "🐁",
   "🐀",
   "🐿",
-  "🦔",
+  "🦔"
 ];
 
 // Set to store used emojis

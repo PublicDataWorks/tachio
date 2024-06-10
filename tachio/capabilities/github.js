@@ -21,17 +21,19 @@
 //         timeZone: "America/New_York",
 //         baseUrl: "https://api.github.com",
 //         log: {
-//           debug: () => {},
-//           info: () => {},
+//           debug: () => {
+//           },
+//           info: () => {
+//           },
 //           warn: console.warn,
-//           error: logger.info,
-//         },
+//           error: logger.info
+//         }
 //       });
 //
 //       this.graphqlWithAuth = graphql.defaults({
 //         headers: {
-//           authorization: `token ${process.env.GITHUB_PERSONAL_ACCESS_TOKEN}`,
-//         },
+//           authorization: `token ${process.env.GITHUB_PERSONAL_ACCESS_TOKEN}`
+//         }
 //       });
 //     } catch (error) {
 //       logger.info(error);
@@ -45,7 +47,7 @@
 //    */
 //   async createRepo(repositoryName) {
 //     const response = await this.octokit.repos.createForAuthenticatedUser({
-//       name: repositoryName,
+//       name: repositoryName
 //     });
 //     logger.info("create repo response");
 //     return JSON.stringify(response);
@@ -90,7 +92,7 @@
 //   async listUserRepos(username) {
 //     const response = await this.octokit.repos.listForUser({
 //       username: username,
-//       per_page: 100,
+//       per_page: 100
 //     });
 //     logger.info("listUserRepos response", response);
 //     return response.data.map((repo) => `${repo.name} - ${repo?.description}`);
@@ -104,7 +106,7 @@
 //   async getProjectIdFromUrl(url) {
 //     const [, , , username, , , projectId] = url.split("/");
 //     const { data: projects } = await this.octokit.projects.listForUser({
-//       username,
+//       username
 //     });
 //     const project = projects.find((project) => project.html_url === url);
 //     return project ? project.id : null;
@@ -170,6 +172,10 @@
 //         }
 //       }
 //     `);
+//     logger.info(`listProjectColumnsAndCards data: ${JSON.stringify(data)}`);
+//
+//     if (!data.node)
+//       return `No project data found for ID: ${projectId}, please check the project ID and try again.`;
 //
 //     const columns = data.node.columns.nodes;
 //     if (!columns) {
@@ -225,7 +231,7 @@
 //     const baseRef = await this.octokit.git.getRef({
 //       owner,
 //       repo: repositoryName,
-//       ref: "heads/master",
+//       ref: "heads/master"
 //     });
 //
 //     const baseSHA = baseRef.data.object.sha;
@@ -234,7 +240,7 @@
 //       owner,
 //       repo: repositoryName,
 //       ref: `refs/heads/${branchName}`,
-//       sha: baseSHA,
+//       sha: baseSHA
 //     });
 //
 //     return response.data;
@@ -248,7 +254,7 @@
 //   async listBranches(repositoryName) {
 //     const response = await this.octokit.repos.listBranches({
 //       owner: process.env.GITHUB_USER,
-//       repo: repositoryName,
+//       repo: repositoryName
 //     });
 //     return response.data;
 //   }
@@ -267,7 +273,7 @@
 //       repo: repositoryName,
 //       path: filePath,
 //       message: commitMessage,
-//       content: Buffer.from(content).toString("base64"),
+//       content: Buffer.from(content).toString("base64")
 //     });
 //     return response.data;
 //   }
@@ -285,7 +291,7 @@
 //       owner: ownerName,
 //       repo: repositoryName,
 //       title: issueTitle,
-//       body: issueBody,
+//       body: issueBody
 //     });
 //     return JSON.stringify(response.data);
 //   }
@@ -301,11 +307,11 @@
 //     const response = await this.octokit.gists.create({
 //       files: {
 //         [fileName]: {
-//           content: contentString,
-//         },
+//           content: contentString
+//         }
 //       },
 //       description: description,
-//       public: true,
+//       public: true
 //     });
 //
 //     return `Gist created! You can access it at <${response.data.html_url}> - remember not to use markdown in your response.`;
@@ -325,7 +331,7 @@
 //       repo: repositoryName,
 //       path: filePath,
 //       message: commitMessage,
-//       content: Buffer.from(newContent).toString("base64"),
+//       content: Buffer.from(newContent).toString("base64")
 //     });
 //     return response.data;
 //   }
@@ -342,7 +348,7 @@
 //       owner: process.env.GITHUB_USER,
 //       repo: repositoryName,
 //       path: filePath,
-//       message: commitMessage,
+//       message: commitMessage
 //     });
 //     return response.data;
 //   }
@@ -361,7 +367,7 @@
 //     title,
 //     headBranch,
 //     baseBranch,
-//     description,
+//     description
 //   ) {
 //     const response = await this.octokit.pulls.create({
 //       owner: process.env.GITHUB_USER,
@@ -369,7 +375,7 @@
 //       title: title,
 //       head: headBranch,
 //       base: baseBranch,
-//       body: description,
+//       body: description
 //     });
 //     return response.data;
 //   }
@@ -384,7 +390,7 @@
 //     const response = await this.octokit.repos.getContent({
 //       owner: process.env.GITHUB_USER,
 //       repo: repositoryName,
-//       path: filePath,
+//       path: filePath
 //     });
 //     return response.data;
 //   }
@@ -425,7 +431,7 @@
 //         return await githubCoach.listUserProjects(...destructuredArgs);
 //       case "listProjectColumnsAndCards":
 //         return await githubCoach.listProjectColumnsAndCards(
-//           ...destructuredArgs,
+//           ...destructuredArgs
 //         );
 //       case "addDraftIssueToProject":
 //         return await githubCoach.addDraftIssueToProject(...destructuredArgs);
@@ -448,5 +454,5 @@
 //       default:
 //         throw new Error(`Invalid method: ${method}`);
 //     }
-//   },
+//   }
 // };

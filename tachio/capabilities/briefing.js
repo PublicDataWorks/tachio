@@ -251,7 +251,7 @@ async function retrieveFeedback() {
     .eq('tags', 'feedback')
 
   if (error) {
-    console.error('Error retrieving feedback', error)
+    logger.error('Error retrieving feedback', error)
     return []
   }
 

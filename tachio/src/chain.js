@@ -37,11 +37,16 @@ module.exports = (async () => {
     retryCount = 0,
     capabilityCallCount = 0
   ) {
+    // Create a unique chain ID so we can track this specific one in the logs
+    // This is helpful if multiple chains are being processed concurrently
     const chainId = getUniqueEmoji();
 
     try {
+      // We need messages to process, at least
       if (!messages.length) {
-        logger.warn("Empty Message Chain");
+        logger.error(
+          `[${chainId}] Cannot process empty message chain, aborting.`
+        );
         return [];
       }
 
@@ -50,18 +55,23 @@ module.exports = (async () => {
         logger.warn("Last Message is undefined");
         return messages;
       }
-
+      // TODO: If the last message contains an image, then it's probably a capability response and we should return early
       if (lastMessage.image) {
         logger.info("Last Message is an Image");
         return messages;
       }
 
-      return await processMessageChainRecursively(
+      // Otherwise, let's process the message chain over and over (up to MAX_CAPABILITY_CALLS)
+      const processedMessages = await processMessageChainRecursively(
         messages,
         { username, channel, guild, related_message_id },
         capabilityCallCount,
         chainId
       );
+      logger.info(
+        `[${chainId}] Message Chain Returning Processed Messages: ${processedMessages.length} messages, ${capabilityCallCount} capability calls.`
+      );
+      return processedMessages
     } catch (error) {
       return await handleMessageChainError(
         messages,
@@ -253,14 +263,14 @@ module.exports = (async () => {
       return "Unexpected error: " + e.message;
     }
 
-    if (capabilityResponse.image) {
-      logger.info("Capability Response is an Image");
-      return capabilityResponse;
-    }
+    // if (capabilityResponse.image) {
+    //   logger.info("Capability Response is an Image");
+    //   return capabilityResponse;
+    // }
 
-    logger.info(`Capability Response: ${JSON.stringify(capabilityResponse)}`);
+    // logger.info(`Capability Response: ${JSON.stringify(capabilityResponse)}`);
 
-    return trimResponseIfNeeded(capabilityResponse);
+    // return trimResponseIfNeeded(capabilityResponse);
   }
 
   /**
@@ -271,6 +281,7 @@ module.exports = (async () => {
    * @returns {Promise<Array>} - The updated array of messages.
    */
   async function processAndLogCapabilityResponse(messages, capabilityMatch) {
+    logger.info(`processAndLogCapabilityResponse: ${capabilityMatch}`);
     let toolId, capSlug, capMethod, capArgs;
     if (capabilityMatch.length === 4) {
       [_, capSlug, capMethod, capArgs] = capabilityMatch
@@ -374,6 +385,10 @@ module.exports = (async () => {
 
   // TODO: Remove this function to simplify
   async function processCapability(messages, capabilityMatch) {
+    if (!messages) {
+      logger.error("No messages found - cannot process capability");
+      return messages;
+    }
     try {
       return await processAndLogCapabilityResponse(messages, capabilityMatch);
     } catch (error) {
@@ -404,11 +419,13 @@ module.exports = (async () => {
   ) {
     const { logInteraction } = await memoryFunctionsPromise;
 
-    logger.info(`Processing Message in chain.js`);
+    logger.info(`Processing Message in chain.js: ${lastMessage}`);
 
     let capabilityMatch = lastMessage.match(capabilityRegex) || lastMessage.match(toolUseCapabilityRegex);
+    logger.info(`Is Capability: ${!!capabilityMatch} - ${lastMessage}`);
     let capabilityName
     if (capabilityMatch) {
+      logger.info(`Capability Detected: ${lastMessage}`);
       messages = await processCapability(messages, capabilityMatch);
       if (capabilityMatch.length === 4) [_, capabilityName] = capabilityMatch
       else [_, _, capabilityName] = capabilityMatch
@@ -423,6 +440,7 @@ module.exports = (async () => {
       .reverse()
       .find((m) => m.role === "user");
     const prompt = lastUserMessage.content;
+    logger.info(`Prompt: ${prompt}`);
     const { temperature, frequency_penalty } = generateAiCompletionParams();
 
     const { aiResponse } = await generateAiCompletion(
@@ -434,6 +452,7 @@ module.exports = (async () => {
         frequency_penalty
       }
     )
+    logger.info(`AI Response: ${aiResponse}`);
     messages.push({
       role: "assistant",
       content: aiResponse
@@ -449,7 +468,7 @@ module.exports = (async () => {
     void logInteraction(
       prompt,
       aiResponse || '',
-      { username, channel, guild, relatedMessageId: storedMessageId },
+      { username, channel, guild, related_message_id: storedMessageId },
       messages,
       !!capabilityName,
       capabilityName || ""
