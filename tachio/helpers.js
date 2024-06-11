@@ -641,7 +641,7 @@ async function addPreambleToMessages(username, messages) {
   return [...preamble, ...messages.flat()];
 }
 
-// const { listTodos } = require("./capabilities/supabasetodo.js")
+// const { listTodos } = require("./capabilities/todos.js")
 
 /**
  * Assembles the message preamble for a given username.

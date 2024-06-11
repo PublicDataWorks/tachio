@@ -167,16 +167,16 @@ async function listEventsPrevWeek(calendarId) {
 /**
  * Retrieves a list of events occurring between the specified dates for the specified calendar.
  * @param {string} calendarId - The ID (email address) of the calendar to retrieve events from.
- * @param {string} startDate - The start date of the range.
- * @param {string} endDate - The end date of the range.
+ * @param {string} startDate - The start date in ISO format of the range.
+ * @param {string} endDate - The end date in ISO format of the range.
  * @returns {Promise<string>} - A promise that resolves to the list of events.
  */
 async function listEventsBetweenDates(calendarId, startDate, endDate) {
   const calendar = await getCalendarInstance();
-  const timeMax = endDate === startDate ? new Date(new Date(endDate).setHours(23, 59, 59, 999)).toISOString() : new Date(endDate).toISOString()
+  const timeMax = endDate === startDate ? new Date(new Date(endDate).setHours(23, 59, 59, 999)).toISOString() : endDate
   const response = await calendar.events.list({
     calendarId,
-    timeMin: new Date(startDate).toISOString(),
+    timeMin: startDate,
     timeMax,
     singleEvents: true,
     orderBy: "startTime"

@@ -51,8 +51,8 @@ async function getLinearWebhooks(teamId, startDate, endDate) {
     .from(WEBHOOK_TABLE_NAME)
     .select('type, data, url, updated_from, action, actor')
     .eq('team_id', teamId)
-    .gte('created_at', startDate.toISOString())
-    .lte('created_at', endDate.toISOString())
+    .gte('created_at', startDate)
+    .lte('created_at', endDate)
   if (error) throw new Error(`Error occurred while trying to fetch linear webhook ${error.message}, ${startDate}`)
   return data || []
 }

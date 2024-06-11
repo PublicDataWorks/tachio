@@ -3,7 +3,7 @@ const { createSharedLabel, createPost } = require('../src/missive')
 const { ORG_TABLE_NAME } = require('./manageorgs')
 const { supabase } = require('../src/supabaseclient')
 const { supabase: supabaseCron } = require('./pgcron')
-const { invokeWeeklyBriefing, generateWeeklyBriefingJobName, invokeProjectBriefing } = require('../src/crons')
+const { invokeBiWeeklyBriefing, generateBiWeeklyBriefingJobName, invokeProjectBriefing } = require('../src/cron-job')
 const { updateJob } = require('./pgcron')
 const { PROJECT_TABLE_NAME } = require("../src/constants");
 require('dotenv').config()
@@ -89,12 +89,12 @@ async function createProject({
       start_date: startDate || new Date(),
       end_date: endDate,
       linear_team_id: linearTeamId,
-      github_repository_urls: githubRepositoryUrls ? JSON.parse(githubRepositoryUrls) : undefined,
+      github_repository_urls: githubRepositoryUrls,
       created_at: new Date() // ElectricSQL does not support default values
     }
   ])
   if (errAddProject) throw new Error(errAddProject.message)
-  await invokeWeeklyBriefing(newProjectID)
+  await invokeBiWeeklyBriefing(newProjectID)
   await invokeProjectBriefing(newProjectID)
   return `Successfully added project: ${projectName}`
 }
@@ -147,7 +147,7 @@ async function updateProject({
       start_date: newStartDate,
       end_date: newEndDate,
       updated_at: new Date(),
-      github_repository_urls: githubRepositoryUrls ? JSON.parse(githubRepositoryUrls) : undefined
+      github_repository_urls: githubRepositoryUrls
     })
     .match({ name: projectName })
   if (errUpdateProject) throw new Error(errUpdateProject.message)
@@ -184,7 +184,7 @@ async function updateProjectStatus({ name, newStatus }) {
     const { data, error } = await supabaseCron
       .from('job')
       .select('jobid')
-      .eq('jobname', generateWeeklyBriefingJobName(existingProject[0].id))
+      .eq('jobname', generateBiWeeklyBriefingJobName(existingProject[0].id))
     if (error) throw new Error(error.message)
     if (data.length === 0) throw new Error('Job not found')
 

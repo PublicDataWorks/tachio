@@ -174,7 +174,7 @@ async function updateJob(job_id, schedule, command, active) {
 module.exports = {
   handleCapabilityMethod: async (method, args) => {
     const [arg1, arg2, arg3] = destructureArgs(args);
-    logger.info(`⚡️ Calling capability method: supabasetodo.${method}`);
+    logger.info(`⚡️ Calling capability method: pgcron.${method}`);
 
     /* args is a string passed in like
       pgcron:createJob(

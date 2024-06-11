@@ -39,26 +39,21 @@ async function getUserMemory(userId, limit = 5) {
 
 /**
  * Retrieves memories between two dates.
- * @param {string} startDate - The start date.
- * @param {string} endDate - The end date.
+ * @param {string} startDate - The start date in ISO format.
+ * @param {string} endDate - The end date in ISO format.
  * @returns {Promise<Array<Object>>} - A promise that resolves to an array of memory objects.
  */
 async function getMemoriesBetweenDates(startDate, endDate) {
-  if (!(startDate instanceof Date) || !(endDate instanceof Date)) {
-    logger.info("Invalid dates provided to getMemoriesBetweenDates");
-    return [];
-  }
-
   logger.info(`Looking for memories between ${startDate} and ${endDate}`);
   logger.info(
-    `Looking for memories between ${startDate.toISOString()} and ${endDate.toISOString()}`
+    `Looking for memories between ${startDate} and ${endDate}`
   );
 
   const response = await supabase
     .from(MEMORIES_TABLE_NAME)
     .select("*")
-    .gte("created_at", startDate.toISOString())
-    .lte("created_at", endDate.toISOString())
+    .gte("created_at", startDate)
+    .lte("created_at", endDate)
     .order("created_at", { ascending: true });
 
   const { data, error } = response;
@@ -373,8 +368,8 @@ async function getUserMessageHistory(userId, limit = 5) {
  * @param {string} channelId - The ID of the channel.
 
  * @param {number} [limit=20] - The maximum number of messages to retrieve. Default is 20.
- * @param {string} startDate - A optional start date for the retrieval.
- * @param {string} endDate - A optional end date for the retrieval.
+ * @param {string} startDate - A optional start date in ISO format for the retrieval.
+ * @param {string} endDate - A optional end date in ISO format for the retrieval.
 
  * @returns {Promise<Array<Object>>} - A promise that resolves to an array of message objects.
  */
@@ -390,8 +385,8 @@ async function getChannelMessageHistory({ channelId, limit, startDate, endDate }
   }
   if (startDate && endDate) {
     query
-      .gte("created_at", startDate.toISOString())
-      .lte("created_at", endDate.toISOString());
+      .gte("created_at", startDate)
+      .lte("created_at", endDate);
   }
 
   const { data, error } = await query
@@ -420,7 +415,7 @@ async function voyageEmbedding(input, model = "voyage-large-2-instruct") {
     body: JSON.stringify({
       input,
       model,
-      input_type: 'query'
+      input_type: 'document'
     })
   })
   logger.info(`Voyage response post status: ${response.status}`)
@@ -595,8 +590,8 @@ async function getMemoriesByString(queryString) {
 /**
  * Search for memories of a specific conversation
  * @param {string} conversationID - The conversationID to search for relevant memories.
- * @param {string} startDate - A optional start date for the retrieval.
- * @param {string} endDate - A optional end date for the retrieval.
+ * @param {string} startDate - A optional start date in ISO format for the retrieval.
+ * @param {string} endDate - A optional end date in ISO format for the retrieval.
  */
 async function getMemoriesByConversationID({ conversationID, startDate, endDate }) {
   const query = supabase
@@ -605,8 +600,8 @@ async function getMemoriesByConversationID({ conversationID, startDate, endDate 
     .eq("conversation_id", conversationID);
   if (startDate && endDate) {
     query
-      .gte("created_at", startDate.toISOString())
-      .lte("created_at", endDate.toISOString());
+      .gte("created_at", startDate)
+      .lte("created_at", endDate);
   }
 
   const { data, error } = await query
@@ -616,7 +611,7 @@ async function getMemoriesByConversationID({ conversationID, startDate, endDate 
     return null;
   }
 
-  return data;
+  return data || [];
 }
 
 module.exports = {

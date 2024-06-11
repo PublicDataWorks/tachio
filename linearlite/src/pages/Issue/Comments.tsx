@@ -70,6 +70,15 @@ function Comments({ issue }: CommentsProps) {
         username: session!.user.email!,
       },
     })
+    db.issues.update({
+      data: {
+        updated_at: new Date()
+      },
+      where: {
+        id: issue.id
+      }
+    })
+    // New comments are counted as updates to be used when creating briefings
     setNewCommentBody('')
   }
 

@@ -1,6 +1,6 @@
 const { parseJSONArg, TODO_TABLE_NAME } = require("../helpers");
 const { supabase } = require('../src/supabaseclient')
-const logger = require("../src/logger")('capability-supabasetodo')
+const logger = require("../src/logger")('capability-todos')
 
 /**
  * Creates a new todo item in the database. This capability allows for the creation of a new todo item within a specified project. It supports optional details such as description, status, priority, external URLs, and attachments, making it flexible for various use cases. The function defaults to setting the todo's status to "To Do" if not specified, ensuring a new todo is actionable immediately upon creation.
@@ -124,7 +124,7 @@ async function listTodos() {
 module.exports = {
   handleCapabilityMethod: async (method, args) => {
     const jsonArgs = parseJSONArg(args)
-    logger.info(`⚡️ Calling capability method: supabasetodo.${method} \n ${args}`);
+    logger.info(`⚡️ Calling capability method: todos.${method} \n ${args}`);
 
     if (method === "createTodo") {
       return await createTodo(jsonArgs);

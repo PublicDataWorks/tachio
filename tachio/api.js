@@ -24,14 +24,15 @@ const {
   makeProjectBriefing,
   makeDailyBriefing
 } = require('./capabilities/briefing')
-const { getWeek } = require('date-fns')
+const { getWeek, differenceInMilliseconds } = require('date-fns')
 const {
   BIWEEKLY_BRIEFING,
   PROJECT_BRIEFING,
   PROJECT_TABLE_NAME,
-  MISSIVE_CONVERSATIONS_TABLE_NAME
+  MISSIVE_CONVERSATIONS_TABLE_NAME, WEEKLY_BRIEFING, DAILY_BRIEFING
 } = require('./src/constants')
 const { getConfigFromSupabase } = require("./helpers");
+const { processPTRequest } = require("./src/pivotal-tracker");
 require('dotenv').config()
 
 let port = process.env.EXPRESS_PORT
@@ -152,7 +153,7 @@ async function processMissiveRequest(body, query) {
     contextPrompt = 'I want to record this as a todo (no further action needed beyond that). '
       + (task.completed_at ? `This todo is already completed at ${new Date(task.completed_at * 1000)}. \n` : `This todo is not completed yet. \n`)
   } else if (body.comment.attachment?.media_type === 'text') {
-    contextPrompt = `ingest:deepDocumentIngest(${body.comment.attachment.url}, ${conversationId})`
+    contextPrompt = `ingest:read(${body.comment.attachment.url}, ${conversationId})`
   }
   // Process the webhook payload using the processWebhookPayload function
   const simplifiedPayload = processWebhookPayload(body)
@@ -160,7 +161,7 @@ async function processMissiveRequest(body, query) {
   // Check if there are any attachments in the comment
   const attachment = body.comment.attachment
 
-  // text memory is handled by deepDocumentIngest
+  // text memory is handled by ingest::read
   if (attachment && body.comment.attachment?.media_type !== 'text') {
     // Extract the resource ID from the attachment
     const resourceId = attachment.id
@@ -400,6 +401,13 @@ app.post('/api/github', async (req, res) => {
   res.status(200).end()
 })
 
+app.post('/api/pivotal-tracker', async (req, res) => {
+  processPTRequest(req.body).then(() => logger.info('Pivotal tracker webhook processed'))
+    .catch((error) => logger.error(`Error processing Pivotal tracker webhook: ${error.message} ${error.stack}`))
+  logger.info(`Sending 200 response`)
+  res.status(204).end()
+})
+
 app.post('/api/missive-daily-report', async (req, res) => {
   res.status(200).end()
 
@@ -412,8 +420,8 @@ app.post('/api/missive-daily-report', async (req, res) => {
     })
 })
 
-// TODO: Add back validateAuthorizationHeader
-app.post(BIWEEKLY_BRIEFING, async (req, res) => {
+app.post(BIWEEKLY_BRIEFING, validateAuthorizationHeader, async (req, res) => {
+  res.status(204).end()
   const projectId = req.body.projectId;
   if (projectId?.length !== 36) {
     logger.error(`Error processing biweekly: Invalid projectID. Data: ${projectId}`);
@@ -426,21 +434,20 @@ app.post(BIWEEKLY_BRIEFING, async (req, res) => {
     .eq('id', projectId)
   if (error || !data || data.length === 0) {
     logger.error(`Error processing biweekly: Project not found. Data: ${projectId} ${error?.message}`);
-    return res.status(400).json({ error: 'Invalid projectID' });
+    return
   }
   const project = data[0]
   // Assume that last_sent_biweekly_briefing is in the past
   // Cron jobs cannot run biweekly directly, so we use a workaround to run it weekly and check if the task is within a 2-week period.
-  // TODO: commented out for testing, add back later
   // TODO: do nothing if last_sent_biweekly_briefing is null
-  // const within2Weeks = differenceInMilliseconds(new Date(), new Date(project.last_sent_biweekly_briefing)) < (14 * 24 * 60 * 60 - 5 * 60) * 1000 // 2 weeks - 5 minutes to account for potential delays
-  // if (within2Weeks) {
-  //   logger.error(`Error processing biweekly: Project already sent briefing in the last 2 weeks. Data: ${projectID} ${project.last_sent_biweekly_briefing}`);
-  //   return res.status(400).json({ error: 'Project already sent briefing in the last 2 weeks' });
-  // }
-  res.status(204).end()
+  const within2Weeks = differenceInMilliseconds(new Date(), new Date(project.last_sent_biweekly_briefing)) < (14 * 24 * 60 * 60 - 5 * 60) * 1000 // 2 weeks - 5 minutes to account for potential delays
+  if (!project.last_sent_biweekly_briefing || within2Weeks) {
+    logger.error(`Error processing biweekly: Project already sent briefing in the last 2 weeks. Data: ${projectId} ${project.last_sent_biweekly_briefing}`);
+    return
+  }
 
   const briefing = await makeBiweeklyProjectBriefing(project.name)
+  logger.info(`Biweekly briefing: \n ${briefing}`)
   await sendMissiveResponse({
     message: briefing,
     notificationTitle: `Biweekly briefing for ${project.name}`,
@@ -463,23 +470,23 @@ app.post(BIWEEKLY_BRIEFING, async (req, res) => {
     })
 })
 
-// TODO: Add back validateAuthorizationHeader
-app.post("/api/weekly-briefing", async (req, res) => {
+app.post(WEEKLY_BRIEFING, validateAuthorizationHeader, async (req, res) => {
   // Call by pg_cron, so we need to return 2xx to avoid spamming
   res.status(204).end()
   const today = new Date();
   const weekOfYear = `${getWeek(today)}_${today.getFullYear()}`;
-  // const { data, error } = await supabase
-  //   .from('weekly_conversations')
-  //   .select("id")
-  //   .limit(1)
-  //   .eq("week_of_year", weekOfYear)
-  // TODO: Add back later
-  // if (error || data?.length !== 0) {
-  //   logger.error(`Error processing weekly: ${error?.message} ${JSON.stringify(data)} ${weekOfYear}`);
-  //   return
-  // }
+  const { data, error } = await supabase
+    .from('weekly_conversations')
+    .select("id")
+    .limit(1)
+    .eq("week_of_year", weekOfYear)
+  if (error || (data && data.length > 0)) {
+    logger.error(`Error processing weekly: ${error?.message} ${JSON.stringify(data)} ${weekOfYear}`);
+    return
+  }
+
   const briefing = await makeWeeklyBriefing()
+  logger.info(`Weekly briefing: \n ${briefing}`)
   const title = `Weekly conversation for week ${getWeek(today)} of ${today.getFullYear()}`
   const newPost = await sendMissiveResponse({
     message: briefing,
@@ -493,18 +500,15 @@ app.post("/api/weekly-briefing", async (req, res) => {
     logger.error(`Error creating new thread for weekly conversation: ${JSON.stringify(newPost)}`);
     return
   }
-  // TODO: Revert to insert later
   const { error: errorNewWeekly } = await supabase
     .from("weekly_conversations")
-    .upsert(
-      { conversation_id: conversationId, week_of_year: weekOfYear, briefing },
-      { onConflict: 'week_of_year', ignoreDuplicates: false }
+    .insert(
+      { conversation_id: conversationId, week_of_year: weekOfYear, briefing }
     );
-  // if (errorNewWeekly) logger.error(`Error insert new weekly conversation: ${errorNewWeekly.message}, ${weekOfYear}, ${conversationId}`);
+  if (errorNewWeekly) logger.error(`Error insert new weekly conversation: ${errorNewWeekly.message}, ${weekOfYear}, ${conversationId}`);
 })
 
-
-app.post(PROJECT_BRIEFING, async (req, res) => {
+app.post(PROJECT_BRIEFING, validateAuthorizationHeader, async (req, res) => {
   res.status(204).end()
   const projectId = req.body.projectId
   if (!projectId) {
@@ -533,6 +537,7 @@ app.post(PROJECT_BRIEFING, async (req, res) => {
   }
 
   const briefing = await makeProjectBriefing(data[0].name)
+  logger.info(`Project briefing: \n ${briefing}`)
   await sendMissiveResponse({
     message: briefing,
     conversationId: weeklyConversation[0].conversation_id,
@@ -555,7 +560,7 @@ app.post(PROJECT_BRIEFING, async (req, res) => {
 })
 
 
-app.post('/api/daily-briefing', async (req, res) => {
+app.post(DAILY_BRIEFING, validateAuthorizationHeader, async (req, res) => {
   res.status(204).end()
   const today = new Date()
   const weekOfYear = `${getWeek(today)}_${today.getFullYear()}`;
@@ -564,11 +569,11 @@ app.post('/api/daily-briefing', async (req, res) => {
     .select('conversation_id')
     .eq('week_of_year', weekOfYear)
   if (error || weeklyConversation?.length === 0) {
-    logger.error(`Error processing project-briefing: ${error?.message} ${JSON.stringify(data)} ${weekOfYear}`);
+    logger.error(`Error processing project-briefing: ${error?.message} ${JSON.stringify(weeklyConversation)} ${weekOfYear}`);
     return
   }
   const briefing = await makeDailyBriefing()
-
+  logger.info(`Daily briefing: \n ${briefing}`)
   await sendMissiveResponse({
     message: briefing,
     conversationId: weeklyConversation[0].conversation_id,

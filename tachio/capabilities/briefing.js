@@ -2,7 +2,6 @@ const dotenv = require('dotenv')
 const dateFns = require('date-fns')
 dotenv.config()
 const {
-  getRelevantMemories,
   getMemoriesByString, getMemoriesByConversationID, getChannelMessageHistory, getMemoriesBetweenDates
 } = require('../src/remember')
 const logger = require('../src/logger')('briefing')
@@ -50,11 +49,13 @@ async function handleCapabilityMethod(method, args) {
 async function makeWeeklyBriefing() {
   try {
     const now = new Date();
-    const weekLater = addWeeks(now, 1);
-    const weekBefore = subWeeks(now, 1);
-    const todoChanges = await listTodoChanges({ startDate: weekBefore, endDate: now });
-    const calendarEntries = await readCalendar({ startDate: now, endDate: weekLater });
-    const weekMemories = await getMemoriesBetweenDates(weekBefore, now)
+    const nowISO = now.toISOString()
+    const weekLater = addWeeks(now, 1).toISOString();
+    const weekBefore = subWeeks(now, 1).toISOString();
+    // Can't annotate projectId as potentially undefined because it would break _persist-manifest
+    const todoChanges = await listTodoChanges({ startDate: weekBefore, endDate: nowISO, projectId: undefined });
+    const calendarEntries = await readCalendar({ startDate: nowISO, endDate: weekLater });
+    const weekMemories = await getMemoriesBetweenDates(weekBefore, nowISO)
     const activeProjects = await getActiveProjects()
     return await generateMetaSummary({
       projectSummaries: activeProjects,
@@ -72,15 +73,15 @@ async function makeWeeklyBriefing() {
  * @returns {Promise<String>} A promise that resolves to a string indicating the status of the daily briefing.
  */
 async function makeDailyBriefing() {
-  const startDate = createDateInTimeZone(6, 0, 'America/Los_Angeles', -1);
-  const endDate = createDateInTimeZone(6, 0, 'America/Los_Angeles', 1);
+  const startDate = createDateInTimeZone(6, 0, 'America/Los_Angeles', -1).toISOString();
+  const endDate = createDateInTimeZone(6, 0, 'America/Los_Angeles', 2).toISOString();
 
   const calendarEntries = await readCalendar({ startDate, endDate })
   const pendingTodos = await listPendingTodos()
   const { data, error } = await supabase.from('project_briefings')
-    .select('*')
-    .gte('created_at', startDate.toISOString())
-    .lte('created_at', endDate.toISOString())
+    .select('content, projects (name)')
+    .gte('created_at', startDate)
+    .lte('created_at', endDate)
   if (error) logger.error(`Error fetching project briefings in makeDailyBriefing: ${error.message}`)
   return await generateDailyBriefing(calendarEntries, pendingTodos, data)
 }
@@ -92,24 +93,30 @@ async function makeDailyBriefing() {
 async function makeProjectBriefing(projectName) {
   const { data, error } = await supabase
     .from(PROJECT_TABLE_NAME)
-    .select('id, missive_conversation_id, missive_label_id, github_repository_url, linear_team_id')
+    .select('id, missive_conversation_id, missive_label_id, github_repository_urls, linear_team_id')
     .eq('name', projectName)
     .limit(1)
   if (error || !data || data.length === 0) throw new Error(`Error occurred while trying to fetch project in making project briefing ${projectName}: ${error?.message} ${data}`)
   const project = data[0]
 
-  const { data: labeledConversations, error: fetchConversation } = await supabase
+  const { data: labeledConversations, error: fetchConversationError } = await supabase
     .from(MISSIVE_CONVERSATIONS_TABLE_NAME)
     .select('id')
     .contains('label_ids', [project.missive_label_id])
-  if (fetchConversation) throw new Error(`Error occurred while trying to fetch ${MISSIVE_CONVERSATIONS_TABLE_NAME} in making project briefing ${projectName}: ${fetchConversation?.message}`)
+  if (fetchConversationError) throw new Error(`Error occurred while trying to fetch ${MISSIVE_CONVERSATIONS_TABLE_NAME} in making project briefing ${projectName}: ${fetchConversationError?.message}`)
   const labelConversationIds = []
-  if (labeledConversations.length > 0) labelConversationIds.push(...labeledConversations.map(conversation => conversation.id))
+  if (labeledConversations.length > 0) {
+    labelConversationIds.push(
+      ...labeledConversations
+        .filter(conversation => conversation.id !== project.id)
+        .map(conversation => conversation.id)
+    )
+  }
+  const startDate = createDateInTimeZone(5, 30, 'America/Los_Angeles', -1).toISOString();
+  const endDate = createDateInTimeZone(21, 30, 'America/Los_Angeles').toISOString();
 
-  const startDate = createDateInTimeZone(5, 30, 'America/Los_Angeles', -10);
-  const endDate = createDateInTimeZone(21, 30, 'America/Los_Angeles', 2);
-
-  const todoChanges = await listTodoChanges({ startDate, endDate })
+  // Can't annotate projectId as potentially undefined because it would break _persist-manifest
+  const todoChanges = await listTodoChanges({ startDate, endDate, projectId: undefined })
   const conversationMessages = await getChannelMessageHistory({
     channelId: project.missive_conversation_id,
     startDate,
@@ -125,7 +132,7 @@ async function makeProjectBriefing(projectName) {
     memories: importedMemories
   } = await processImportedConversations([...importedConversationIds, ...labelConversationIds])
 
-  const relevantMemories = await getRelevantMemories(projectName)
+  // const relevantMemories = await getRelevantMemories(projectName) // TODO: TBD
   const memoriesMentioningProject = await getMemoriesByString(projectName)
   const memoriesInProjectConversation = await getMemoriesByConversationID({
     conversationID: project.missive_conversation_id,
@@ -133,13 +140,19 @@ async function makeProjectBriefing(projectName) {
     endDate
   })
 
-  const githubWebhooks = await getGithubWebhooks(project.github_repository_url, startDate, endDate)
+  let githubUrls
+  try {
+    githubUrls = JSON.parse(project.github_repository_urls)
+  } catch (e) {
+    logger.error(`Error parsing github repository urls: ${e.message} ${projectName} ${project.github_repository_urls}`)
+  }
+  const githubWebhooks = await getGithubWebhooks(githubUrls, startDate, endDate)
   const linearWebhooks = await getLinearWebhooks(project.linear_team_id, startDate, endDate)
+  // TODO: Get PT
   const { PROJECT_BRIEFING_TEMPLATE } = await getPromptsFromSupabase();
-  if (todoChanges.length > 0 || conversationMessages.length > 0 || importedMessages.length > 0 || importedMemories.length > 0 || relevantMemories.length > 0 || memoriesInProjectConversation.length > 0 || githubWebhooks.length > 0 || linearWebhooks.length > 0 || memoriesMentioningProject.length > 0) {
+  if (todoChanges.length > 0 || conversationMessages.length > 0 || importedMessages.length > 0 || importedMemories.length > 0 || memoriesInProjectConversation.length > 0 || githubWebhooks.length > 0 || linearWebhooks.length > 0 || memoriesMentioningProject.length > 0) {
     return await generateProjectSummary({
       projectName,
-      relevantMemories,
       todoChanges,
       conversationMessages,
       memoriesMentioningProject,
@@ -169,10 +182,10 @@ async function makeBiweeklyProjectBriefing(projectName) {
     .limit(1)
   if (error || !data || data.length === 0) throw new Error(`Error occurred while trying to fetch project in making biweekly project briefing ${projectName}: ${error.message}`)
   const project = data[0]
-  const startDate = createDateInTimeZone(0, 0, 'America/Los_Angeles', -14);
-  const endDate = createDateInTimeZone(0, 0, 'America/Los_Angeles');
+  const startDate = createDateInTimeZone(0, 0, 'America/Los_Angeles', -14).toISOString()
+  const endDate = createDateInTimeZone(0, 0, 'America/Los_Angeles').toISOString()
 
-  const relevantMemories = await getRelevantMemories(projectName)
+  // const relevantMemories = await getRelevantMemories(projectName) // TODO: TBD
   const memoriesMentioningProject = await getMemoriesByString(projectName)
   const memoriesInProjectConversation = await getMemoriesByConversationID({
     conversationID: project.missive_conversation_id,
@@ -204,8 +217,8 @@ async function makeBiweeklyProjectBriefing(projectName) {
     .from(DAILY_REPORT_TABLE_NAME)
     .select('subject, content')
     .eq('project_id', project.id)
-    .gte('created_at', startDate.toISOString())
-    .lte('created_at', endDate.toISOString())
+    .gte('created_at', startDate)
+    .lte('created_at', endDate)
 
   if (errorFetchDailyReports) throw new Error(`Error occurred while trying to fetch daily reports in making biweekly project briefing: ${error.message}`)
   const { BIWEEKLY_BRIEFING_TEMPLATE } = await getPromptsFromSupabase();
@@ -216,7 +229,6 @@ async function makeBiweeklyProjectBriefing(projectName) {
     projectName: projectName,
     calendarEntries,
     conversationMessages,
-    relevantMemories,
     memoriesMentioningProject,
     memoriesInProjectConversation,
     dailyReports,
@@ -358,17 +370,21 @@ In the previous message I just sent, please identify any GitHub Repos, Issues, M
 
 /**
  * Lists all todo changes from this week (added, edited, deleted).
- * @param {string} startDate - A optional start date for the todo changes. Leave it empty to default to the current week.
- * @param {string} endDate - A optional end date for the todo changes. Leave it empty to default to the current week.
+ * @param {string} startDate - A optional start date in ISO format for the todo changes. Leave it empty to default to the current week.
+ * @param {string} endDate - A optional end date in ISO format for the todo changes. Leave it empty to default to the current week.
+ * @param {string} projectId - A optional project id to be filtered
  * @returns {Promise<Array>} A promise that resolves to an array of todo changes.
  */
-async function listTodoChanges({ startDate, endDate } = {}) {
-  const { data, error } = await supabase
+async function listTodoChanges({ startDate, endDate, projectId }) {
+  const query = supabase
     .from('issues')
     .select('*')
-    .gte('updated_at', startDate?.toISOString() || dateFns.startOfWeek(new Date()))
-    .lte('updated_at', endDate?.toISOString() || dateFns.endOfWeek(new Date()))
-
+    .gte('updated_at', startDate || dateFns.startOfWeek(new Date()).toISOString())
+    .lte('updated_at', endDate || dateFns.endOfWeek(new Date()).toISOString())
+  if (projectId) {
+    query.eq('project_id', projectId)
+  }
+  const { data, error } = await query
   if (error) {
     logger.error(`Error retrieving todo changes: ${JSON.stringify(error)}`)
     return []
@@ -379,8 +395,8 @@ async function listTodoChanges({ startDate, endDate } = {}) {
 
 /**
  * Reads the calendar for the current week.
- * @param {string} startDate - An optional start date for the calendar entries, leave it empty to default to the current week.
- * @param {string} endDate - An optional end date for the calendar entries, leave it empty to default to the current week.
+ * @param {string} startDate - An optional start date in ISO format for the calendar entries, leave it empty to default to the current week.
+ * @param {string} endDate - An optional end date in ISO format for the calendar entries, leave it empty to default to the current week.
  *
  * @returns {Promise<array>} A promise that resolves to an object containing calendar entries.
  */
@@ -391,8 +407,8 @@ async function readCalendar({ startDate, endDate }) {
     const promises = calendarIds.map(async (calendarId) => {
       const events = await listEventsBetweenDates(
         calendarId,
-        startDate || dateFns.subWeeks(new Date(), 1),
-        endDate || dateFns.addWeeks(new Date(), 1)
+        startDate || dateFns.subWeeks(new Date(), 1).toISOString(),
+        endDate || dateFns.addWeeks(new Date(), 1).toISOString()
       )
       return JSON.parse(events)
     })
@@ -444,28 +460,35 @@ async function generateProjectSummary({
   logger.info(`Generating project summary for: ${projectName}`)
   const messages = []
 
+  messages.push({
+    role: 'user',
+    content: `Can you please generate a detailed summary for the ${projectName} project from ${startDate} to ${endDate} based on your own analysis and understanding?
+     Focus solely on creating the summary without utilizing any other capabilities. Please do the best you can using only the data I provide, do not mention or comment on any missing data or gaps.
+     Be as detailed as possible based on this: ${template}`
+  })
+
   if (projectName) {
     messages.push({
       role: 'user',
-      content: `I want to generate a summary for project ${projectName}`
+      content: `I want to generate a summary of the recent progress in the ${projectName} project`
     })
   }
 
   if (relevantMemories && relevantMemories.length > 0) {
     messages.push({
       role: 'user',
-      content: `Here are the relevant memories for project ${projectName}: ${
+      content: `Here are the relevant memories for the ${projectName} project: ${
         relevantMemories.map(memory => memory.value).join('\n')}`
     })
   } else {
-    logger.info(`No relevant memories found for project ${projectName}`)
+    logger.info(`No relevant memories found for the ${projectName} project`)
   }
 
   if (conversationMessages && conversationMessages.length > 0) {
     messages.push({
       role: 'user',
-      content: `Here are comments written by users into the project ${projectName}: ${
-        conversationMessages.map(message => message.value).join('\n')}`
+      content: `Here are comments written by users into the ${projectName} project: ${
+        conversationMessages.map(message => `${message.value} with assistant response ${message.assistant_response}`).join('\n')}`
     })
   } else {
     logger.info(`No comments written by users found for project ${projectName}`)
@@ -474,21 +497,21 @@ async function generateProjectSummary({
   if (todoChanges && todoChanges.length > 0) {
     messages.push({
       role: 'user',
-      content: `Here are the todo changes for project ${projectName}: ${JSON.stringify(todoChanges)}`
+      content: `Here are the todo changes for the ${projectName} project: ${JSON.stringify(todoChanges)}`
     })
   } else {
-    logger.info(`No todo changes found for project ${projectName}`)
+    logger.info(`No todo changes found for the ${projectName} project`)
   }
 
   if (memoriesMentioningProject && memoriesMentioningProject.length > 0) {
     messages.push({
       role: 'user',
-      content: `These memories reference the project ${projectName}: ${
+      content: `These memories reference the the ${projectName} project: ${
         memoriesMentioningProject.map(memory => memory.value).join('\n')
       }`
     })
   } else {
-    logger.info(`No memories mentioning project found for project ${projectName}`)
+    logger.info(`No memories mentioning project found for the ${projectName} project`)
   }
 
   if (memoriesInProjectConversation && memoriesInProjectConversation.length > 0) {
@@ -497,44 +520,44 @@ async function generateProjectSummary({
     if (attachmentMemories.length > 0) {
       messages.push({
         role: 'user',
-        content: `These attachment memories in the project ${projectName} conversation: ${
+        content: `These attachment memories in the ${projectName} project's conversation: ${
           attachmentMemories.map((memory) => memory.value).join('\n')}`
       })
     }
     if (messageMemories.length > 0) {
       messages.push({
         role: 'user',
-        content: `These message memories in the project ${projectName} conversation: ${
+        content: `These message memories in the ${projectName} project's conversation: ${
           messageMemories.map((memory) => memory.value).join('\n')
         }`
       })
     }
   } else {
-    logger.info(`No memories in project conversation found for project ${projectName}`)
+    logger.info(`No memories in project conversation found for the ${projectName} project`)
   }
 
   if (importedMemories && importedMemories.length > 0) {
     messages.push({
       role: 'user',
-      content: `These memories are imported into the project ${projectName}: ${JSON.stringify(importedMemories)}`
+      content: `These new memories are related to the ${projectName} project: ${JSON.stringify(importedMemories)}`
     })
   } else {
-    logger.info(`No memories imported into the project ${projectName}`)
+    logger.info(`No memories related to the ${projectName}project`)
   }
 
   if (importedMessages && importedMessages.length > 0) {
     messages.push({
       role: 'user',
-      content: `These messages are imported into the project ${projectName}: ${JSON.stringify(importedMessages)}`
+      content: `These new messages are related to the ${projectName} project: ${JSON.stringify(importedMessages)}`
     })
   } else {
-    logger.info(`No messages imported into the project ${projectName}`)
+    logger.info(`No messages related to the ${projectName} project`)
   }
 
   if (githubWebhooks && githubWebhooks.length > 0) {
     messages.push({
       role: 'user',
-      content: `Here are the Github webhook history for project ${projectName}: ${
+      content: `Here are the Github webhook history for the ${projectName} project: ${
         githubWebhooks.map(data => JSON.stringify(data)).join('\n')
       }`
     })
@@ -545,40 +568,31 @@ async function generateProjectSummary({
   if (linearWebhooks && linearWebhooks.length > 0) {
     messages.push({
       role: 'user',
-      content: `Here are the Linear webhook history for project ${projectName}: ${
+      content: `Here are the Linear webhook history for the ${projectName} project: ${
         linearWebhooks.map(data => JSON.stringify(data)).join('\n')
       }`
     })
   } else {
-    logger.info(`No Linear webhooks found for project ${projectName}`)
+    logger.info(`No Linear webhooks found for the ${projectName} project`)
   }
 
   if (calendarEntries && Object.keys(calendarEntries).length > 0) {
     messages.push({
       role: 'user',
-      content: `Here are the calendar entries for project ${
-        projectName
-      }: ${JSON.stringify(calendarEntries)}`
+      content: `Here are the calendar entries for the ${projectName} project: ${JSON.stringify(calendarEntries)}`
     })
   } else {
-    logger.info(`No calendar found for project ${projectName}`)
+    logger.info(`No calendar found for the ${projectName} project`)
   }
 
   if (dailyReports) {
     messages.push({
       role: 'user',
-      content: `Here are daily reports for project ${JSON.stringify(dailyReports)}`
+      content: `Here are daily reports for the ${projectName} project: ${JSON.stringify(dailyReports)}`
     })
   } else {
-    logger.info(`No daily report found for project ${projectName}`)
+    logger.info(`No daily report found for the ${projectName} project`)
   }
-
-  messages.push({
-    role: 'user',
-    content: `Can you please generate a detailed summary for project ${projectName} from ${startDate} to ${endDate} based on your own analysis and understanding?
-     Focus solely on creating the summary without utilizing any other capabilities. Please do the best you can using only the data I provide, do not mention or comment on any missing data or gaps.
-     Be as detailed as possible based on this: ${template}`
-  })
 
   return await createChatCompletion(messages)
 }
@@ -620,19 +634,22 @@ async function generateMetaSummary({
       content: `Here are todo changes from last week: ${JSON.stringify(todoChanges)}`
     })
   }
-  messages.push({
-    role: 'user',
-    content: `Here are the active projects with their to-do list. Each to-do has its own rank in terms of urgency: ${JSON.stringify(projectSummaries)}`
-  })
+
+  if (projectSummaries && projectSummaries.length > 0) {
+    messages.push({
+      role: 'user',
+      content: `Here are the active projects with their to-do list. Each to-do has its own rank in terms of urgency: ${JSON.stringify(projectSummaries)}`
+    })
+  }
   return await createChatCompletion([
-    ...messages,
     {
       role: 'user',
       content: `Can you please generate a detailed summary based on your own analysis and understanding?
      Focus solely on creating the summary without utilizing any other capabilities. Please do the best you can using only the data I provide, do not mention or comment on any missing data or gaps.
      ${WEEKLY_BRIEFING_TEMPLATE}
       `
-    }
+    },
+    ...messages
   ])
 }
 
@@ -721,7 +738,10 @@ async function processImportedConversations(uuids, startDate, endDate) {
     try {
       const channelMessageHistory = await getChannelMessageHistory({ channelId: uuid, startDate, endDate, limit: 30 });
       const memoryHistory = await getMemoriesByConversationID({ conversationID: uuid, startDate, endDate });
-      channelMessageHistory.length > 0 && messages.push(`ConversationID ${uuid}. Message history: ${JSON.stringify(channelMessageHistory.map(message => ({ value: message.value })))}`)
+      channelMessageHistory.length > 0 && messages.push(`ConversationID ${uuid}. Message history: ${channelMessageHistory.map(message => ({
+        value: message.value,
+        assistant_response: message.assistant_response
+      }))}`)
       memoryHistory.length > 0 && memories.push(`ConversationID ${uuid}. Memories: ${JSON.stringify(memoryHistory.map(message => ({ value: message.value })))}`)
     } catch (error) {
       logger.error(`Error processing UUID ${uuid}: ${error} ${error.stack}`);
@@ -746,10 +766,17 @@ async function listPendingTodos() {
 
 async function generateDailyBriefing(calendarEntries, pendingTodos, projectBriefings) {
   const { DAILY_BRIEFING_TEMPLATE } = await getPromptsFromSupabase();
-
   const today = new Date()
   logger.info(`Generating daily briefing for: ${today}`)
   const messages = []
+
+  messages.push({
+    role: 'user',
+    content: `Can you please generate a detailed summary for today briefing ${today} based on your own analysis and understanding?
+     Focus solely on creating the summary without utilizing any other capabilities. Please do the best you can using only the data I provide, do not mention or comment on any missing data or gaps.
+     ${DAILY_BRIEFING_TEMPLATE}
+     `
+  })
 
   messages.push({
     role: 'user',
@@ -763,17 +790,9 @@ async function generateDailyBriefing(calendarEntries, pendingTodos, projectBrief
 
   messages.push({
     role: 'user',
-    content: `Here are the project briefings yesterday: ${
-      projectBriefings.map(briefing => briefing.content).join('\n')
+    content: `Here are the project briefings for today: ${
+      projectBriefings.map(briefing => `${briefing.content} of ${briefing.projects.name} project`).join('\n')
     }`
-  })
-
-  messages.push({
-    role: 'user',
-    content: `Can you please generate a detailed summary for today briefing ${today} based on your own analysis and understanding?
-     Focus solely on creating the summary without utilizing any other capabilities. Please do the best you can using only the data I provide, do not mention or comment on any missing data or gaps.
-     ${DAILY_BRIEFING_TEMPLATE}
-     `
   })
 
   return await createChatCompletion(messages)
@@ -784,5 +803,6 @@ module.exports = {
   makeBiweeklyProjectBriefing,
   makeWeeklyBriefing,
   makeProjectBriefing,
-  makeDailyBriefing
+  makeDailyBriefing,
+  listTodoChanges
 }

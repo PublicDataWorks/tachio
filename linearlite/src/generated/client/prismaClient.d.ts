@@ -55,7 +55,7 @@ export type Issues = {
   title: string
   description: string
   created_at: Date
-  kanbanorder: string
+  kanbanorder: string | null
   username: string
   external_urls: string | null
   completed_at: Date | null
@@ -154,6 +154,8 @@ export type Projects = {
    */
   linear_team_id: string | null
   pivotal_tracker_id: bigint | null
+  last_sent_biweekly_briefing: Date | null
+  github_repository_urls: string | null
 }
 
 /**
@@ -3414,7 +3416,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     title: string
     description: string
     created_at: Date
-    kanbanorder: string
+    kanbanorder: string | null
     username: string
     external_urls: string | null
     completed_at: Date | null
@@ -5469,6 +5471,8 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     status: project_status | null
     linear_team_id: string | null
     pivotal_tracker_id: bigint | null
+    last_sent_biweekly_briefing: Date | null
+    github_repository_urls: string | null
   }
 
   export type ProjectsMaxAggregateOutputType = {
@@ -5488,6 +5492,8 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     status: project_status | null
     linear_team_id: string | null
     pivotal_tracker_id: bigint | null
+    last_sent_biweekly_briefing: Date | null
+    github_repository_urls: string | null
   }
 
   export type ProjectsCountAggregateOutputType = {
@@ -5508,6 +5514,8 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     status: number
     linear_team_id: number
     pivotal_tracker_id: number
+    last_sent_biweekly_briefing: number
+    github_repository_urls: number
     _all: number
   }
 
@@ -5537,6 +5545,8 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     status?: true
     linear_team_id?: true
     pivotal_tracker_id?: true
+    last_sent_biweekly_briefing?: true
+    github_repository_urls?: true
   }
 
   export type ProjectsMaxAggregateInputType = {
@@ -5556,6 +5566,8 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     status?: true
     linear_team_id?: true
     pivotal_tracker_id?: true
+    last_sent_biweekly_briefing?: true
+    github_repository_urls?: true
   }
 
   export type ProjectsCountAggregateInputType = {
@@ -5576,6 +5588,8 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     status?: true
     linear_team_id?: true
     pivotal_tracker_id?: true
+    last_sent_biweekly_briefing?: true
+    github_repository_urls?: true
     _all?: true
   }
 
@@ -5689,6 +5703,8 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     status: project_status | null
     linear_team_id: string | null
     pivotal_tracker_id: bigint | null
+    last_sent_biweekly_briefing: Date | null
+    github_repository_urls: string | null
     _count: ProjectsCountAggregateOutputType | null
     _avg: ProjectsAvgAggregateOutputType | null
     _sum: ProjectsSumAggregateOutputType | null
@@ -5728,6 +5744,8 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     status?: boolean
     linear_team_id?: boolean
     pivotal_tracker_id?: boolean
+    last_sent_biweekly_briefing?: boolean
+    github_repository_urls?: boolean
     issues?: boolean | Projects$issuesArgs
     orgs?: boolean | OrgsArgs
     _count?: boolean | ProjectsCountOutputTypeArgs
@@ -7672,7 +7690,9 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     history: 'history',
     status: 'status',
     linear_team_id: 'linear_team_id',
-    pivotal_tracker_id: 'pivotal_tracker_id'
+    pivotal_tracker_id: 'pivotal_tracker_id',
+    last_sent_biweekly_briefing: 'last_sent_biweekly_briefing',
+    github_repository_urls: 'github_repository_urls'
   };
 
   export type ProjectsScalarFieldEnum = (typeof ProjectsScalarFieldEnum)[keyof typeof ProjectsScalarFieldEnum]
@@ -7811,7 +7831,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     title?: StringFilter | string
     description?: StringFilter | string
     created_at?: DateTimeFilter | Date | string
-    kanbanorder?: StringFilter | string
+    kanbanorder?: StringNullableFilter | string | null
     username?: StringFilter | string
     external_urls?: StringNullableFilter | string | null
     completed_at?: DateTimeNullableFilter | Date | string | null
@@ -7870,7 +7890,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     title?: StringWithAggregatesFilter | string
     description?: StringWithAggregatesFilter | string
     created_at?: DateTimeWithAggregatesFilter | Date | string
-    kanbanorder?: StringWithAggregatesFilter | string
+    kanbanorder?: StringNullableWithAggregatesFilter | string | null
     username?: StringWithAggregatesFilter | string
     external_urls?: StringNullableWithAggregatesFilter | string | null
     completed_at?: DateTimeNullableWithAggregatesFilter | Date | string | null
@@ -8004,6 +8024,8 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     status?: Enumproject_statusNullableFilter | project_status | null
     linear_team_id?: UuidNullableFilter | string | null
     pivotal_tracker_id?: BigIntNullableFilter | bigint | number | null
+    last_sent_biweekly_briefing?: DateTimeNullableFilter | Date | string | null
+    github_repository_urls?: StringNullableFilter | string | null
     issues?: IssuesListRelationFilter
     orgs?: XOR<OrgsRelationFilter, OrgsWhereInput>
   }
@@ -8026,6 +8048,8 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     status?: SortOrder
     linear_team_id?: SortOrder
     pivotal_tracker_id?: SortOrder
+    last_sent_biweekly_briefing?: SortOrder
+    github_repository_urls?: SortOrder
     issues?: IssuesOrderByRelationAggregateInput
     orgs?: OrgsOrderByWithRelationInput
   }
@@ -8052,6 +8076,8 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     status?: SortOrder
     linear_team_id?: SortOrder
     pivotal_tracker_id?: SortOrder
+    last_sent_biweekly_briefing?: SortOrder
+    github_repository_urls?: SortOrder
     _count?: ProjectsCountOrderByAggregateInput
     _avg?: ProjectsAvgOrderByAggregateInput
     _max?: ProjectsMaxOrderByAggregateInput
@@ -8080,6 +8106,8 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     status?: Enumproject_statusNullableWithAggregatesFilter | project_status | null
     linear_team_id?: UuidNullableWithAggregatesFilter | string | null
     pivotal_tracker_id?: BigIntNullableWithAggregatesFilter | bigint | number | null
+    last_sent_biweekly_briefing?: DateTimeNullableWithAggregatesFilter | Date | string | null
+    github_repository_urls?: StringNullableWithAggregatesFilter | string | null
   }
 
   export type Slack_channelsWhereInput = {
@@ -8223,7 +8251,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     title: string
     description: string
     created_at: Date | string
-    kanbanorder: string
+    kanbanorder?: string | null
     username: string
     external_urls?: string | null
     completed_at?: Date | string | null
@@ -8239,7 +8267,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     title: string
     description: string
     created_at: Date | string
-    kanbanorder: string
+    kanbanorder?: string | null
     username: string
     external_urls?: string | null
     completed_at?: Date | string | null
@@ -8255,7 +8283,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     title?: StringFieldUpdateOperationsInput | string
     description?: StringFieldUpdateOperationsInput | string
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    kanbanorder?: StringFieldUpdateOperationsInput | string
+    kanbanorder?: NullableStringFieldUpdateOperationsInput | string | null
     username?: StringFieldUpdateOperationsInput | string
     external_urls?: NullableStringFieldUpdateOperationsInput | string | null
     completed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -8271,7 +8299,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     title?: StringFieldUpdateOperationsInput | string
     description?: StringFieldUpdateOperationsInput | string
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    kanbanorder?: StringFieldUpdateOperationsInput | string
+    kanbanorder?: NullableStringFieldUpdateOperationsInput | string | null
     username?: StringFieldUpdateOperationsInput | string
     external_urls?: NullableStringFieldUpdateOperationsInput | string | null
     completed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -8287,7 +8315,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     title: string
     description: string
     created_at: Date | string
-    kanbanorder: string
+    kanbanorder?: string | null
     username: string
     external_urls?: string | null
     completed_at?: Date | string | null
@@ -8302,7 +8330,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     title?: StringFieldUpdateOperationsInput | string
     description?: StringFieldUpdateOperationsInput | string
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    kanbanorder?: StringFieldUpdateOperationsInput | string
+    kanbanorder?: NullableStringFieldUpdateOperationsInput | string | null
     username?: StringFieldUpdateOperationsInput | string
     external_urls?: NullableStringFieldUpdateOperationsInput | string | null
     completed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -8316,7 +8344,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     title?: StringFieldUpdateOperationsInput | string
     description?: StringFieldUpdateOperationsInput | string
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    kanbanorder?: StringFieldUpdateOperationsInput | string
+    kanbanorder?: NullableStringFieldUpdateOperationsInput | string | null
     username?: StringFieldUpdateOperationsInput | string
     external_urls?: NullableStringFieldUpdateOperationsInput | string | null
     completed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -8492,6 +8520,8 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     status?: project_status | null
     linear_team_id?: string | null
     pivotal_tracker_id?: bigint | number | null
+    last_sent_biweekly_briefing?: Date | string | null
+    github_repository_urls?: string | null
     issues?: IssuesCreateNestedManyWithoutProjectsInput
     orgs: OrgsCreateNestedOneWithoutProjectsInput
   }
@@ -8514,6 +8544,8 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     status?: project_status | null
     linear_team_id?: string | null
     pivotal_tracker_id?: bigint | number | null
+    last_sent_biweekly_briefing?: Date | string | null
+    github_repository_urls?: string | null
     issues?: IssuesUncheckedCreateNestedManyWithoutProjectsInput
   }
 
@@ -8534,6 +8566,8 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     status?: NullableEnumproject_statusFieldUpdateOperationsInput | project_status | null
     linear_team_id?: NullableStringFieldUpdateOperationsInput | string | null
     pivotal_tracker_id?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    last_sent_biweekly_briefing?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    github_repository_urls?: NullableStringFieldUpdateOperationsInput | string | null
     issues?: IssuesUpdateManyWithoutProjectsNestedInput
     orgs?: OrgsUpdateOneRequiredWithoutProjectsNestedInput
   }
@@ -8556,6 +8590,8 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     status?: NullableEnumproject_statusFieldUpdateOperationsInput | project_status | null
     linear_team_id?: NullableStringFieldUpdateOperationsInput | string | null
     pivotal_tracker_id?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    last_sent_biweekly_briefing?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    github_repository_urls?: NullableStringFieldUpdateOperationsInput | string | null
     issues?: IssuesUncheckedUpdateManyWithoutProjectsNestedInput
   }
 
@@ -8577,6 +8613,8 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     status?: project_status | null
     linear_team_id?: string | null
     pivotal_tracker_id?: bigint | number | null
+    last_sent_biweekly_briefing?: Date | string | null
+    github_repository_urls?: string | null
   }
 
   export type ProjectsUpdateManyMutationInput = {
@@ -8596,6 +8634,8 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     status?: NullableEnumproject_statusFieldUpdateOperationsInput | project_status | null
     linear_team_id?: NullableStringFieldUpdateOperationsInput | string | null
     pivotal_tracker_id?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    last_sent_biweekly_briefing?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    github_repository_urls?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type ProjectsUncheckedUpdateManyInput = {
@@ -8616,6 +8656,8 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     status?: NullableEnumproject_statusFieldUpdateOperationsInput | project_status | null
     linear_team_id?: NullableStringFieldUpdateOperationsInput | string | null
     pivotal_tracker_id?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    last_sent_biweekly_briefing?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    github_repository_urls?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type Slack_channelsCreateInput = {
@@ -9123,6 +9165,8 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     status?: SortOrder
     linear_team_id?: SortOrder
     pivotal_tracker_id?: SortOrder
+    last_sent_biweekly_briefing?: SortOrder
+    github_repository_urls?: SortOrder
   }
 
   export type ProjectsAvgOrderByAggregateInput = {
@@ -9146,6 +9190,8 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     status?: SortOrder
     linear_team_id?: SortOrder
     pivotal_tracker_id?: SortOrder
+    last_sent_biweekly_briefing?: SortOrder
+    github_repository_urls?: SortOrder
   }
 
   export type ProjectsMinOrderByAggregateInput = {
@@ -9165,6 +9211,8 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     status?: SortOrder
     linear_team_id?: SortOrder
     pivotal_tracker_id?: SortOrder
+    last_sent_biweekly_briefing?: SortOrder
+    github_repository_urls?: SortOrder
   }
 
   export type ProjectsSumOrderByAggregateInput = {
@@ -9792,7 +9840,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     title: string
     description: string
     created_at: Date | string
-    kanbanorder: string
+    kanbanorder?: string | null
     username: string
     external_urls?: string | null
     completed_at?: Date | string | null
@@ -9807,7 +9855,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     title: string
     description: string
     created_at: Date | string
-    kanbanorder: string
+    kanbanorder?: string | null
     username: string
     external_urls?: string | null
     completed_at?: Date | string | null
@@ -9832,7 +9880,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     title?: StringFieldUpdateOperationsInput | string
     description?: StringFieldUpdateOperationsInput | string
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    kanbanorder?: StringFieldUpdateOperationsInput | string
+    kanbanorder?: NullableStringFieldUpdateOperationsInput | string | null
     username?: StringFieldUpdateOperationsInput | string
     external_urls?: NullableStringFieldUpdateOperationsInput | string | null
     completed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -9847,7 +9895,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     title?: StringFieldUpdateOperationsInput | string
     description?: StringFieldUpdateOperationsInput | string
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    kanbanorder?: StringFieldUpdateOperationsInput | string
+    kanbanorder?: NullableStringFieldUpdateOperationsInput | string | null
     username?: StringFieldUpdateOperationsInput | string
     external_urls?: NullableStringFieldUpdateOperationsInput | string | null
     completed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -9990,6 +10038,8 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     status?: project_status | null
     linear_team_id?: string | null
     pivotal_tracker_id?: bigint | number | null
+    last_sent_biweekly_briefing?: Date | string | null
+    github_repository_urls?: string | null
     orgs: OrgsCreateNestedOneWithoutProjectsInput
   }
 
@@ -10011,6 +10061,8 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     status?: project_status | null
     linear_team_id?: string | null
     pivotal_tracker_id?: bigint | number | null
+    last_sent_biweekly_briefing?: Date | string | null
+    github_repository_urls?: string | null
   }
 
   export type ProjectsCreateOrConnectWithoutIssuesInput = {
@@ -10067,6 +10119,8 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     status?: NullableEnumproject_statusFieldUpdateOperationsInput | project_status | null
     linear_team_id?: NullableStringFieldUpdateOperationsInput | string | null
     pivotal_tracker_id?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    last_sent_biweekly_briefing?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    github_repository_urls?: NullableStringFieldUpdateOperationsInput | string | null
     orgs?: OrgsUpdateOneRequiredWithoutProjectsNestedInput
   }
 
@@ -10088,6 +10142,8 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     status?: NullableEnumproject_statusFieldUpdateOperationsInput | project_status | null
     linear_team_id?: NullableStringFieldUpdateOperationsInput | string | null
     pivotal_tracker_id?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    last_sent_biweekly_briefing?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    github_repository_urls?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type EmailsCreateWithoutOrgsInput = {
@@ -10139,6 +10195,8 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     status?: project_status | null
     linear_team_id?: string | null
     pivotal_tracker_id?: bigint | number | null
+    last_sent_biweekly_briefing?: Date | string | null
+    github_repository_urls?: string | null
     issues?: IssuesCreateNestedManyWithoutProjectsInput
   }
 
@@ -10159,6 +10217,8 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     status?: project_status | null
     linear_team_id?: string | null
     pivotal_tracker_id?: bigint | number | null
+    last_sent_biweekly_briefing?: Date | string | null
+    github_repository_urls?: string | null
     issues?: IssuesUncheckedCreateNestedManyWithoutProjectsInput
   }
 
@@ -10241,6 +10301,8 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     status?: Enumproject_statusNullableFilter | project_status | null
     linear_team_id?: UuidNullableFilter | string | null
     pivotal_tracker_id?: BigIntNullableFilter | bigint | number | null
+    last_sent_biweekly_briefing?: DateTimeNullableFilter | Date | string | null
+    github_repository_urls?: StringNullableFilter | string | null
   }
 
   export type IssuesCreateWithoutProjectsInput = {
@@ -10248,7 +10310,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     title: string
     description: string
     created_at: Date | string
-    kanbanorder: string
+    kanbanorder?: string | null
     username: string
     external_urls?: string | null
     completed_at?: Date | string | null
@@ -10263,7 +10325,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     title: string
     description: string
     created_at: Date | string
-    kanbanorder: string
+    kanbanorder?: string | null
     username: string
     external_urls?: string | null
     completed_at?: Date | string | null
@@ -10354,7 +10416,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     title?: StringFilter | string
     description?: StringFilter | string
     created_at?: DateTimeFilter | Date | string
-    kanbanorder?: StringFilter | string
+    kanbanorder?: StringNullableFilter | string | null
     username?: StringFilter | string
     external_urls?: StringNullableFilter | string | null
     completed_at?: DateTimeNullableFilter | Date | string | null
@@ -10606,6 +10668,8 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     status?: project_status | null
     linear_team_id?: string | null
     pivotal_tracker_id?: bigint | number | null
+    last_sent_biweekly_briefing?: Date | string | null
+    github_repository_urls?: string | null
   }
 
   export type ProjectsUpdateWithoutOrgsInput = {
@@ -10625,6 +10689,8 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     status?: NullableEnumproject_statusFieldUpdateOperationsInput | project_status | null
     linear_team_id?: NullableStringFieldUpdateOperationsInput | string | null
     pivotal_tracker_id?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    last_sent_biweekly_briefing?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    github_repository_urls?: NullableStringFieldUpdateOperationsInput | string | null
     issues?: IssuesUpdateManyWithoutProjectsNestedInput
   }
 
@@ -10645,6 +10711,8 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     status?: NullableEnumproject_statusFieldUpdateOperationsInput | project_status | null
     linear_team_id?: NullableStringFieldUpdateOperationsInput | string | null
     pivotal_tracker_id?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    last_sent_biweekly_briefing?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    github_repository_urls?: NullableStringFieldUpdateOperationsInput | string | null
     issues?: IssuesUncheckedUpdateManyWithoutProjectsNestedInput
   }
 
@@ -10665,6 +10733,8 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     status?: NullableEnumproject_statusFieldUpdateOperationsInput | project_status | null
     linear_team_id?: NullableStringFieldUpdateOperationsInput | string | null
     pivotal_tracker_id?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    last_sent_biweekly_briefing?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    github_repository_urls?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type IssuesCreateManyProjectsInput = {
@@ -10672,7 +10742,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     title: string
     description: string
     created_at: Date | string
-    kanbanorder: string
+    kanbanorder?: string | null
     username: string
     external_urls?: string | null
     completed_at?: Date | string | null
@@ -10686,7 +10756,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     title?: StringFieldUpdateOperationsInput | string
     description?: StringFieldUpdateOperationsInput | string
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    kanbanorder?: StringFieldUpdateOperationsInput | string
+    kanbanorder?: NullableStringFieldUpdateOperationsInput | string | null
     username?: StringFieldUpdateOperationsInput | string
     external_urls?: NullableStringFieldUpdateOperationsInput | string | null
     completed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -10701,7 +10771,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     title?: StringFieldUpdateOperationsInput | string
     description?: StringFieldUpdateOperationsInput | string
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    kanbanorder?: StringFieldUpdateOperationsInput | string
+    kanbanorder?: NullableStringFieldUpdateOperationsInput | string | null
     username?: StringFieldUpdateOperationsInput | string
     external_urls?: NullableStringFieldUpdateOperationsInput | string | null
     completed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -10716,7 +10786,7 @@ export type InputJsonValue = null | string | number | boolean | InputJsonObject 
     title?: StringFieldUpdateOperationsInput | string
     description?: StringFieldUpdateOperationsInput | string
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    kanbanorder?: StringFieldUpdateOperationsInput | string
+    kanbanorder?: NullableStringFieldUpdateOperationsInput | string | null
     username?: StringFieldUpdateOperationsInput | string
     external_urls?: NullableStringFieldUpdateOperationsInput | string | null
     completed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null

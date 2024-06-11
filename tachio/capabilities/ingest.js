@@ -16,7 +16,7 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 
-const MEMORY_TYPE = 'capability-deepdocumentingest'
+const MEMORY_TYPE = 'capability-read'
 const cacheDir = path.join(__dirname, "cache");
 if (!fs.existsSync(cacheDir)) {
   fs.mkdirSync(cacheDir, { recursive: true });
@@ -25,8 +25,8 @@ if (!fs.existsSync(cacheDir)) {
 async function handleCapabilityMethod(method, args) {
   const [arg1, arg2] = destructureArgs(args);
 
-  if (method === "deepDocumentIngest") {
-    return await deepDocumentIngest(arg1, arg2);
+  if (method === "read") {
+    return await read(arg1, arg2);
   } else {
     throw new Error(`Method ${method} not supported by this capability.`);
   }
@@ -34,15 +34,15 @@ async function handleCapabilityMethod(method, args) {
 
 /**
  * @async
- * @function deepDocumentIngest
+ * @function read
  * @param {string} url - The arguments object that contains the URL or the text of the document to be ingested
  * @param {string} conversationId - The conversation ID to associate with the memory
  * @returns {Promise<string>} - The meta-summary of the document
  *
  */
-async function deepDocumentIngest(url, conversationId) {
+async function read(url, conversationId) {
   // For testing:
-  // node capability-player.js --runCapability="ingest:deepDocumentIngest(https://docs.pdw.co/tachio-overview)"
+  // node capability-player.js --runCapability="ingest:read(https://docs.pdw.co/tachio-overview)"
   const { PROMPT_DEEP_INGEST } = await getPromptsFromSupabase();
   const { TOKEN_LIMIT } = await getConfigFromSupabase();
 
