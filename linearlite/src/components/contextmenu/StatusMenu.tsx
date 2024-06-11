@@ -43,7 +43,7 @@ export default function StatusMenu({ id, button, className, onSelect }: Props) {
         <Menu
           id={id}
           size="normal"
-          filterKeyword={true}
+          filterKeyword={false}
           className={className}
           searchPlaceholder="Set status..."
           onKeywordChange={(kw) => setKeyword(kw)}

@@ -4,7 +4,7 @@ import { ContextMenuTrigger } from '@firefox-devtools/react-contextmenu'
 import { Menu } from './menu'
 import { useElectric } from '../../electric.ts'
 import { useLiveQuery } from 'electric-sql/react'
-import { GrProjects } from 'react-icons/gr'
+import { ReactComponent as HighPriorityIcon } from '../../assets/icons/signal-strong.svg'
 
 interface Props {
   id: string
@@ -35,7 +35,7 @@ function ProjectMenu({
         key={project.id}
         onClick={() => onSelect({ id: project.id, name: project.name })}
       >
-        <GrProjects size={13} className="mr-3" /> <span className='overflow-hidden'>{project.name}</span>
+        <HighPriorityIcon className="mr-3" /> <span className='overflow-hidden'>{project.name}</span>
       </Menu.Item>
     )
   })

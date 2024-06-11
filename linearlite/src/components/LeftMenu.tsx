@@ -27,7 +27,7 @@ function LeftMenu() {
     })
   )
   const classes = classnames(
-    'absolute z-40 lg:static inset-0 transform duration-300 lg:relative lg:translate-x-0 bg-white flex flex-col flex-shrink-0 w-56 font-sans text-sm text-gray-700 border-r border-gray-100 lg:shadow-none justify-items-start',
+    'absolute z-40 lg:static inset-0 transform duration-300 lg:relative lg:translate-x-0 bg-white dark:bg-left-menu-bg-color flex flex-col flex-shrink-0 w-56 font-sans text-sm text-gray-700 dark:text-almost-white-color border-r border-gray-100 lg:shadow-none justify-items-start',
     {
       '-translate-x-full ease-out shadow-none': !showMenu,
       'translate-x-0 ease-in shadow-xl': showMenu
@@ -49,14 +49,14 @@ function LeftMenu() {
           <div className="flex items-center justify-between">
             {/* Project selection */}
             <Link
-              className="flex items-center p-2 pr-3 rounded cursor-pointer hover:bg-gray-100"
+              className="flex items-center p-2 pr-3 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-context-bg-color"
               to="/"
             >
               <img
                 src="/pdw-icon.png"
                 className="w-4.5 h-auto mr-2.5 rounded-sm"
               />
-              <span className="flex text-sm font-medium">LinearLite</span>
+              <span className="flex text-sm font-medium dark:text-white">LinearLite</span>
             </Link>
 
             {/* User avatar  */}
@@ -83,7 +83,7 @@ function LeftMenu() {
           {/* Create issue btn */}
           <div className="flex">
             <button
-              className="inline-flex w-full items-center px-2 py-2 mt-3 bg-white border border-gray-300 rounded hover:bg-gray-100 h-7"
+              className="inline-flex w-full items-center px-2 py-2 mt-3 bg-white dark:bg-black-bg-color border border-gray-300 dark:border-border-color rounded hover:bg-gray-100 h-7"
               onClick={() => {
                 setShowIssueModal(true)
               }}
@@ -92,7 +92,7 @@ function LeftMenu() {
             </button>
             <Link
               to="/search"
-              className="inline-flex ms-2 items-center px-2 py-2 mt-3 bg-white border border-gray-300 rounded hover:bg-gray-100 h-7"
+              className="inline-flex ms-2 items-center px-2 py-2 mt-3 bg-white dark:bg-black-bg-color border border-gray-300 dark:border-border-color rounded hover:bg-gray-100 h-7"
             >
               <SearchIcon className="w-3.5 h-3.5" />
             </Link>
@@ -103,7 +103,7 @@ function LeftMenu() {
           <ItemGroup title="Projects">
             <Link
               to="/projects"
-              className="flex items-center pl-6 rounded cursor-pointer group h-7 hover:bg-gray-100"
+              className="flex items-center pl-6 rounded cursor-pointer group h-7 hover:bg-gray-100 dark:hover:bg-hover-bg-color"
             >
               <AiOutlineTeam className="w-3.5 h-3.5 mr-2" />
               <span>All Projects</span>
@@ -112,7 +112,7 @@ function LeftMenu() {
               <Link
                 key={project.id}
                 to={`/projects/${project.id}`}
-                className="flex items-center pl-6 rounded cursor-pointer h-7 hover:bg-gray-100"
+                className="flex items-center pl-6 rounded cursor-pointer h-7 hover:bg-gray-100 dark:hover:bg-hover-bg-color"
               >
                 <span className="w-3.5 h-6 mr-2 inline-block">
                   <span className="block w-2 h-full border-r"></span>
@@ -125,7 +125,7 @@ function LeftMenu() {
           <ItemGroup title="Boards">
             <Link
               to="/board"
-              className="flex items-center pl-6 rounded cursor-pointer group h-7 hover:bg-gray-100"
+              className="flex items-center pl-6 rounded cursor-pointer group h-7 hover:bg-gray-100 dark:hover:bg-hover-bg-color"
             >
               <BoardIcon className="w-3.5 h-3.5 mr-2" />
               <span>All Projects</span>
@@ -134,7 +134,7 @@ function LeftMenu() {
               <Link
                 key={project.id}
                 to={`/board?projectId=${project.id}`}
-                className="flex items-center pl-6 rounded cursor-pointer h-7 hover:bg-gray-100"
+                className="flex items-center pl-6 rounded cursor-pointer h-7 hover:bg-gray-100 dark:hover:bg-hover-bg-color"
               >
                 <span className="w-3.5 h-6 mr-2 inline-block">
                   <span className="block w-2 h-full border-r"></span>
@@ -147,14 +147,14 @@ function LeftMenu() {
           <ItemGroup title="Your Issues">
             <Link
               to="/"
-              className="flex items-center pl-6 rounded cursor-pointer group h-7 hover:bg-gray-100"
+              className="flex items-center pl-6 rounded cursor-pointer group h-7 hover:bg-gray-100 dark:hover:bg-hover-bg-color"
             >
               <IssuesIcon className="w-3.5 h-3.5 mr-2" />
               <span>All Issues</span>
             </Link>
             <Link
               to="/?status=todo,in_progress"
-              className="flex items-center pl-6 rounded cursor-pointer h-7 hover:bg-gray-100"
+              className="flex items-center pl-6 rounded cursor-pointer h-7 hover:bg-gray-100 dark:hover:bg-hover-bg-color"
             >
               <span className="w-3.5 h-6 mr-2 inline-block">
                 <span className="block w-2 h-full border-r"></span>
@@ -163,14 +163,14 @@ function LeftMenu() {
             </Link>
             <Link
               to="/?status=backlog"
-              className="flex items-center pl-6 rounded cursor-pointer h-7 hover:bg-gray-100"
+              className="flex items-center pl-6 rounded cursor-pointer h-7 hover:bg-gray-100 dark:hover:bg-hover-bg-color"
             >
               <BacklogIcon className="w-3.5 h-3.5 mr-2" />
               <span>Backlog</span>
             </Link>
             <Link
               to="/board"
-              className="flex items-center pl-6 rounded cursor-pointer h-7 hover:bg-gray-100"
+              className="flex items-center pl-6 rounded cursor-pointer h-7 hover:bg-gray-100 dark:hover:bg-hover-bg-color"
             >
               <BoardIcon className="w-3.5 h-3.5 mr-2" />
               <span>Board</span>

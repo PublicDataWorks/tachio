@@ -28,7 +28,7 @@ interface MenuItemProps {
 const Item = function ({ onClick, children }: MenuItemProps) {
   return (
     <MenuItem
-      className="flex items-center h-8 px-3 text-gray-500 hover:text-gray-800 hover:bg-gray-100"
+      className="flex items-center h-8 px-3 text-gray-500 dark:text-almost-white-color hover:text-gray-800 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-hover-bg-color font-normal"
       onClick={onClick}
     >
       {children}
@@ -37,7 +37,7 @@ const Item = function ({ onClick, children }: MenuItemProps) {
 }
 
 const Divider = function () {
-  return <MenuItem divider className="border-t border-gray-200" />
+  return <MenuItem divider className="border-t border-gray-200 dark:border-border-color" />
 }
 
 const Header = function ({ children }: MenuItemProps) {

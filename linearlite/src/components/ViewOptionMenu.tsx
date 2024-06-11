@@ -42,15 +42,15 @@ export default function ({ isOpen, onDismiss }: Props) {
         leave="transition easy-in duration-75"
         leaveFrom="transform opacity-100 scale-100"
         leaveTo="transform opacity-0 scale-95"
-        className="fixed right-0 z-30 flex flex-col bg-white rounded-lg shadow-modal top-12 w-70"
+        className="fixed right-0 z-30 flex flex-col bg-white rounded-lg shadow-modal top-12 w-70 dark:bg-context-bg-color dark:text-almost-white-color"
       >
-        <div className="font-medium border-b border-gray-200 px-4.5 py-2">
+        <div className="font-medium border-b border-gray-200 px-4.5 py-2 dark:border-context-border-color">
           View Options
         </div>
 
-        <div className="px-4.5 py-2 flex flex-col border-b border-gray-200">
+        <div className="px-4.5 py-2 flex flex-col border-b border-gray-200 dark:border-context-border-color">
           <div className="flex items-center mt-1 min-h-8">
-            <span className="text-gray-500">Ordering</span>
+            <span className="text-gray-500 dark:text-almost-white-color">Ordering</span>
             <div className="flex ml-auto">
               <Select
                 value={filterState.orderBy}

@@ -17,7 +17,7 @@ import Comments from './Comments'
 import debounce from 'lodash.debounce'
 import ItemGroup from '../../components/ItemGroup.tsx'
 import ExternalUrlMenu from '../../components/contextmenu/ExternalUrlMenu.tsx'
-import { GrProjects } from 'react-icons/gr'
+import { ReactComponent as HighPriorityIcon } from '../../assets/icons/signal-strong.svg'
 import ProjectMenu from '../../components/contextmenu/ProjectMenu.tsx'
 import { showInfo } from '../../utils/notification.tsx'
 
@@ -191,25 +191,25 @@ function IssuePage() {
   }
   return (
     <>
-      <div className="flex flex-col flex-1 overflow-hidden">
+      <div className="flex flex-col flex-1 overflow-hidden dark:text-almost-white-color">
         <div className="flex flex-col">
-          <div className="flex justify-between flex-shrink-0 pr-6 border-b border-gray-200 h-14 pl-3 md:pl-5 lg:pl-9">
+          <div className="flex justify-between flex-shrink-0 pr-6 border-b border-gray-200 h-14 pl-3 md:pl-5 lg:pl-9 dark:border-border-color">
             <div className="flex items-center">
               <span className="font-semibold me-2">Issue</span>
-              <span className="text-gray-500" title={issue.id}>
+              <span className="text-gray-500 dark:text-white" title={issue.id}>
                 {shortId()}
               </span>
             </div>
 
             <div className="flex items-center">
               <button
-                className="p-2 rounded hover:bg-gray-100"
+                className="p-2 rounded hover:bg-gray-100 dark:hover:bg-hover-bg-color"
                 onClick={() => setShowDeleteModal(true)}
               >
                 <DeleteIcon size={14} />
               </button>
               <button
-                className="ms-2 p-2 rounded hover:bg-gray-100"
+                className="ms-2 p-2 rounded hover:bg-gray-100 dark:hover:bg-hover-bg-color"
                 onClick={handleClose}
               >
                 <CloseIcon size={14} />
@@ -223,27 +223,28 @@ function IssuePage() {
           <div className="md:block flex md:flex-[1_0_0] min-w-0 md:p-3 md:order-2">
             <div className="max-w-4xl flex flex-row md:flex-col">
               <div className="flex flex-1 mb-3 mr-5 md-mr-0">
-                <div className="flex flex-[2_0_0] mr-2 md-mr-0 items-center">
+                <div className="flex flex-[1_0_0] mr-2 md-mr-0 items-center">
                   Opened by
                 </div>
                 <div className="flex flex-[3_0_0]">
                   <button
-                    className="inline-flex items-center h-6 ps-1.5 pe-2 text-gray-500border-none rounded hover:bg-gray-100">
+                    className="inline-flex items-center h-6 ps-1.5 pe-2 text-gray-500 dark:text-almost-white-color border-none rounded hover:bg-gray-100 dark:hover:bg-context-bg-color">
                     <Avatar name={issue.username} />
                     <span className="ml-1">{issue.username}</span>
                   </button>
                 </div>
               </div>
               <div className="flex flex-1 mb-3 mr-5 md-mr-0">
-                <div className="flex flex-[2_0_0] mr-2 md-mr-0 items-center">
+                <div className="flex flex-[1_0_0] mr-2 md-mr-0 items-center">
                   Status
                 </div>
                 <div className="flex flex-[3_0_0]">
                   <StatusMenu
                     id={'issue-status-' + issue.id}
+                    className='dark:bg-context-bg-color border dark:border-context-border-color'
                     button={
                       <button
-                        className="inline-flex items-center h-6 px-2 text-gray-500border-none rounded hover:bg-gray-100">
+                        className="inline-flex items-center h-6 px-2 text-gray-500 dark:text-almost-white-color border-none rounded hover:bg-gray-100 dark:hover:bg-context-bg-color">
                         <StatusIcon status={issue.status} className="mr-1" />
                         <span>{StatusDisplay[issue.status]}</span>
                       </button>
@@ -253,18 +254,19 @@ function IssuePage() {
                 </div>
               </div>
               <div className="flex flex-1 mb-3 mr-5 md-mr-0">
-                <div className="flex flex-[2_0_0] mr-2 md-mr-0 items-center">
+                <div className="flex flex-[1_0_0] mr-2 md-mr-0 items-center">
                   Priority
                 </div>
                 <div className="flex flex-[3_0_0]">
                   <PriorityMenu
                     id={'issue-priority-' + issue.id}
+                    className='dark:bg-context-bg-color border dark:border-context-border-color'
                     button={
                       <button
-                        className="inline-flex items-center h-6 px-2 text-gray-500 border-none rounded hover:bg-gray-100 hover:text-gray-700">
+                        className="inline-flex items-center h-6 px-2 text-gray-500 dark:text-almost-white-color border-none rounded hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-context-bg-color">
                         <PriorityIcon
                           priority={issue.priority}
-                          className="mr-1"
+                          className="mr-1 dark:fill-white"
                         />
                         <span>{PriorityDisplay[issue.priority]}</span>
                       </button>
@@ -278,10 +280,11 @@ function IssuePage() {
                 <div className="border-gray-200">
                   <ProjectMenu
                     id="project-menu"
+                    className='dark:bg-context-bg-color border dark:border-context-border-color'
                     button={
                       <button
-                        className="flex items-center w-full h-8 mt-2 px-2 hover:bg-gray-100">
-                        <GrProjects size={13} className="mr-2" />
+                        className="flex items-center w-full h-8 mt-2 px-2 hover:bg-gray-100 dark:hover:bg-context-bg-color">
+                        <HighPriorityIcon className="mr-2 dark:fill-white" />
                         <span className="overflow-hidden">{'projects' in issue ? issue.projects?.name : ''}</span>
                       </button>
                     }
@@ -291,16 +294,16 @@ function IssuePage() {
             </div>
           </div>
           <div
-            className="flex flex-col md:flex-[3_0_0] md:p-3 border-gray-200 md:border-r min-h-0 min-w-0 overflow-auto">
+            className="flex flex-col md:flex-[3_0_0] md:p-3 border-gray-200 md:border-r dark:border-border-color min-h-0 min-w-0 overflow-auto">
             <input
-              className="w-full px-3 py-1 text-lg font-semibold placeholder-gray-400 border-transparent rounded "
+              className="w-full px-3 py-1 text-lg font-semibold placeholder-gray-400 border-transparent rounded dark:bg-black-bg-color focus:border-white focus:outline-none focus:ring-0"
               placeholder="Issue title"
               value={titleIsDirty.current ? dirtyTitle! : issue.title}
               onChange={(e) => handleTitleChange(e.target.value)}
             />
 
             <Editor
-              className="prose w-full max-w-full mt-2 font-normal appearance-none min-h-12 p-3 text-md rounded editor"
+              className="prose w-full max-w-full mt-2 font-normal appearance-none min-h-12 p-3 text-md rounded editor dark:text-white dark:focus:border dark:focus:border-white focus:outline-none focus:ring-0"
               value={
                 descriptionIsDirty.current
                   ? dirtyDescription || ''
@@ -341,7 +344,7 @@ function IssuePage() {
             )}
 
 
-            <div className="border-t border-gray-200 mt-3 p-3">
+            <div className="border-t border-gray-200 mt-3 p-3 dark:border-border-color">
               <h2 className="text-md mb-3">Comments</h2>
               <Comments issue={issue} />
             </div>
