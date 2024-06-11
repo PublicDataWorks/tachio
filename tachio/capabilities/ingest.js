@@ -56,7 +56,7 @@ async function read(url, conversationId) {
     fs.existsSync(cacheFilePath) &&
     Date.now() - fs.statSync(cacheFilePath).mtimeMs < 3600000
   ) {
-    console.log("Using cached data");
+    logger.log("Using cached data");
     cachedData = JSON.parse(fs.readFileSync(cacheFilePath, "utf8"));
   }
 

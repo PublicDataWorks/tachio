@@ -3,7 +3,7 @@ const {
   removeMentionFromMessage,
   splitAndSendMessage,
   displayTypingIndicator,
-  getConfigFromSupabase,
+  getConfigFromSupabase
 } = require("../helpers.js");
 
 const vision = require("./vision.js");
@@ -24,8 +24,8 @@ class DiscordBot {
         GatewayIntentBits.MessageContent,
         GatewayIntentBits.GuildMessageReactions,
         GatewayIntentBits.DirectMessages,
-        GatewayIntentBits.MessageContent,
-      ],
+        GatewayIntentBits.MessageContent
+      ]
     });
     this.bot.login(process.env.DISCORD_BOT_TOKEN);
     this.bot.on("ready", onClientReady);
@@ -84,9 +84,9 @@ class DiscordBot {
         files: [
           {
             attachment: image,
-            name: "image.png",
-          },
-        ],
+            name: "image.png"
+          }
+        ]
       });
     } catch (error) {
       logger.info(error);
@@ -155,8 +155,8 @@ class DiscordBot {
       [
         {
           role: "user",
-          content: prompt,
-        },
+          content: prompt
+        }
       ],
       { username, channel, guild, related_message_id }
     );
@@ -170,12 +170,7 @@ class DiscordBot {
     const botMentionOrChannel = detectBotMentionOrChannel(message);
     const messageAuthorIsBot = message.author.bot;
     const authorIsMe = message.author.username === "coachartie";
-
-    logger.info(`📩 Message received: ${message.content}`);
-
-    if (!botMentionOrChannel || authorIsMe || messageAuthorIsBot) return;
-
-    const typing = displayTypingIndicator(message);
+    if (authorIsMe) return;
 
     let prompt = await this.processPrompt(message);
     let processedPrompt = await this.processImageAttachment(message, prompt);
@@ -197,15 +192,53 @@ class DiscordBot {
       : message.channel.id;
 
     const channelObj = this.fetchChannelById(channelName);
+    // log the "math" that goes into shouldRespond
+    logger.info(
+      `Determining whether to respond: ${JSON.stringify({
+        botMentionOrChannel,
+        messageAuthorIsBot,
+        authorIsMe
+      })}`
+    );
 
+    // Determine if the bot should respond to the message
+    let shouldRespond = false;
+    if (botMentionOrChannel) {
+      shouldRespond = true;
+    } else if (!authorIsMe) {
+      shouldRespond = false;
+    } else if (!messageAuthorIsBot) {
+      shouldRespond = false;
+    }
+
+    // const typing = displayTypingIndicator(message);
+    // only show typing indicator if we are going to respond
+    const typing = shouldRespond ? displayTypingIndicator(message) : null;
+
+    // logger.info(`📩 Message received: ${message.content}`);
+    // way more verbose
+    logger.info(
+      `${guild} 📩 #${channelName} <${
+        message.author.username
+      }> Message received: ${message.content} ${
+        messageAuthorIsBot ? "🤖" : "🧑"
+      } ${botMentionOrChannel ? "📣" : "🦻"} - ${
+        shouldRespond ? "Responding" : "Not Responding"
+      }`
+    );
     // TODO: add channelName- make it easier to understand what the var is and how it is meant to be used- some places expect an object, like splitAndSendMessage, and other things expect a name string, like the memory saving
 
+    // Okay one issue is this actually seems to be sending the message back itself
     let messages = await this.processMessageChain(processedPrompt, {
       username,
       channel,
       guild,
-      related_message_id: messageId,
+      related_message_id: messageId
     });
+
+    logger.info(`📤 Messages: ${JSON.stringify(messages)}`);
+
+    if (!shouldRespond) return;
 
     // Check if the last message contains an image- if so send it as a file
     const lastMessage = messages[messages.length - 1];
@@ -226,6 +259,7 @@ class DiscordBot {
       // });
       // stop typing interval
       await this.sendAttachment(lastMessage.image, channelObj);
+      logger.info("📤 Sent image as attachment");
     }
 
     if (lastMessage.content) {
@@ -250,10 +284,10 @@ class DiscordBot {
 
 function onClientReady(c) {
   logger.info(`⭐️ Ready! Logged in as ${c.user.username}`);
-  logger.info("\n🌐 Connected servers and channels:");
-  client.guilds.cache.forEach((guild) => {
-    logger.info(` - ${guild.name}`);
-  });
+  // logger.info("\n🌐 Connected servers and channels:");
+  // client.guilds.cache.forEach((guild) => {
+  //   logger.info(` - ${guild.name}`);
+  // });
 }
 
 function detectBotMentionOrChannel(message) {
