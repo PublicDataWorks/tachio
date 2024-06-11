@@ -2,7 +2,7 @@ import { LIB_VERSION } from 'electric-sql/version'
 import { makeElectricContext } from 'electric-sql/react'
 import { uniqueTabId } from 'electric-sql/util'
 import { Electric, schema } from './generated/client'
-
+import type { Session } from '@supabase/supabase-js'
 export type { Issues } from './generated/client'
 
 export const { ElectricProvider, useElectric } = makeElectricContext<Electric>()
@@ -65,7 +65,7 @@ export const initWaSqlite = async () => {
   }
 }
 
-export const initElectric = async () => {
+export const initElectric = async (session: Session) => {
   const { electric, conn, config } =
     CLIENT_DB === 'wa-sqlite' ? await initWaSqlite() : await initPGlite()
   if (DEBUG) {
@@ -76,12 +76,7 @@ export const initElectric = async () => {
     console.log(config)
   }
 
-  let userId = window.sessionStorage.getItem('userId')
-  if (!userId) {
-    userId = genUUID()
-    window.sessionStorage.setItem('userId', userId)
-  }
-  const authToken = insecureAuthToken({ sub: userId })
-  await electric.connect(authToken)
+  const token = session.access_token
+  await electric.connect(token)
   return electric
 }

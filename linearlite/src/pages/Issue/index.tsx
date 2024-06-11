@@ -1,25 +1,25 @@
-import { useLiveQuery } from 'electric-sql/react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
-import { useState, useRef } from 'react'
-import { BsThreeDots, BsTrash3 as DeleteIcon } from 'react-icons/bs'
-import { FaExternalLinkAlt as LinkIcon } from 'react-icons/fa'
-import { BsXLg as CloseIcon } from 'react-icons/bs'
+import {useLiveQuery} from 'electric-sql/react'
+import {useParams, useNavigate} from 'react-router-dom'
+import {useState, useRef} from 'react'
+import {BsThreeDots, BsTrash3 as DeleteIcon} from 'react-icons/bs'
+import {FaExternalLinkAlt as LinkIcon} from 'react-icons/fa'
+import {BsXLg as CloseIcon} from 'react-icons/bs'
 import PriorityMenu from '../../components/contextmenu/PriorityMenu'
 import StatusMenu from '../../components/contextmenu/StatusMenu'
 import PriorityIcon from '../../components/PriorityIcon'
 import StatusIcon from '../../components/StatusIcon'
 import Avatar from '../../components/Avatar'
-import { useElectric } from '../../electric'
-import { PriorityDisplay, StatusDisplay } from '../../types/issue'
+import {useElectric} from '../../electric'
+import {PriorityDisplay, StatusDisplay} from '../../types/issue'
 import Editor from '../../components/editor/Editor'
 import DeleteModal from './DeleteModal'
 import Comments from './Comments'
 import debounce from 'lodash.debounce'
 import ItemGroup from '../../components/ItemGroup.tsx'
 import ExternalUrlMenu from '../../components/contextmenu/ExternalUrlMenu.tsx'
-import { ReactComponent as HighPriorityIcon } from '../../assets/icons/signal-strong.svg'
+import {ReactComponent as HighPriorityIcon} from '../../assets/icons/signal-strong.svg'
 import ProjectMenu from '../../components/contextmenu/ProjectMenu.tsx'
-import { showInfo } from '../../utils/notification.tsx'
+import {showInfo} from '../../utils/notification.tsx'
 
 const debounceTime = 500
 
@@ -185,15 +185,17 @@ function IssuePage() {
     }
   }
 
-  const onClickExternalUrl = (e: MouseEvent, url: string) => {
+  const onClickExternalUrl = (e: React.MouseEvent<SVGElement>, url: string) => {
     setExternalUrlMenu(url)
     e.preventDefault()
   }
+
   return (
     <>
       <div className="flex flex-col flex-1 overflow-hidden dark:text-almost-white-color">
         <div className="flex flex-col">
-          <div className="flex justify-between flex-shrink-0 pr-6 border-b border-gray-200 h-14 pl-3 md:pl-5 lg:pl-9 dark:border-border-color">
+          <div
+            className="flex justify-between flex-shrink-0 pr-6 border-b border-gray-200 h-14 pl-3 md:pl-5 lg:pl-9 dark:border-border-color">
             <div className="flex items-center">
               <span className="font-semibold me-2">Issue</span>
               <span className="text-gray-500 dark:text-white" title={issue.id}>
@@ -206,13 +208,13 @@ function IssuePage() {
                 className="p-2 rounded hover:bg-gray-100 dark:hover:bg-hover-bg-color"
                 onClick={() => setShowDeleteModal(true)}
               >
-                <DeleteIcon size={14} />
+                <DeleteIcon size={14}/>
               </button>
               <button
                 className="ms-2 p-2 rounded hover:bg-gray-100 dark:hover:bg-hover-bg-color"
                 onClick={handleClose}
               >
-                <CloseIcon size={14} />
+                <CloseIcon size={14}/>
               </button>
             </div>
           </div>
@@ -229,7 +231,7 @@ function IssuePage() {
                 <div className="flex flex-[3_0_0]">
                   <button
                     className="inline-flex items-center h-6 ps-1.5 pe-2 text-gray-500 dark:text-almost-white-color border-none rounded hover:bg-gray-100 dark:hover:bg-context-bg-color">
-                    <Avatar name={issue.username} />
+                    <Avatar name={issue.username}/>
                     <span className="ml-1">{issue.username}</span>
                   </button>
                 </div>
@@ -245,7 +247,7 @@ function IssuePage() {
                     button={
                       <button
                         className="inline-flex items-center h-6 px-2 text-gray-500 dark:text-almost-white-color border-none rounded hover:bg-gray-100 dark:hover:bg-context-bg-color">
-                        <StatusIcon status={issue.status} className="mr-1" />
+                        <StatusIcon status={issue.status} className="mr-1"/>
                         <span>{StatusDisplay[issue.status]}</span>
                       </button>
                     }
@@ -284,11 +286,12 @@ function IssuePage() {
                     button={
                       <button
                         className="flex items-center w-full h-8 mt-2 px-2 hover:bg-gray-100 dark:hover:bg-context-bg-color">
-                        <HighPriorityIcon className="mr-2 dark:fill-white" />
-                        <span className="overflow-hidden">{'projects' in issue ? issue.projects?.name : ''}</span>
+                        <HighPriorityIcon className="mr-2 dark:fill-white"/>
+                        {/* @ts-ignore: project is always there*/}
+                        <span className="overflow-hidden">{issue.projects?.name || ''}</span>
                       </button>
                     }
-                    onSelect={project => handleProjectChange(project.id)} />
+                    onSelect={project => handleProjectChange(project.id)}/>
                 </div>
               </div>
             </div>
@@ -316,18 +319,18 @@ function IssuePage() {
               <ItemGroup title="Link">
                 {issue.external_urls?.split('\n').filter(url => url !== '').map(url => (
                   <div className="flex relative" key={url}>
-                    <Link
+                    <a
                       className="inline-flex w-full items-center px-4 mt-2 h-10 bg-white border border-gray-300 rounded hover:bg-gray-100 justify-between"
-                      to={url}
-                      target="_blank"
+                      href={url}
+                      rel="noopener noreferrer"
                     >
                       {url}
                       <div className="flex">
-                        <LinkIcon className="mr-2.5 w-3.5 h-3.5" />
-                        <BsThreeDots onClick={(e: MouseEvent) => onClickExternalUrl(e, url)}
-                                     className="mr-2.5 w-3.5 h-3.5 hover:bg-gray-300" />
+                        <LinkIcon className="mr-2.5 w-3.5 h-3.5"/>
+                        <BsThreeDots onClick={(e: React.MouseEvent<SVGElement>) => onClickExternalUrl(e, url)}
+                                     className="mr-2.5 w-3.5 h-3.5 hover:bg-gray-300"/>
                       </div>
-                    </Link>
+                    </a>
                     <ExternalUrlMenu
                       isOpen={showExternalUrlMenu === url}
                       onDismiss={() => setExternalUrlMenu('')}
@@ -346,7 +349,7 @@ function IssuePage() {
 
             <div className="border-t border-gray-200 mt-3 p-3 dark:border-border-color">
               <h2 className="text-md mb-3">Comments</h2>
-              <Comments issue={issue} />
+              <Comments issue={issue}/>
             </div>
           </div>
         </div>

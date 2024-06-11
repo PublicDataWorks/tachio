@@ -2,7 +2,7 @@ module.exports = {
   extends: [
     'eslint:recommended',
     'plugin:@typescript-eslint/recommended',
-    'plugin:react-hooks/recommended',
+    'plugin:react-hooks/recommended'
   ],
   parser: '@typescript-eslint/parser',
   plugins: ['@typescript-eslint', 'react-refresh'],
@@ -13,19 +13,19 @@ module.exports = {
       {
         argsIgnorePattern: '^_',
         varsIgnorePattern: '^_',
-        caughtErrorsIgnorePattern: '^_',
-      },
+        caughtErrorsIgnorePattern: '^_'
+      }
     ],
     '@typescript-eslint/no-explicit-any': ['warn', { ignoreRestArgs: true }],
     '@typescript-eslint/ban-ts-comment': [
       'error',
-      { 'ts-ignore': 'allow-with-description' },
+      { 'ts-ignore': 'allow-with-description' }
     ],
     'no-constant-condition': ['error', { checkLoops: false }],
     'react-refresh/only-export-components': [
       'warn',
-      { allowConstantExport: true },
-    ],
+      { allowConstantExport: true }
+    ]
   },
-  ignorePatterns: ['**/*/mock.ts', 'dist', '.eslintrc.cjs'],
+  ignorePatterns: ['**/*/mock.ts', 'dist', '.eslintrc.cjs', 'src/generated/*']
 }

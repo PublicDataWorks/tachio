@@ -7,7 +7,7 @@ import { PriorityOptions } from '../../types/issue'
 interface Props {
   id: string
   button: ReactNode
-  filterKeyword: boolean
+  filterKeyword?: boolean
   className?: string
   onSelect?: (item: string) => void
 }
@@ -55,7 +55,7 @@ function PriorityMenu({
         <Menu
           id={id}
           size="small"
-          filterKeyword={false}
+          filterKeyword={filterKeyword}
           searchPlaceholder="Set priority..."
           onKeywordChange={(kw) => setKeyword(kw)}
           className={className}

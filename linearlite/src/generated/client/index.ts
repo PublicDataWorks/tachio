@@ -1,7 +1,10 @@
+// @ts-nocheck
+
 import { z } from 'zod';
 import type { Prisma } from './prismaClient';
 import { type TableSchema, DbSchema, Relation, ElectricClient, type HKT } from 'electric-sql/client/model';
 import migrations from './migrations';
+import pgMigrations from './pg-migrations';
 
 /////////////////////////////////////////
 // HELPER FUNCTIONS
@@ -4136,32 +4139,32 @@ export const Slack_channelsDeleteManyArgsSchema: z.ZodType<Prisma.Slack_channels
 
 interface CommentsGetPayload extends HKT {
   readonly _A?: boolean | null | undefined | Prisma.CommentsArgs
-  readonly type: Prisma.CommentsGetPayload<this['_A']>
+  readonly type: Omit<Prisma.CommentsGetPayload<this['_A']>, "Please either choose `select` or `include`">
 }
 
 interface EmailsGetPayload extends HKT {
   readonly _A?: boolean | null | undefined | Prisma.EmailsArgs
-  readonly type: Prisma.EmailsGetPayload<this['_A']>
+  readonly type: Omit<Prisma.EmailsGetPayload<this['_A']>, "Please either choose `select` or `include`">
 }
 
 interface IssuesGetPayload extends HKT {
   readonly _A?: boolean | null | undefined | Prisma.IssuesArgs
-  readonly type: Prisma.IssuesGetPayload<this['_A']>
+  readonly type: Omit<Prisma.IssuesGetPayload<this['_A']>, "Please either choose `select` or `include`">
 }
 
 interface OrgsGetPayload extends HKT {
   readonly _A?: boolean | null | undefined | Prisma.OrgsArgs
-  readonly type: Prisma.OrgsGetPayload<this['_A']>
+  readonly type: Omit<Prisma.OrgsGetPayload<this['_A']>, "Please either choose `select` or `include`">
 }
 
 interface ProjectsGetPayload extends HKT {
   readonly _A?: boolean | null | undefined | Prisma.ProjectsArgs
-  readonly type: Prisma.ProjectsGetPayload<this['_A']>
+  readonly type: Omit<Prisma.ProjectsGetPayload<this['_A']>, "Please either choose `select` or `include`">
 }
 
 interface Slack_channelsGetPayload extends HKT {
   readonly _A?: boolean | null | undefined | Prisma.Slack_channelsArgs
-  readonly type: Prisma.Slack_channelsGetPayload<this['_A']>
+  readonly type: Omit<Prisma.Slack_channelsGetPayload<this['_A']>, "Please either choose `select` or `include`">
 }
 
 export const tableSchemas = {
@@ -4204,7 +4207,7 @@ export const tableSchemas = {
     deleteSchema: CommentsDeleteArgsSchema,
     deleteManySchema: CommentsDeleteManyArgsSchema
   } as TableSchema<
-    z.infer<typeof CommentsCreateInputSchema>,
+    z.infer<typeof CommentsUncheckedCreateInputSchema>,
     Prisma.CommentsCreateArgs['data'],
     Prisma.CommentsUpdateArgs['data'],
     Prisma.CommentsFindFirstArgs['select'],
@@ -4246,7 +4249,7 @@ export const tableSchemas = {
     deleteSchema: EmailsDeleteArgsSchema,
     deleteManySchema: EmailsDeleteManyArgsSchema
   } as TableSchema<
-    z.infer<typeof EmailsCreateInputSchema>,
+    z.infer<typeof EmailsUncheckedCreateInputSchema>,
     Prisma.EmailsCreateArgs['data'],
     Prisma.EmailsUpdateArgs['data'],
     Prisma.EmailsFindFirstArgs['select'],
@@ -4325,7 +4328,7 @@ export const tableSchemas = {
     deleteSchema: IssuesDeleteArgsSchema,
     deleteManySchema: IssuesDeleteManyArgsSchema
   } as TableSchema<
-    z.infer<typeof IssuesCreateInputSchema>,
+    z.infer<typeof IssuesUncheckedCreateInputSchema>,
     Prisma.IssuesCreateArgs['data'],
     Prisma.IssuesUpdateArgs['data'],
     Prisma.IssuesFindFirstArgs['select'],
@@ -4429,7 +4432,7 @@ export const tableSchemas = {
     deleteSchema: OrgsDeleteArgsSchema,
     deleteManySchema: OrgsDeleteManyArgsSchema
   } as TableSchema<
-    z.infer<typeof OrgsCreateInputSchema>,
+    z.infer<typeof OrgsUncheckedCreateInputSchema>,
     Prisma.OrgsCreateArgs['data'],
     Prisma.OrgsUpdateArgs['data'],
     Prisma.OrgsFindFirstArgs['select'],
@@ -4536,7 +4539,7 @@ export const tableSchemas = {
     deleteSchema: ProjectsDeleteArgsSchema,
     deleteManySchema: ProjectsDeleteManyArgsSchema
   } as TableSchema<
-    z.infer<typeof ProjectsCreateInputSchema>,
+    z.infer<typeof ProjectsUncheckedCreateInputSchema>,
     Prisma.ProjectsCreateArgs['data'],
     Prisma.ProjectsUpdateArgs['data'],
     Prisma.ProjectsFindFirstArgs['select'],
@@ -4574,7 +4577,7 @@ export const tableSchemas = {
     deleteSchema: Slack_channelsDeleteArgsSchema,
     deleteManySchema: Slack_channelsDeleteManyArgsSchema
   } as TableSchema<
-    z.infer<typeof Slack_channelsCreateInputSchema>,
+    z.infer<typeof Slack_channelsUncheckedCreateInputSchema>,
     Prisma.Slack_channelsCreateArgs['data'],
     Prisma.Slack_channelsUpdateArgs['data'],
     Prisma.Slack_channelsFindFirstArgs['select'],
@@ -4587,6 +4590,6 @@ export const tableSchemas = {
   >,
 }
 
-export const schema = new DbSchema(tableSchemas, migrations)
+export const schema = new DbSchema(tableSchemas, migrations, pgMigrations)
 export type Electric = ElectricClient<typeof schema>
 export const JsonNull = { __is_electric_json_null__: true }
