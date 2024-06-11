@@ -24,11 +24,14 @@ try {
  */
 const convertMermaidDiagram = async (diagramText) => {
   try {
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({
+    args: ['--no-sandbox'],
+    headless: "new",
+  });
     const page = await browser.newPage();
 
     // we need to clean the diagram text- sometimes it might come in a code block like
-    /* 
+    /*
     ```mermaid
       graph LR;
           A[Conservation Efforts] -- Fighting by --> B[Large Water Users];
@@ -56,7 +59,7 @@ const convertMermaidDiagram = async (diagramText) => {
       diagramText = diagramText.replace("```", "");
     }
 
-    
+
 
 
 

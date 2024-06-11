@@ -9,7 +9,10 @@ const puppeteer = require("puppeteer");
  */
 const convertSvgToImage = async (svgString) => {
   try {
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({
+    args: ['--no-sandbox'],
+    headless: "new",
+  });
     const page = await browser.newPage();
 
     // Set up the SVG
