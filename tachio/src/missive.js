@@ -2,6 +2,8 @@ const { JSDOM } = require('jsdom')
 const { supabase } = require('./supabaseclient')
 const { notificationRegex } = require('../helpers')
 const { PROJECT_TABLE_NAME, DAILY_REPORT_TABLE_NAME } = require("./constants");
+const { storeUserMessage } = require("./remember");
+const { createHmac } = require("crypto");
 const logger = require('./logger.js')('missive')
 const DAILY_REPORT_REGEX = /Hi.*What has the team done since the last call\/email regarding this project\??(.*)What will the team do between now and the next call\/email regarding this project\??(.*)What impedes the team from performing their work as effectively as possible\??(.*)How much time have we spent today\??(.*)How much time have we spent this week.*How much time have we spent this month.*Our team today:?(.*)Regards/
 const DESIGN_REGEX = /\[Design].*?billable (?:hour|day)\(s\)/
@@ -410,17 +412,7 @@ async function processDailyReport(payload) {
   if (!payload.rule.description.toLowerCase().includes('daily report')) return
 
   const { id: messageId, subject } = payload.message
-  // Body payload is only a summary of the content, we need to fetch the full message
-  const message = await getMessage(messageId)
-  // It's in HTML format
-  const dom = new JSDOM(message.messages.body)
-  const listItems = dom.window.document.querySelectorAll('li')
-  // Append a space after each list item, otherwise the text will be concatenated
-  listItems.forEach(li => {
-    const space = dom.window.document.createTextNode('. ')
-    li.appendChild(space)
-  })
-  const text = dom.window.document.body.textContent
+  const text = await getFullMessage(messageId)
   const match = text.match(DAILY_REPORT_REGEX)
 
   const doneToday = match ? match[1].trim() : ''
@@ -465,6 +457,26 @@ async function processDailyReport(payload) {
     }
   ])
   if (error) throw new Error(error.message)
+}
+
+async function processEmailMessage(payload) {
+  const { id: messageId, from_field: fromField } = payload.message
+  const email = await getFullMessage(messageId)
+
+  const username = fromField?.address || 'API User'
+  const conversationId = payload.conversation.id
+  const sharedLabelIDs = payload.conversation.shared_labels?.map(label => label.id)
+  const { data } = await supabase
+    .from(PROJECT_TABLE_NAME)
+    .select('id')
+    .in('missive_label_id', sharedLabelIDs)
+    .limit(1)
+  const projectId = (data?.length > 0) ? `Project ID: ${data[0].id}. \n` : ''
+
+  await storeUserMessage(
+    { username, conversationId, guild: 'missive', response: '' },
+    `${projectId} <${username}> \n ${email}`
+  );
 }
 
 async function sendMissiveResponse({
@@ -522,6 +534,26 @@ async function sendMissiveResponse({
   return response
 }
 
+function verifyMissiveSignature(req, res) {
+  const passphrase = process.env.MISSIVE_WEBHOOK_SECRET // Assuming PASSPHRASE is the environment variable name
+  // Generate HMAC hash of the request body to verify authenticity
+  const hmac = createHmac('sha256', passphrase)
+  const reqBodyString = JSON.stringify(req.body)
+  hmac.update(reqBodyString)
+  const hash = hmac.digest('hex')
+
+  logger.info('Request headers:' + JSON.stringify(req.headers))
+  const signature = `${req.headers['x-hook-signature']}`
+
+  const hashString = `sha256=${hash}`
+  if (hashString !== signature) {
+    logger.info('HMAC signature check failed')
+    return false
+  }
+  logger.info('HMAC signature check passed')
+  return true
+}
+
 function missiveOptions(body = undefined, method = 'GET') {
   return {
     body,
@@ -573,6 +605,20 @@ function splitIntoParagraphs(text, maxLines) {
   return paragraphs
 }
 
+async function getFullMessage(messageId) {
+  // Body payload is only a summary of the content, we need to fetch the full message
+  const message = await getMessage(messageId)
+  // It's in HTML format
+  const dom = new JSDOM(message.messages.body)
+  const listItems = dom.window.document.querySelectorAll('li')
+  // Append a space after each list item, otherwise the text will be concatenated
+  listItems.forEach(li => {
+    const space = dom.window.document.createTextNode('. ')
+    li.appendChild(space)
+  })
+  return dom.window.document.body.textContent
+}
+
 module.exports = {
-  createSharedLabel, createPost, processDailyReport, sendMissiveResponse
+  createSharedLabel, createPost, processDailyReport, sendMissiveResponse, processEmailMessage, verifyMissiveSignature
 }
