@@ -1,7 +1,7 @@
 const dotenv = require("dotenv");
 // const { Configuration, OpenAIApi } = require("openai");
 const puppeteer = require("puppeteer");
-const { getPromptsFromSupabase } = require("../helpers");
+const { getPromptsFromSupabase, parseJSONArg } = require("../helpers");
 const { WEBPAGE_UNDERSTANDER_PROMPT, WEBPAGE_CHUNK_UNDERSTANDER_PROMPT } =
   getPromptsFromSupabase();
 const { encode, decode } = require("@nem035/gpt-3-encoder");
@@ -80,7 +80,10 @@ function cleanUrlForPuppeteer(dirtyUrl) {
 
 // Refactored function to be exported
 async function webPageToText(url) {
-  const browser = await puppeteer.launch();
+  const browser = await puppeteer.launch({
+    args: ['--no-sandbox'],
+    headless: "new",
+  });
   const page = await browser.newPage();
   await page.setUserAgent(randomUserAgent());
   await page.goto(url);
@@ -116,7 +119,10 @@ async function webPageToText(url) {
 }
 
 async function webpageToHTML(url) {
-  const browser = await puppeteer.launch();
+  const browser = await puppeteer.launch({
+    args: ['--no-sandbox'],
+    headless: "new",
+  });
   const page = await browser.newPage();
   await page.setUserAgent(randomUserAgent());
   await page.goto(url);
@@ -149,10 +155,13 @@ async function fetchAndParseURL(url) {
  * @param {string} url - The URL to fetch links from.
  * @returns {Promise<string>} - A promise that resolves to a string containing the links.
  */
-async function fetchAllLinks(url) {
+async function fetchAllLinks({ url }) {
   logger.info("🕸️  Fetching all links on " + url);
   // navigate to a page and fetch all of the anchor tags
-  const browser = await puppeteer.launch();
+  const browser = await puppeteer.launch({
+    args: ['--no-sandbox'],
+    headless: "new"
+  });
   const page = await browser.newPage();
   await page.setUserAgent(randomUserAgent());
 
@@ -234,7 +243,10 @@ async function fetchAllLinks(url) {
 async function fetchAllVisibleImages(url) {
   logger.info("🕸️  Fetching all images on " + url);
   // navigate to a page and fetch all of the anchor tags
-  const browser = await puppeteer.launch();
+  const browser = await puppeteer.launch({
+    args: ['--no-sandbox'],
+    headless: "new",
+  });
   const page = await browser.newPage();
   await page.setUserAgent(randomUserAgent());
 
@@ -282,7 +294,7 @@ async function fetchAllVisibleImages(url) {
  * @param {string} url - The URL to fetch the images from.
  * @returns {Promise<string>} The source URL of the largest image.
  */
-async function fetchLargestImage(url) {
+async function fetchLargestImage({ url }) {
   const urlImages = await fetchAllVisibleImages(url);
   // sort the images by size
   urlImages.sort((a, b) => {
@@ -341,9 +353,10 @@ async function processChunks(chunks, data, limit = 2, userPrompt = "") {
 /**
  * Fetches the content of a URL, generates a summary, and caches the result.
  * @param {string} url - The URL to fetch and summarize.
+ * @param {string} userPrompt - The user prompt.
  * @returns {Promise<string>} - The generated summary.
  */
-async function fetchAndSummarizeUrl(url, userPrompt = "") {
+async function fetchAndSummarizeUrl({ url, userPrompt = "" }) {
   const cleanedUrl = cleanUrlForPuppeteer(url);
   const hashedUrl = crypto.createHash("md5").update(cleanedUrl).digest("hex");
   const cachePath = path.join(__dirname, "cache", `${hashedUrl}.json`);
@@ -488,17 +501,13 @@ async function handleCapabilityMethod(method, args, messages) {
   // then we need to return the result of the method
 
   const userPrompt = lastUserMessage(messages);
-
-  const url = destructureArgs(args)[0];
+  const arg = parseJSONArg(args)
   if (method === "fetchAndSummarizeUrl") {
-    const summary = await fetchAndSummarizeUrl(url, userPrompt);
-    return summary;
+    return await fetchAndSummarizeUrl({ ...arg, userPrompt });
   } else if (method === "fetchAllLinks") {
-    const links = await fetchAllLinks(url);
-    return links;
+    return await fetchAllLinks(arg);
   } else if (method === "fetchLargestImage") {
-    const image = await fetchLargestImage(url);
-    return image;
+    return await fetchLargestImage(arg);
   }
 }
 

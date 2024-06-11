@@ -233,7 +233,7 @@ function doesMessageContainCapability(message) {
  * Finds the last message in the array with the user role.
  *
  * @param {Array} messagesArray - The array of messages.
- * @returns {Object} - The last message with the user role.
+ * @returns {string} - The last message with the user role.
  */
 function lastUserMessage(messagesArray) {
   // find the last message in the array with the user role
