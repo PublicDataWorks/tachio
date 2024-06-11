@@ -1,17 +1,21 @@
 import { LIB_VERSION } from 'electric-sql/version'
 import { makeElectricContext } from 'electric-sql/react'
 import { uniqueTabId } from 'electric-sql/util'
-import { electrify, ElectricDatabase } from 'electric-sql/wa-sqlite'
 import { Electric, schema } from './generated/client'
 import type { Session } from '@supabase/supabase-js'
 export type { Issues } from './generated/client'
 
 export const { ElectricProvider, useElectric } = makeElectricContext<Electric>()
 
-const discriminator = 'linearlite'
-
+const ELECTRIC_SERVICE =
+  import.meta.env.ELECTRIC_SERVICE || import.meta.env.ELECTRIC_URL
 const DEV_MODE = import.meta.env.DEV
 const DEBUG_ENV = import.meta.env.DEBUG
+const CLIENT_DB: 'wa-sqlite' | 'pglite' = import.meta.env.ELECTRIC_CLIENT_DB || 'wa-sqlite'
+
+const discriminator = 'linearlite'
+const tabId = uniqueTabId().tabId.slice(0, 8)
+const electricUrl = ELECTRIC_SERVICE ?? 'ws://localhost:5133'
 
 // We can override the debug mode with a query param: ?debug=true or ?debug=false
 const searchParams = new URLSearchParams(window.location.search)
@@ -22,14 +26,56 @@ export const DEBUG = debugParam ? debugParam === 'true' : DEV_MODE || DEBUG_ENV
 // We export dbName so that we can delete the database if the schema changes
 export let dbName: string
 
-export const initElectric = async (session: Session) => {
+const initPGlite = async () => {
+  const { electrify } = await import('electric-sql/pglite')
+  const { PGlite } = await import('@electric-sql/pglite')
+
+  dbName = `idb://${discriminator}-${LIB_VERSION}-${tabId}.db`
   const config = {
-    url: import.meta.env.ELECTRIC_URL
+    url: import.meta.env.ELECTRIC_URL,
+    debug: DEBUG
   }
-  const { tabId } = uniqueTabId()
+
+  const conn = new PGlite(dbName)
+  const electric = await electrify(conn, schema, config)
+  return {
+    electric,
+    conn,
+    config
+  }
+}
+
+export const initWaSqlite = async () => {
+  const { electrify, ElectricDatabase } = await import('electric-sql/wa-sqlite')
+
   dbName = `${discriminator}-${LIB_VERSION}-${tabId}.db`
+  console.log('dbName', dbName)
+
+  const config = {
+    url: electricUrl,
+    debug: DEBUG
+  }
+
   const conn = await ElectricDatabase.init(dbName)
   const electric = await electrify(conn, schema, config)
+  return {
+    electric,
+    conn,
+    config
+  }
+}
+
+export const initElectric = async (session: Session) => {
+  const { electric, conn, config } =
+    CLIENT_DB === 'wa-sqlite' ? await initWaSqlite() : await initPGlite()
+  if (DEBUG) {
+    console.log('initElectric')
+    console.log('dbName', dbName)
+    console.log(conn)
+    console.log(schema)
+    console.log(config)
+  }
+
   const token = session.access_token
   await electric.connect(token)
   return electric

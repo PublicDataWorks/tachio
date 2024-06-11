@@ -49,6 +49,9 @@ export default function IssueBoard({ issues }: IssueBoardProps) {
     // Sort issues in each column by kanbanorder and issue id
     Object.keys(issuesByStatus).forEach((status) => {
       issuesByStatus[status].sort((a, b) => {
+        if (!a.kanbanorder || !b.kanbanorder) {
+          return 0
+        }
         if (a.kanbanorder < b.kanbanorder) {
           return -1
         }

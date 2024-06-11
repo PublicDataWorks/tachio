@@ -15,12 +15,12 @@ import { Transition } from '@headlessui/react'
 interface Props {
   title?: string
   isOpen: boolean
-  center: boolean
+  center?: boolean
   className?: string
   /* function called when modal is closed */
   onDismiss?: () => void
   children?: React.ReactNode
-  size: keyof typeof sizeClasses
+  size?: keyof typeof sizeClasses
 }
 
 const sizeClasses = {
@@ -31,8 +31,8 @@ const sizeClasses = {
 function Modal({
   title,
   isOpen,
-  center,
-  size,
+  center = true,
+  size = 'normal',
   className,
   onDismiss,
   children,
@@ -96,11 +96,6 @@ function Modal({
     modal,
     document.getElementById('root-modal') as Element
   )
-}
-
-Modal.defaultProps = {
-  size: 'normal',
-  center: true,
 }
 
 export default memo(Modal)

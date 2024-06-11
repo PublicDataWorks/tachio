@@ -70,21 +70,9 @@ export const MainRoutes = ({ onElectricLoaded }: MainRoutesProps) => {
       try {
         const client = await initElectric(session!)
         setElectric(client)
-        const { synced } = await client.db.issues.sync({
-          include: {
-            projects: {
-              include: {
-                orgs: {
-                  include: {
-                    emails: true,
-                    slack_channels: true
-                  }
-                }
-              }
-            }
-          }
-        })
-        await synced
+        const { synced } = await client.db.projects.sync()
+        const { synced: syncedIssues } = await client.db.issues.sync()
+        await Promise.all([synced, syncedIssues])
         const timeToSync = performance.now()
         if (DEBUG) {
           console.log(`Synced in ${timeToSync}ms from page load`)
