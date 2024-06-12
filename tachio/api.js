@@ -285,7 +285,7 @@ async function processMissiveRequest(body, query) {
 }
 
 app.post('/api/missive-reply', async (req, res) => {
-  if (!verifyMissiveSignature()) {
+  if (!verifyMissiveSignature(req)) {
     return res.status(401).send('Unauthorized request')
   }
 
@@ -305,7 +305,7 @@ app.post('/api/missive-reply', async (req, res) => {
 })
 
 app.post('/api/missive-email', async (req, res) => {
-  if (!verifyMissiveSignature()) {
+  if (!verifyMissiveSignature(req)) {
     return res.status(401).send('Unauthorized request')
   }
 

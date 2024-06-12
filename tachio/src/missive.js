@@ -534,7 +534,7 @@ async function sendMissiveResponse({
   return response
 }
 
-function verifyMissiveSignature(req, res) {
+function verifyMissiveSignature(req) {
   const passphrase = process.env.MISSIVE_WEBHOOK_SECRET // Assuming PASSPHRASE is the environment variable name
   // Generate HMAC hash of the request body to verify authenticity
   const hmac = createHmac('sha256', passphrase)
