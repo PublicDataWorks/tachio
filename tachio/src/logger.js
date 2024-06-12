@@ -62,7 +62,7 @@ module.exports = function (serviceName) {
   if (!process.env.DISABLE_LOCAL_LOGS) {
     loggers.push(
       new winston.transports.File({
-        filename: "coachartie.log",
+        filename: "tachio.log",
         format: winston.format.combine(
           winston.format.timestamp(),
           winston.format.printf((info) => {
@@ -77,7 +77,7 @@ module.exports = function (serviceName) {
 
     loggers.push(
       new winston.transports.File({
-        filename: `coachartie-${serviceName}.log`,
+        filename: `tachio-${serviceName}.log`,
         format: winston.format.combine(
           winston.format.timestamp(),
           winston.format.printf((info) => {

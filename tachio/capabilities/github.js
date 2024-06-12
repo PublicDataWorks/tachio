@@ -407,7 +407,7 @@
 //
 //     const destructuredArgs = destructureArgs(args);
 //     // logger.info("destructuredArgs", destructuredArgs);
-//     // destructuredArgs [ 'coachartie/test2', 'Test issue 1', 'This is a test issue' ]
+//     // destructuredArgs [ 'tachio/test2', 'Test issue 1', 'This is a test issue' ]
 //     // to pass the array off arguments to each method
 //     // we need to
 //     // 1. destructure the array

@@ -111,8 +111,8 @@ class DiscordBot {
    * @param {object} message - The message object containing the content.
    */
   async processPrompt(message) {
-    // const prompt = removeMentionFromMessage(message.content, "@coachartie");
-    // const prompt = replaceStringWithId(message.content, "<@!879978978>", "@coachartie");
+    // const prompt = removeMentionFromMessage(message.content, "@tachio");
+    // const prompt = replaceStringWithId(message.content, "<@!879978978>", "@tachio");
     // the message might look like `<@1086489885269037128> what's up`
     // and it should ust be
     // what's up
@@ -169,7 +169,7 @@ class DiscordBot {
   async respondToMessage(message) {
     const botMentionOrChannel = detectBotMentionOrChannel(message);
     const messageAuthorIsBot = message.author.bot;
-    const authorIsMe = message.author.username === "coachartie";
+    const authorIsMe = message.author.username === "tachio";
     if (authorIsMe) return;
 
     let prompt = await this.processPrompt(message);
