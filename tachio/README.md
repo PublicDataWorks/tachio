@@ -242,7 +242,12 @@ $$;
 
 ## Setup: Initialize Cron Jobs for Briefings
 
-Run the following command to set up the cron jobs for creating weekly and daily briefings:
+# Run the following command to set up the cron jobs for creating weekly and daily briefings:
 
 ```sh
 npm run briefing:init
+
+# Run the following command to set up the cron jobs for trigger Rememberizer crawling
+
+```sh
+npm run rememberizer

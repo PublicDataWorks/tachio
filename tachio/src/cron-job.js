@@ -1,5 +1,5 @@
 const { createJob } = require('../capabilities/pgcron')
-const { BIWEEKLY_BRIEFING, PROJECT_BRIEFING, WEEKLY_BRIEFING, DAILY_BRIEFING } = require("./constants")
+const { BIWEEKLY_BRIEFING, PROJECT_BRIEFING, WEEKLY_BRIEFING, DAILY_BRIEFING, REMEMBERIZER } = require("./constants")
 
 // Used to trigger biweekly briefing
 const invokeBiWeeklyBriefing = async (projectId) => {
@@ -66,6 +66,21 @@ const invokeDailyBriefing = async () => {
   );
 }
 
+const invokeRememberizer = async () => {
+  const cronExpression = '0 6 * * *'; // 6:00 AM PT every day
+  await createJob(
+    cronExpression,
+    `
+      SELECT
+        net.http_post(
+            url:='${process.env.BACKEND_URL}${REMEMBERIZER}',
+            headers:='{"Content-Type": "application/json", "Authorization": "Bearer ${process.env.SUPABASE_API_KEY}"}'::jsonb
+        ) AS request_id;
+    `,
+    'rememberizer'
+  );
+}
+
 const generateBiWeeklyBriefingJobName = (projectId) => `biweekly-briefing-${projectId}`;
 
-module.exports = { invokeBiWeeklyBriefing, generateBiWeeklyBriefingJobName, invokeProjectBriefing, invokeWeeklyBriefing, invokeDailyBriefing }
+module.exports = { invokeBiWeeklyBriefing, generateBiWeeklyBriefingJobName, invokeProjectBriefing, invokeWeeklyBriefing, invokeDailyBriefing, invokeRememberizer }
