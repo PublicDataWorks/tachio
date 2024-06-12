@@ -290,6 +290,16 @@ module.exports = (async () => {
     }
     const currentTokenCount = countMessageTokens(messages);
 
+    if (!capabilityMatch) {
+      logger.error("No capability match found");
+      return messages;
+    }
+
+    // log the capabilityMatch and the stuff we extract from it
+    logger.info(
+      `Capability match: ${capabilityMatch}\nProcessing Capability: ${capSlug}:${capMethod} with args: ${capArgs}`
+    );
+
     if (currentTokenCount >= TOKEN_LIMIT - WARNING_BUFFER) {
       logger.warn('Token Limit Warning: Current Tokens - ' + currentTokenCount);
       messages.push(createTokenLimitWarning());
@@ -392,7 +402,7 @@ module.exports = (async () => {
     try {
       return await processAndLogCapabilityResponse(messages, capabilityMatch);
     } catch (error) {
-      logger.info(`Error processing capability: ${error}`);
+      logger.error(`Error processing capability: ${error}`);
       messages.push({
         role: 'system',
         content: 'Error processing capability: ' + error
