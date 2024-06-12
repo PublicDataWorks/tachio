@@ -154,6 +154,8 @@ async function processMissiveRequest(body, query) {
       + (task.completed_at ? `This todo is already completed at ${new Date(task.completed_at * 1000)}. \n` : `This todo is not completed yet. \n`)
   } else if (body.comment.attachment?.media_type === 'text') {
     contextPrompt = `ingest:read(${body.comment.attachment.url}, ${conversationId})`
+  } else if (body.comment.body?.startsWith('https://docs.pdw.co')) {
+    contextPrompt = `ingest:read(${body.comment.body}, ${conversationId})`
   }
   // Process the webhook payload using the processWebhookPayload function
   const simplifiedPayload = processWebhookPayload(body)
