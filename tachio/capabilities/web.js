@@ -361,7 +361,7 @@ async function processChunks(chunks, data, limit = 2, userPrompt = "") {
  * @param {string} userPrompt - The user prompt.
  * @returns {Promise<string>} - The generated summary.
  */
-async function fetchAndSummarizeUrl({ url, userPrompt = "" }) {
+async function fetchAndSummarizeUrl({ url, userPrompt = '' }) {
   const cleanedUrl = cleanUrlForPuppeteer(url);
   const hashedUrl = crypto.createHash("md5").update(cleanedUrl).digest("hex");
   const cachePath = path.join(__dirname, "cache", `${hashedUrl}.json`);
@@ -428,15 +428,15 @@ async function fetchAndSummarizeUrl({ url, userPrompt = "" }) {
       chunkResponses = JSON.parse(
         fs.readFileSync(
           path.join(__dirname, `../cache/${cacheKey}.json`),
-          "utf8"
-        )
+          "utf8",
+        ),
       );
     } else {
       chunkResponses = await processChunks(chunks, cleanText);
       // Cache the chunks
       fs.writeFileSync(
         path.join(__dirname, `../cache/${cacheKey}.json`),
-        JSON.stringify(chunkResponses)
+        JSON.stringify(chunkResponses),
       );
     }
 

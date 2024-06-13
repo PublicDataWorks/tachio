@@ -52,7 +52,7 @@ async function createTodo({ projectId, title, username, status = "todo", priorit
  * Verify Deletion: The function returns a boolean value indicating the success of the deletion operation. Use this to provide feedback to the user or to update the application state accordingly.
  *
  * @param {number} todoId - ID of the todo to be deleted.
- * @returns {Promise<string>} A promise that resolves to true if the deletion was successful, false otherwise.
+ * @returns {Promise<string>} A promise that resolves to true if the deletion was successful, false otherwise
  * @example supabasetodo:deleteTodo(123).
  */
 async function deleteTodo(todoId) {

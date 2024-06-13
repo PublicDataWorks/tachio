@@ -38,7 +38,6 @@ async function createJob(schedule, command, jobName) {
   return `Job created: ${data}`;
 }
 
-
 // we also need a function that makes it REALLY easy to make a webhook
 /**
  * Creates a webhook and sends a POST request to the specified URL with the provided body and headers.
@@ -90,14 +89,19 @@ async function createWebhook(schedule, url, body, headers, name) {
 // lets also make another function to list the current webhook jobs
 
 async function listWebhookJobs() {
-  const { data, error } = await supabase.from('job').select('*').limit(100);
+  const { data, error } = await supabase.from("job").select("*").limit(100);
 
   if (error) {
-    logger.error('Error listing webhook jobs with pg_cron:', error);
+    logger.error("Error listing webhook jobs with pg_cron:", error);
     throw error;
   }
 
-  logger.info('Webhook Jobs:', data);
+  // no jobs without `net.http_post(`
+  const filteredJobs = data.filter((job) =>
+    job.command.includes("net.http_post("),
+  );
+
+  logger.info("Webhook Jobs:", data);
   return JSON.stringify(data, null, 2);
 }
 

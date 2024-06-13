@@ -169,8 +169,8 @@ class DiscordBot {
   async respondToMessage(message) {
     const botMentionOrChannel = detectBotMentionOrChannel(message);
     const messageAuthorIsBot = message.author.bot;
-    const authorIsMe = message.author.username === "tachio";
-    if (authorIsMe) return;
+    const authorIsMe = message.author.username === 'tachio'
+    if (authorIsMe) return
 
     let prompt = await this.processPrompt(message);
     let processedPrompt = await this.processImageAttachment(message, prompt);
@@ -187,9 +187,7 @@ class DiscordBot {
       ? message.channel.name
       : this.fetchChannelById(message.channel.id).name;
 
-    const channelName = isDM
-      ? `DM-${message.author.id}`
-      : message.channel.id;
+    const channelName = isDM ? `DM-${message.author.id}` : message.channel.id;
 
     const channelObj = this.fetchChannelById(channelName);
     // log the "math" that goes into shouldRespond
@@ -226,6 +224,7 @@ class DiscordBot {
         shouldRespond ? "Responding" : "Not Responding"
       }`
     );
+
     // TODO: add channelName- make it easier to understand what the var is and how it is meant to be used- some places expect an object, like splitAndSendMessage, and other things expect a name string, like the memory saving
 
     // Okay one issue is this actually seems to be sending the message back itself
