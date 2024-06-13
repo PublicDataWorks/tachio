@@ -44,7 +44,7 @@ const TODO_TABLE_NAME = 'issues'
  *
  */
 async function getPromptsFromSupabase() {
-  const { data: promptArray, error } = await supabase.from("prompts").select()
+  const { data: promptArray } = await supabase.from("prompts").select()
   const promptKeys = promptArray.map((prompt) => prompt.prompt_name);
   const promptValues = promptArray.map((prompt) => prompt.prompt_text);
   // return an object with all the keys and values

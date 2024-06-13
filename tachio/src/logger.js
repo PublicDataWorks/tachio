@@ -23,7 +23,7 @@ module.exports = function (serviceName) {
 
   // Function to send log to Supabase
   const sendLogToSupabase = async (level, message) => {
-    const response = await supabase.from("logs").insert([
+    const { error } = await supabase.from("logs").insert([
       {
         level,
         message,
@@ -32,8 +32,8 @@ module.exports = function (serviceName) {
       },
     ]);
 
-    if (response.error) {
-      console.error("Error sending log to Supabase:", response.error);
+    if (error) {
+      console.error(`Error sending log to Supabase: ${error.message}`);
     }
   };
 
