@@ -13,11 +13,7 @@ async function generateManifest() {
   const documentation = await import("documentation"); // Move import outside the loop if possible
 
   for (const file of files) {
-    if (
-      path.extname(file) !== ".js" ||
-      file === "_template.js" ||
-      file === "_generate-manifest.js"
-    ) {
+    if (path.extname(file) !== ".js" || file === "_template.js" || file === "_generate-manifest.js") {
       continue; // Skip non-JS, _template, and self
     }
 
@@ -25,10 +21,7 @@ async function generateManifest() {
     logger.info(`Generating manifest for ${capabilityName}`);
 
     try {
-      const docs = await documentation.build(
-        [path.join(capabilitiesDir, file)],
-        { shallow: true },
-      );
+      const docs = await documentation.build([path.join(capabilitiesDir, file)], { shallow: true });
       const output = await documentation.formats.json(docs);
       manifest[capabilityName] = parseJSDoc(JSON.parse(output), capabilityName);
     } catch (err) {
@@ -36,19 +29,14 @@ async function generateManifest() {
     }
   }
 
-  fs.writeFileSync(
-    "capabilities/_manifest.json",
-    JSON.stringify(manifest, null, 2),
-  );
+  fs.writeFileSync("capabilities/_manifest.json", JSON.stringify(manifest, null, 2));
 }
 
 // Call the async function
-generateManifest()
-  .then(() => {
-    console.log("Manifest generation complete.");
-    process.exit(0);
-  })
-  .catch(console.error);
+generateManifest().then(() => {    
+  console.log('Manifest generation complete.')
+  process.exit(0);
+}).catch(console.error);
 
 function parseJSDoc(jsDocData, moduleName) {
   let output = [];

@@ -115,11 +115,11 @@ describe("Helpers", () => {
       const lastMessageSystem = { role: "system" };
       const resultUser = isBreakingMessageChain(
         capabilityMatch,
-        lastMessageUser
+        lastMessageUser,
       );
       const resultSystem = isBreakingMessageChain(
         capabilityMatch,
-        lastMessageSystem
+        lastMessageSystem,
       );
       expect(resultUser).toBe(false);
       expect(resultSystem).toBe(false);

@@ -282,23 +282,13 @@ module.exports = (async () => {
    */
   async function processAndLogCapabilityResponse(messages, capabilityMatch) {
     logger.info(`processAndLogCapabilityResponse: ${capabilityMatch}`);
-    let toolId, capSlug, capMethod, capArgs
+    let toolId, capSlug, capMethod, capArgs;
     if (capabilityMatch.length === 4) {
       [_, capSlug, capMethod, capArgs] = capabilityMatch
     } else {
       [_, toolId, capSlug, capMethod, capArgs] = capabilityMatch
     }
     const currentTokenCount = countMessageTokens(messages);
-
-    if (!capabilityMatch) {
-      logger.error("No capability match found");
-      return messages;
-    }
-
-    // log the capabilityMatch and the stuff we extract from it
-    logger.info(
-      `Capability match: ${capabilityMatch}\nProcessing Capability: ${capSlug}:${capMethod} with args: ${capArgs}`
-    );
 
     if (currentTokenCount >= TOKEN_LIMIT - WARNING_BUFFER) {
       logger.warn('Token Limit Warning: Current Tokens - ' + currentTokenCount);
@@ -402,7 +392,7 @@ module.exports = (async () => {
     try {
       return await processAndLogCapabilityResponse(messages, capabilityMatch);
     } catch (error) {
-      logger.error(`Error processing capability: ${error}`);
+      logger.info(`Error processing capability: ${error}`);
       messages.push({
         role: 'system',
         content: 'Error processing capability: ' + error
@@ -432,7 +422,7 @@ module.exports = (async () => {
     logger.info(`Processing Message in chain.js: ${lastMessage}`);
 
     let capabilityMatch = lastMessage.match(capabilityRegex) || lastMessage.match(toolUseCapabilityRegex);
-    logger.info(`Is Capability: ${!!capabilityMatch} - ${lastMessage}`)
+    logger.info(`Is Capability: ${!!capabilityMatch} - ${lastMessage}`);
     let capabilityName
     if (capabilityMatch) {
       logger.info(`Capability Detected: ${lastMessage}`);
