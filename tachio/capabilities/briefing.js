@@ -153,6 +153,8 @@ async function makeProjectBriefing(projectName) {
   if (todoChanges.length > 0 || conversationMessages.length > 0 || importedMessages.length > 0 || importedMemories.length > 0 || memoriesInProjectConversation.length > 0 || githubWebhooks.length > 0 || linearWebhooks.length > 0 || memoriesMentioningProject.length > 0) {
     return await generateProjectSummary({
       projectName,
+      startDate,
+      endDate,
       todoChanges,
       conversationMessages,
       memoriesMentioningProject,
@@ -236,10 +238,6 @@ async function makeBiweeklyProjectBriefing(projectName) {
   })
 }
 
-/**
- * Retrieves feedback on previous weekly summaries.
- * @returns {Promise<Array>} A promise that resolves to an array of feedback items.
- */
 async function retrieveFeedback() {
   // Placeholder for feedback retrieval logic
 
@@ -258,11 +256,6 @@ async function retrieveFeedback() {
   return data
 }
 
-/**
- * Identifies projects, project IDs, or project slugs mentioned in the memories.
- * @param {Array} processedMemories - The processed memories to identify projects in.
- * @returns {Promise<Array>} A promise that resolves to an array of project identifiers.
- */
 async function identifyProjectsInMemories(processedMemories) {
   // Placeholder for project identification logic
   // We are going to get a bunch of memory objects
@@ -368,13 +361,57 @@ In the previous message I just sent, please identify any GitHub Repos, Issues, M
   return parsedResponse
 }
 
-/**
- * Lists all todo changes from this week (added, edited, deleted).
- * @param {string} startDate - A optional start date in ISO format for the todo changes. Leave it empty to default to the current week.
- * @param {string} endDate - A optional end date in ISO format for the todo changes. Leave it empty to default to the current week.
- * @param {string} projectId - A optional project id to be filtered
- * @returns {Promise<Array>} A promise that resolves to an array of todo changes.
- */
+async function formatSummary(summary) {
+  const formattedCompletion = await createChatCompletion([
+    {
+      role: 'user',
+      content: `I want to format the summary: ${summary}`
+    },
+    {
+      role: 'user',
+      content: `Can you please re-write this summary of facts into a well-architected summary document? Wherever possible, summarize related facts into a single sentence or paragraph. Use bullet points for lists. Be as detailed as possible and surface specific links, dates, projects, and names.`
+    }
+  ])
+
+  return formattedCompletion
+}
+
+async function communicateSummary(message, service) {
+  // Placeholder for communication logic
+  if (service === 'discord') {
+    // Look up the ID of the weekly summary from the config
+    // then send a message to that channel
+    // figure out the correct Discord channel to post to
+    // post to discord
+  } else if (service === 'api') {
+    // AKA Missive
+    //
+    // Create a new conversation with a title like "Weekly Summary - Week of [date]"
+    // post to missive
+  } else if (service === 'github') {
+    // figure out any relevant repos / issues
+    // and send response there
+  }
+}
+
+async function archiveSummary(summary) {
+  // Placeholder for archiving logic
+  // we will save a special type of memory that is tagged as a weekly summary archive
+  const { supabase } = require('../helpers')
+  const { data, error } = await supabase.from('memories').insert([
+    {
+      content: summary,
+      tags: ['weekly_summary']
+    }
+  ])
+
+  if (error) {
+    logger.error('Error archiving summary', error)
+  }
+
+  return data
+}
+
 async function listTodoChanges({ startDate, endDate, projectId }) {
   const query = supabase
     .from('issues')
@@ -393,13 +430,6 @@ async function listTodoChanges({ startDate, endDate, projectId }) {
   return data
 }
 
-/**
- * Reads the calendar for the current week.
- * @param {string} startDate - An optional start date in ISO format for the calendar entries, leave it empty to default to the current week.
- * @param {string} endDate - An optional end date in ISO format for the calendar entries, leave it empty to default to the current week.
- *
- * @returns {Promise<array>} A promise that resolves to an object containing calendar entries.
- */
 async function readCalendar({ startDate, endDate }) {
   try {
     // Assuming you have a way to determine the calendarId. It could be an environment variable or a fixed value.
@@ -420,26 +450,6 @@ async function readCalendar({ startDate, endDate }) {
   }
 }
 
-/**
- * Generates summary by project.
- * @param {Array} projectName - The name of the project
- * @param {string} startDate - The start date for the briefing period.
- * @param {string} endDate - The end date for the briefing period.
- * @param {Array} todoChanges - An array of changes made to the project's to-do list. Each change could be an addition, deletion, or modification..
- * @param {Object} calendarEntries - An object that contains calendar entries related to the project.
- * @param {Object} memoriesMentioningProject - A list of memory objects that mention the project.
- * @param {Object} memoriesInProjectConversation - A list of memory object that were part of the project's conversation.
- * @param {Object} relevantMemories - A list of memory object that is relevant.
- * @param {Object} conversationMessages - A list of comments in the project conversation.
- * @param {Object} importedMemories - A list of memories string that were imported into the project's conversation.
- * @param {Object} importedMessages - A list of messages string that were imported into the project's conversation.
- * @param {Object} githubWebhooks - A list of objects that contain the history of GitHub webhooks related to the project
- * @param {Object} linearWebhooks - A list of objects that contain the history of Linear webhooks related to the project
- * @param {String} dailyReports - A string aggregator of all daily reports of this project
- * @param {String} template - The template for the summary
- * @returns {Promise<String>} A promise that resolves to an array of project summaries.
- * @example await generateProjectSummary({ project, projectMemoryMap, todoChanges, calendarEntries });
- */
 async function generateProjectSummary({
   projectName,
   startDate,
@@ -547,14 +557,6 @@ async function generateProjectSummary({
   return await createChatCompletion(messages)
 }
 
-/**
- * Generates a meta-summary based on project summaries.
- * @param {Array} projectSummaries - The project summaries to base the meta-summary on.
- * @param {Array} weekMemories - The project memories to base the meta-summary on.
- * @param {Array} todoChanges - An array of changes made to the project's to-do list. Each change could be an addition, deletion, or modification..
- * @param {Object} calendarEntries - An object that contains calendar entries related to the project.
- * @returns {Promise<String>} A promise that resolves to a string containing the meta-summary.
- */
 async function generateMetaSummary({
   weekMemories,
   projectSummaries,
@@ -592,74 +594,6 @@ async function generateMetaSummary({
   ])
 }
 
-/**
- * Formats the fact-based summary through a weekly summary prompt/template.
- * @param {String} summary - The summary to format.
- * @returns {Promise<String>} A promise that resolves to a string containing the formatted summary.
- */
-async function formatSummary(summary) {
-  const formattedCompletion = await createChatCompletion([
-    {
-      role: 'user',
-      content: `I want to format the summary: ${summary}`
-    },
-    {
-      role: 'user',
-      content: `Can you please re-write this summary of facts into a well-architected summary document? Wherever possible, summarize related facts into a single sentence or paragraph. Use bullet points for lists. Be as detailed as possible and surface specific links, dates, projects, and names.`
-    }
-  ])
-
-  return formattedCompletion
-}
-
-/**
- * Creates new posts or threads in communication platforms.
- * @param {String} message - The message to post.
- * @param {String} service - The service to post the message to - could be either `discord` or `missive` so far
- * @returns {Promise<void>}
- */
-async function communicateSummary(message, service) {
-  // Placeholder for communication logic
-  if (service === 'discord') {
-    // Look up the ID of the weekly summary from the config
-    // then send a message to that channel
-    // figure out the correct Discord channel to post to
-    // post to discord
-  } else if (service === 'api') {
-    // AKA Missive
-    //
-    // Create a new conversation with a title like "Weekly Summary - Week of [date]"
-    // post to missive
-  } else if (service === 'github') {
-    // figure out any relevant repos / issues
-    // and send response there
-  }
-}
-
-/**
- * Saves an archived copy of the weekly summary.
- * @param {String} summary - The summary to archive.
- * @returns {Promise<void>}
- */
-async function archiveSummary(summary) {
-  // Placeholder for archiving logic
-  // we will save a special type of memory that is tagged as a weekly summary archive
-  const { supabase } = require('../helpers')
-  const { data, error } = await supabase.from('memories').insert([
-    {
-      content: summary,
-      tags: ['weekly_summary']
-    }
-  ])
-
-  if (error) {
-    logger.error('Error archiving summary', error)
-  }
-
-  return data
-}
-
-// ===============================Helper functions===============================
 async function readCalendarByProject({ name, shortname, aliases, startDate, endDate }) {
   const events = await readCalendar({ startDate, endDate })
   if (!name && !shortname && !aliases) return events
