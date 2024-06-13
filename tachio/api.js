@@ -33,7 +33,7 @@ const {
 } = require('./src/constants')
 const { getConfigFromSupabase } = require('./helpers');
 const { processPTRequest } = require('./src/pivotal-tracker');
-const { retrieveSlackContent } = require('./src/rememberizer')
+const { crawlSlack } = require('./src/rememberizer')
 require('dotenv').config()
 
 let port = process.env.EXPRESS_PORT
@@ -615,7 +615,7 @@ app.post('/api/label-changed', async (req, res) => {
 app.post(REMEMBERIZER, validateAuthorizationHeader, async (req, res) => {
   logger.info(`Sending 204 response`)
   res.status(204).end()
-  await retrieveSlackContent()
+  await crawlSlack()
 })
 
 
