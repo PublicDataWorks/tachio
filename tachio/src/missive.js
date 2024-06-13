@@ -1,9 +1,9 @@
 const { JSDOM } = require('jsdom')
 const { supabase } = require('./supabaseclient')
 const { notificationRegex } = require('../helpers')
-const { PROJECT_TABLE_NAME, DAILY_REPORT_TABLE_NAME } = require("./constants");
-const { storeUserMessage } = require("./remember");
-const { createHmac } = require("crypto");
+const { PROJECT_TABLE_NAME, DAILY_REPORT_TABLE_NAME } = require('./constants');
+const { storeUserMessage } = require('./remember');
+const { createHmac } = require('crypto');
 const logger = require('./logger.js')('missive')
 const DAILY_REPORT_REGEX = /Hi.*What has the team done since the last call\/email regarding this project\??(.*)What will the team do between now and the next call\/email regarding this project\??(.*)What impedes the team from performing their work as effectively as possible\??(.*)How much time have we spent today\??(.*)How much time have we spent this week.*How much time have we spent this month.*Our team today:?(.*)Regards/
 const DESIGN_REGEX = /\[Design].*?billable (?:hour|day)\(s\)/
@@ -339,19 +339,19 @@ async function createSharedLabel({ name, organization, parent, shareWithOrganiza
 
 
 async function createPost({
-                            conversationSubject,
-                            username,
-                            usernameIcon,
-                            organization,
-                            addSharedLabels,
-                            notificationTitle,
-                            notificationBody = '',
-                            text,
-                            markdown,
-                            conversation,
-                            add_users,
-                            add_assignees
-                          }) {
+  conversationSubject,
+  username,
+  usernameIcon,
+  organization,
+  addSharedLabels,
+  notificationTitle,
+  notificationBody = '',
+  text,
+  markdown,
+  conversation,
+  add_users,
+  add_assignees
+}) {
   const url = `${apiFront}/posts`
   const body = JSON.stringify({
     posts: {
@@ -480,19 +480,16 @@ async function processEmailMessage(payload) {
 }
 
 async function sendMissiveResponse({
-                                     message,
-                                     conversationId,
-                                     notificationTitle,
-                                     conversationSubject,
-                                     organization,
-                                     addToInbox,
-                                     requestQuery
-                                   }) {
+  message,
+  conversationId,
+  notificationTitle,
+  conversationSubject,
+  organization,
+  addToInbox,
+  requestQuery
+}) {
   // Separate thinking part out of result part of Claude's message
-  let notification = {
-    title: notificationTitle || BOT_NAME,
-    body: ''
-  }
+  let notification
   const notificationContent = extractTagContent(message, 'notification')
   try {
     notification = JSON.parse(notificationContent)
@@ -518,7 +515,7 @@ async function sendMissiveResponse({
       posts: {
         conversation_subject: conversationSubject,
         conversation: conversationId,
-        notification,
+        notification: notification || { title: notificationTitle || BOT_NAME, body: '' },
         username: BOT_NAME,
         attachments,
         markdown: attachments.length > 0 ? undefined : message,

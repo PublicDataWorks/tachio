@@ -11,17 +11,17 @@ const { destructureArgs, getPromptsFromSupabase } = require('../helpers')
 const { supabase } = require('../src/supabaseclient')
 const { getActiveProjects } = require('./manageprojects')
 const { createChatCompletion } = require('../helpers')
-const { addWeeks, subWeeks } = require("date-fns")
-const { createDateInTimeZone } = require("../src/dateUtils")
-const { INGEST_MEMORY_TYPE } = require("./ingest")
-const { getGithubWebhooks } = require("../src/github")
-const { getLinearWebhooks } = require("../src/linear")
+const { addWeeks, subWeeks } = require('date-fns')
+const { createDateInTimeZone } = require('../src/dateUtils')
+const { INGEST_MEMORY_TYPE } = require('./ingest')
+const { getGithubWebhooks } = require('../src/github')
+const { getLinearWebhooks } = require('../src/linear')
 const {
   PROJECT_TABLE_NAME,
   DAILY_REPORT_TABLE_NAME,
   MISSIVE_CONVERSATIONS_TABLE_NAME,
   NO_PROJECT_UPDATE
-} = require("../src/constants");
+} = require('../src/constants');
 
 const MISSIVE_CONVERSATION_URL_REGEX = /https:\/\/mail\.missiveapp\.com\/[^ ]*\/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})\/?/
 
@@ -441,22 +441,22 @@ async function readCalendar({ startDate, endDate }) {
  * @example await generateProjectSummary({ project, projectMemoryMap, todoChanges, calendarEntries });
  */
 async function generateProjectSummary({
-                                        projectName,
-                                        startDate,
-                                        endDate,
-                                        relevantMemories,
-                                        todoChanges,
-                                        calendarEntries,
-                                        conversationMessages,
-                                        memoriesMentioningProject,
-                                        memoriesInProjectConversation,
-                                        importedMemories,
-                                        importedMessages,
-                                        githubWebhooks,
-                                        linearWebhooks,
-                                        dailyReports,
-                                        template
-                                      }) {
+  projectName,
+  startDate,
+  endDate,
+  relevantMemories,
+  todoChanges,
+  calendarEntries,
+  conversationMessages,
+  memoriesMentioningProject,
+  memoriesInProjectConversation,
+  importedMemories,
+  importedMessages,
+  githubWebhooks,
+  linearWebhooks,
+  dailyReports,
+  template
+}) {
   logger.info(`Generating project summary for: ${projectName}`)
   const messages = []
 
@@ -606,41 +606,14 @@ async function generateProjectSummary({
  * @returns {Promise<String>} A promise that resolves to a string containing the meta-summary.
  */
 async function generateMetaSummary({
-                                     weekMemories,
-                                     projectSummaries,
-                                     todoChanges,
-                                     calendarEntries
-                                   }) {
+  weekMemories,
+  projectSummaries,
+  todoChanges,
+  calendarEntries
+}) {
   logger.info(`Generating meta-summary for projectSummaries: ${projectSummaries?.length}`)
   const { WEEKLY_BRIEFING_TEMPLATE } = await getPromptsFromSupabase();
 
-  const messages = []
-  if (weekMemories && weekMemories.length > 0) {
-    messages.push({
-      role: 'user',
-      content: `Here are all the memories from last week: ${
-        weekMemories.map(memory => `${memory.created_at}: ${memory.value}`).join('\n')}`
-    })
-  }
-  if (calendarEntries && calendarEntries.length > 0) {
-    messages.push({
-      role: 'user',
-      content: `Here are the calendar entries for the upcoming week: ${JSON.stringify(calendarEntries)}`
-    })
-  }
-  if (todoChanges && todoChanges.length > 0) {
-    messages.push({
-      role: 'user',
-      content: `Here are todo changes from last week: ${JSON.stringify(todoChanges)}`
-    })
-  }
-
-  if (projectSummaries && projectSummaries.length > 0) {
-    messages.push({
-      role: 'user',
-      content: `Here are the active projects with their to-do list. Each to-do has its own rank in terms of urgency: ${JSON.stringify(projectSummaries)}`
-    })
-  }
   return await createChatCompletion([
     {
       role: 'user',
@@ -649,7 +622,23 @@ async function generateMetaSummary({
      ${WEEKLY_BRIEFING_TEMPLATE}
       `
     },
-    ...messages
+    {
+      role: 'user',
+      content: `Here are all the memories from last week: ${
+        weekMemories.map(memory => `${memory.created_at}: ${memory.value}`).join('\n')}`
+    },
+    {
+      role: 'user',
+      content: `Here are the calendar entries for the upcoming week: ${JSON.stringify(calendarEntries)}`
+    },
+    {
+      role: 'user',
+      content: `Here are todo changes from last week: ${JSON.stringify(todoChanges)}`
+    },
+    {
+      role: 'user',
+      content: `Here are the active projects with their to-do list. Each to-do has its own rank in terms of urgency: ${JSON.stringify(projectSummaries)}`
+    }
   ])
 }
 
@@ -803,5 +792,5 @@ module.exports = {
   makeBiweeklyProjectBriefing,
   makeWeeklyBriefing,
   makeProjectBriefing,
-  makeDailyBriefing,
+  makeDailyBriefing
 }
