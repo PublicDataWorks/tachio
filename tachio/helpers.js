@@ -505,9 +505,10 @@ function setTypingInterval(message) {
  * @returns {Promise<{ messages: Array<Object>, aiResponse: string | null }>} - An object containing the updated messages array and the AI response.
  */
 async function generateAiCompletion(prompt, username, messages, config) {
-  let { temperature, presence_penalty } = config;
+  let { temperature, presence_penalty, max_token } = config;
   if (!temperature) temperature = 1;
   if (!presence_penalty) presence_penalty = 0;
+  if (!max_token) max_token = 800;
 
 
   // if the last message has .image, delete it that property off it
@@ -535,7 +536,8 @@ async function generateAiCompletion(prompt, username, messages, config) {
       messages,
       {
         temperature,
-        presence_penalty
+        presence_penalty,
+        max_token
       }
     );
     logger.info(`🔧 Chat completion created:\n- Completion: ${completion}`);

@@ -226,7 +226,7 @@ async function makeBiweeklyProjectBriefing(projectName) {
   return await generateProjectSummary({
     startDate,
     endDate,
-    projectName: projectName,
+    projectName,
     calendarEntries,
     conversationMessages,
     memoriesMentioningProject,
@@ -467,132 +467,82 @@ async function generateProjectSummary({
      Be as detailed as possible based on this: ${template}`
   })
 
-  if (projectName) {
-    messages.push({
-      role: 'user',
-      content: `I want to generate a summary of the recent progress in the ${projectName} project`
-    })
-  }
+  messages.push({
+    role: 'user',
+    content: `I want to generate a summary of the recent progress in the ${projectName} project`
+  })
 
-  if (relevantMemories && relevantMemories.length > 0) {
-    messages.push({
-      role: 'user',
-      content: `Here are the relevant memories for the ${projectName} project: ${
-        relevantMemories.map(memory => memory.value).join('\n')}`
-    })
-  } else {
-    logger.info(`No relevant memories found for the ${projectName} project`)
-  }
+  messages.push({
+    role: 'user',
+    content: `Here are the relevant memories for the ${projectName} project: ${
+      relevantMemories?.map(memory => memory.value).join('\n')}`
+  })
 
-  if (conversationMessages && conversationMessages.length > 0) {
-    messages.push({
-      role: 'user',
-      content: `Here are comments written by users into the ${projectName} project: ${
-        conversationMessages.map(message => `${message.value} with assistant response ${message.assistant_response}`).join('\n')}`
-    })
-  } else {
-    logger.info(`No comments written by users found for project ${projectName}`)
-  }
+  messages.push({
+    role: 'user',
+    content: `Here are comments written by users into the ${projectName} project: ${
+      conversationMessages?.map(message => `${message.value} with assistant response ${message.assistant_response}`).join('\n')}`
+  })
 
-  if (todoChanges && todoChanges.length > 0) {
-    messages.push({
-      role: 'user',
-      content: `Here are the todo changes for the ${projectName} project: ${JSON.stringify(todoChanges)}`
-    })
-  } else {
-    logger.info(`No todo changes found for the ${projectName} project`)
-  }
+  messages.push({
+    role: 'user',
+    content: `Here are the todo changes for the ${projectName} project: ${JSON.stringify(todoChanges)}`
+  })
 
-  if (memoriesMentioningProject && memoriesMentioningProject.length > 0) {
-    messages.push({
-      role: 'user',
-      content: `These memories reference the the ${projectName} project: ${
-        memoriesMentioningProject.map(memory => memory.value).join('\n')
-      }`
-    })
-  } else {
-    logger.info(`No memories mentioning project found for the ${projectName} project`)
-  }
+  messages.push({
+    role: 'user',
+    content: `These memories reference the the ${projectName} project: ${
+      memoriesMentioningProject?.map(memory => memory.value).join('\n')
+    }`
+  })
 
-  if (memoriesInProjectConversation && memoriesInProjectConversation.length > 0) {
-    const attachmentMemories = memoriesInProjectConversation.filter(memory => memory.memory_type === 'attachment' || memory.memory_type === INGEST_MEMORY_TYPE)
-    const messageMemories = memoriesInProjectConversation.filter(memory => memory.memory_type !== 'attachment' && memory.memory_type !== INGEST_MEMORY_TYPE)
-    if (attachmentMemories.length > 0) {
-      messages.push({
-        role: 'user',
-        content: `These attachment memories in the ${projectName} project's conversation: ${
-          attachmentMemories.map((memory) => memory.value).join('\n')}`
-      })
-    }
-    if (messageMemories.length > 0) {
-      messages.push({
-        role: 'user',
-        content: `These message memories in the ${projectName} project's conversation: ${
-          messageMemories.map((memory) => memory.value).join('\n')
-        }`
-      })
-    }
-  } else {
-    logger.info(`No memories in project conversation found for the ${projectName} project`)
-  }
+  const attachmentMemories = memoriesInProjectConversation?.filter(memory => memory.memory_type === 'attachment' || memory.memory_type === INGEST_MEMORY_TYPE)
+  const messageMemories = memoriesInProjectConversation?.filter(memory => memory.memory_type !== 'attachment' && memory.memory_type !== INGEST_MEMORY_TYPE)
+  messages.push({
+    role: 'user',
+    content: `These attachment memories in the ${projectName} project's conversation: ${
+      attachmentMemories?.map((memory) => memory.value).join('\n')}`
+  })
+  messages.push({
+    role: 'user',
+    content: `These message memories in the ${projectName} project's conversation: ${
+      messageMemories?.map((memory) => memory.value).join('\n')
+    }`
+  })
 
-  if (importedMemories && importedMemories.length > 0) {
-    messages.push({
-      role: 'user',
-      content: `These new memories are related to the ${projectName} project: ${JSON.stringify(importedMemories)}`
-    })
-  } else {
-    logger.info(`No memories related to the ${projectName}project`)
-  }
+  messages.push({
+    role: 'user',
+    content: `These new memories are related to the ${projectName} project: ${JSON.stringify(importedMemories)}`
+  })
 
-  if (importedMessages && importedMessages.length > 0) {
-    messages.push({
-      role: 'user',
-      content: `These new messages are related to the ${projectName} project: ${JSON.stringify(importedMessages)}`
-    })
-  } else {
-    logger.info(`No messages related to the ${projectName} project`)
-  }
+  messages.push({
+    role: 'user',
+    content: `These new messages are related to the ${projectName} project: ${JSON.stringify(importedMessages)}`
+  })
 
-  if (githubWebhooks && githubWebhooks.length > 0) {
-    messages.push({
-      role: 'user',
-      content: `Here are the Github webhook history for the ${projectName} project: ${
-        githubWebhooks.map(data => JSON.stringify(data)).join('\n')
-      }`
-    })
-  } else {
-    logger.info(`No Github webhooks found for project ${projectName}`)
-  }
+  messages.push({
+    role: 'user',
+    content: `Here are the Github webhook history for the ${projectName} project: ${
+      githubWebhooks?.map(data => JSON.stringify(data)).join('\n')
+    }`
+  })
 
-  if (linearWebhooks && linearWebhooks.length > 0) {
-    messages.push({
-      role: 'user',
-      content: `Here are the Linear webhook history for the ${projectName} project: ${
-        linearWebhooks.map(data => JSON.stringify(data)).join('\n')
-      }`
-    })
-  } else {
-    logger.info(`No Linear webhooks found for the ${projectName} project`)
-  }
+  messages.push({
+    role: 'user',
+    content: `Here are the Linear webhook history for the ${projectName} project: ${
+      linearWebhooks?.map(data => JSON.stringify(data)).join('\n')
+    }`
+  })
 
-  if (calendarEntries && Object.keys(calendarEntries).length > 0) {
-    messages.push({
-      role: 'user',
-      content: `Here are the calendar entries for the ${projectName} project: ${JSON.stringify(calendarEntries)}`
-    })
-  } else {
-    logger.info(`No calendar found for the ${projectName} project`)
-  }
+  messages.push({
+    role: 'user',
+    content: `Here are the calendar entries for the ${projectName} project: ${JSON.stringify(calendarEntries)}`
+  })
 
-  if (dailyReports) {
-    messages.push({
-      role: 'user',
-      content: `Here are daily reports for the ${projectName} project: ${JSON.stringify(dailyReports)}`
-    })
-  } else {
-    logger.info(`No daily report found for the ${projectName} project`)
-  }
+  messages.push({
+    role: 'user',
+    content: `Here are daily reports for the ${projectName} project: ${JSON.stringify(dailyReports)}`
+  })
 
   return await createChatCompletion(messages)
 }
@@ -780,7 +730,7 @@ async function generateDailyBriefing(calendarEntries, pendingTodos, projectBrief
   messages.push({
     role: 'user',
     content: `Here are the project briefings for today: ${
-      projectBriefings.map(briefing => `${briefing.content} of ${briefing.projects.name} project`).join('\n')
+      projectBriefings?.map(briefing => `${briefing.content} of ${briefing.projects.name} project`).join('\n')
     }`
   })
 

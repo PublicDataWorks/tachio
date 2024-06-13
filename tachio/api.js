@@ -153,7 +153,7 @@ async function processMissiveRequest(body, query) {
   if (task) {
     contextPrompt = 'I want to record this as a todo (no further action needed beyond that). '
       + (task.completed_at ? `This todo is already completed at ${new Date(task.completed_at * 1000)}. \n` : `This todo is not completed yet. \n`)
-  } else if (body.comment.attachment?.media_type === 'text') {
+  } else if (body.comment.attachment?.extension === 'md') {
     contextPrompt = `ingest:read(${body.comment.attachment.url}, ${conversationId})`
   } else if (body.comment.body?.startsWith('https://docs.pdw.co')) {
     contextPrompt = `ingest:read(${body.comment.body}, ${conversationId})`
@@ -165,7 +165,7 @@ async function processMissiveRequest(body, query) {
   const attachment = body.comment.attachment
 
   // text memory is handled by ingest::read
-  if (attachment && body.comment.attachment?.media_type !== 'text') {
+  if (attachment && body.comment.attachment?.extension !== 'md') {
     // Extract the resource ID from the attachment
     const resourceId = attachment.id
 
@@ -444,7 +444,7 @@ app.post(BIWEEKLY_BRIEFING, validateAuthorizationHeader, async (req, res) => {
   // Cron jobs cannot run biweekly directly, so we use a workaround to run it weekly and check if the task is within a 2-week period.
   // TODO: do nothing if last_sent_biweekly_briefing is null
   const within2Weeks = differenceInMilliseconds(new Date(), new Date(project.last_sent_biweekly_briefing)) < (14 * 24 * 60 * 60 - 5 * 60) * 1000 // 2 weeks - 5 minutes to account for potential delays
-  if (!project.last_sent_biweekly_briefing || within2Weeks) {
+  if (project.last_sent_biweekly_briefing && within2Weeks) {
     logger.error(`Error processing biweekly: Project already sent briefing in the last 2 weeks. Data: ${projectId} ${project.last_sent_biweekly_briefing}`);
     return
   }
@@ -456,6 +456,7 @@ app.post(BIWEEKLY_BRIEFING, validateAuthorizationHeader, async (req, res) => {
     notificationTitle: `Biweekly briefing for ${project.name}`,
     conversationSubject: `Biweekly briefing for ${project.name}`,
     organization: process.env.MISSIVE_ORGANIZATION,
+    addSharedLabels: [process.env.MISSIVE_SHARED_LABEL],
     addToInbox: true
   })
   await supabase
@@ -496,7 +497,8 @@ app.post(WEEKLY_BRIEFING, validateAuthorizationHeader, async (req, res) => {
     notificationTitle: title,
     conversationSubject: title,
     organization: process.env.MISSIVE_ORGANIZATION,
-    addToInbox: true
+    addToInbox: true,
+    addSharedLabels: [process.env.MISSIVE_SHARED_LABEL]
   })
   const conversationId = newPost?.posts?.conversation
   if (!conversationId) {
@@ -589,6 +591,34 @@ app.post(DAILY_BRIEFING, validateAuthorizationHeader, async (req, res) => {
     })
 })
 
+app.post('/api/label-changed', async (req, res) => {
+  if (!verifyMissiveSignature(req)) {
+    return res.status(401).send('Unauthorized request')
+  }
+  const newLabelIds = req.body.conversation.shared_labels.map(label => label.id)
+  const conversationId = req.body.conversation.id
+
+  const { error: upsertError } = await supabase
+    .from(MISSIVE_CONVERSATIONS_TABLE_NAME)
+    .upsert(
+      [{ id: conversationId, label_ids: newLabelIds }],
+      { onConflict: 'id', ignoreDuplicates: false }
+    );
+
+  if (upsertError) {
+    logger.error(`Error updating record: ${upsertError.message}`);
+  }
+
+  res.status(200).end()
+})
+
+app.post(REMEMBERIZER, validateAuthorizationHeader, async (req, res) => {
+  logger.info(`Sending 204 response`)
+  res.status(204).end()
+  await retrieveSlackContent()
+})
+
+
 function jsonToMarkdownList(jsonObj, indentLevel = 0) {
   let str = ''
   const indentSpaces = ' '.repeat(indentLevel * 2)
@@ -623,27 +653,3 @@ function validateAuthorizationHeader(req, res, next) {
   }
   next();
 }
-
-app.post('/api/label-changed', async (req, res) => {
-  const newLabelIds = req.body.conversation.shared_labels.map(label => label.id)
-  const conversationId = req.body.conversation.id
-
-  const { error: upsertError } = await supabase
-    .from(MISSIVE_CONVERSATIONS_TABLE_NAME)
-    .upsert(
-      [{ id: conversationId, label_ids: newLabelIds }],
-      { onConflict: 'id', ignoreDuplicates: false }
-    );
-
-  if (upsertError) {
-    logger.error(`Error updating record: ${upsertError.message}`);
-  }
-
-  res.status(200).end()
-})
-
-app.post(REMEMBERIZER, async (req, res) => {
-  logger.info(`Sending 204 response`)
-  res.status(204).end()
-  await retrieveSlackContent()
-})

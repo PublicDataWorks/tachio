@@ -1,8 +1,8 @@
-const { trimResponseByLineCount, toolUseCapabilityRegex } = require("../helpers");
-const memoryFunctionsPromise = require("./memory");
-const { capabilityRegex, callCapabilityMethod } = require("./capabilities");
-const { storeUserMessage } = require("./remember");
-const logger = require("../src/logger.js")("chain");
+const { trimResponseByLineCount, toolUseCapabilityRegex } = require('../helpers');
+const memoryFunctionsPromise = require('./memory');
+const { capabilityRegex, callCapabilityMethod } = require('./capabilities');
+const { storeUserMessage } = require('./remember');
+const logger = require('../src/logger.js')('chain');
 
 module.exports = (async () => {
   const {
@@ -14,7 +14,7 @@ module.exports = (async () => {
     getUniqueEmoji,
     getConfigFromSupabase,
     createTokenLimitWarning
-  } = require("../helpers");
+  } = require('../helpers');
 
   const { TOKEN_LIMIT, WARNING_BUFFER, MAX_CAPABILITY_CALLS, MAX_RETRY_COUNT, RESPONSE_LIMIT } =
     await getConfigFromSupabase();
@@ -52,12 +52,12 @@ module.exports = (async () => {
 
       const lastMessage = messages[messages.length - 1];
       if (!lastMessage) {
-        logger.warn("Last Message is undefined");
+        logger.warn('Last Message is undefined');
         return messages;
       }
       // TODO: If the last message contains an image, then it's probably a capability response and we should return early
       if (lastMessage.image) {
-        logger.info("Last Message is an Image");
+        logger.info('Last Message is an Image');
         return messages;
       }
 
@@ -103,7 +103,7 @@ module.exports = (async () => {
     chainId
   ) {
     let capabilityCallIndex = 0;
-    let chainReport = "";
+    let chainReport = '';
     if (!messages.length) {
       logger.warn(`${chainId} - Empty Message Chain`);
       return [];
@@ -113,11 +113,11 @@ module.exports = (async () => {
       capabilityCallIndex++;
       const lastMessage = messages[messages.length - 1];
       if (!lastMessage) {
-        logger.warn("Last Message is undefined");
+        logger.warn('Last Message is undefined');
         return messages;
       }
       if (!lastMessage.content) {
-        logger.warn("Last Message content is undefined");
+        logger.warn('Last Message content is undefined');
         return messages;
       }
 
@@ -154,8 +154,8 @@ module.exports = (async () => {
           `${chainId} - Process message chain: error processing message: ${error.message} ${error.stack}`
         );
         messages.push({
-          role: "assistant",
-          content: "Error processing message: " + error
+          role: 'assistant',
+          content: 'Error processing message: ' + error
         });
         return messages;
       }
@@ -237,7 +237,7 @@ module.exports = (async () => {
    */
   async function getCapabilityResponse(capSlug, capMethod, capArgs, messages) {
     try {
-      logger.info("Calling Capability: " + capSlug + ":" + capMethod);
+      logger.info('Calling Capability: ' + capSlug + ':' + capMethod);
       const response = await callCapabilityMethod(
         capSlug,
         capMethod,
@@ -248,19 +248,19 @@ module.exports = (async () => {
       // Check if the capability call was successful
       if (response.success) {
         if (response.data.image) {
-          logger.info("Capability Response is an Image");
+          logger.info('Capability Response is an Image');
           return response.data;
         }
         return trimResponseIfNeeded(response.data);
       } else {
         // Handle error case
-        logger.info("Capability Failed: " + response.error);
+        logger.info('Capability Failed: ' + response.error);
         return response.error; // Consider how you want to handle errors
       }
     } catch (e) {
       // This catch block might be redundant now, consider removing or logging unexpected errors
-      logger.error("Unexpected error in getCapabilityResponse: " + e);
-      return "Unexpected error: " + e.message;
+      logger.error('Unexpected error in getCapabilityResponse: ' + e);
+      return 'Unexpected error: ' + e.message;
     }
 
     // if (capabilityResponse.image) {
@@ -291,11 +291,11 @@ module.exports = (async () => {
     const currentTokenCount = countMessageTokens(messages);
 
     if (currentTokenCount >= TOKEN_LIMIT - WARNING_BUFFER) {
-      logger.warn("Token Limit Warning: Current Tokens - " + currentTokenCount);
+      logger.warn('Token Limit Warning: Current Tokens - ' + currentTokenCount);
       messages.push(createTokenLimitWarning());
     }
 
-    logger.info("Processing Capability: " + capSlug + ":" + capMethod);
+    logger.info('Processing Capability: ' + capSlug + ':' + capMethod);
 
     const capabilityResponse = await getCapabilityResponse(
       capSlug,
@@ -306,22 +306,22 @@ module.exports = (async () => {
     let message;
     if (toolId) {
       message = {
-        role: "user",
+        role: 'user',
         content: `[{ "type": "tool_result", "tool_use_id": ${toolId}, "content": ${capabilityResponse} }]`
       };
     } else {
       message = {
-        role: "system",
+        role: 'system',
         content:
-          "Capability " +
+          'Capability ' +
           capSlug +
-          ":" +
+          ':' +
           capMethod +
-          " responded with: " +
+          ' responded with: ' +
           capabilityResponse
       };
     }
-    logger.info("Capability Response: " + capabilityResponse);
+    logger.info('Capability Response: ' + capabilityResponse);
 
     if (capabilityResponse.image) {
       message.image = capabilityResponse.image;
@@ -352,11 +352,11 @@ module.exports = (async () => {
     const currentTokenCount = countMessageTokens(messages);
 
     if (currentTokenCount >= TOKEN_LIMIT - WARNING_BUFFER) {
-      logger.warn("Token Limit Warning: Current Tokens - " + currentTokenCount);
+      logger.warn('Token Limit Warning: Current Tokens - ' + currentTokenCount);
       messages.push(createTokenLimitWarning());
     }
 
-    logger.info("Processing Capability: " + capSlug + ":" + capMethod);
+    logger.info('Processing Capability: ' + capSlug + ':' + capMethod);
 
     const capabilityResponse = await getCapabilityResponse(
       capSlug,
@@ -386,7 +386,7 @@ module.exports = (async () => {
   // TODO: Remove this function to simplify
   async function processCapability(messages, capabilityMatch) {
     if (!messages) {
-      logger.error("No messages found - cannot process capability");
+      logger.error('No messages found - cannot process capability');
       return messages;
     }
     try {
@@ -394,8 +394,8 @@ module.exports = (async () => {
     } catch (error) {
       logger.info(`Error processing capability: ${error}`);
       messages.push({
-        role: "system",
-        content: "Error processing capability: " + error
+        role: 'system',
+        content: 'Error processing capability: ' + error
       });
       return messages;
     }
@@ -415,7 +415,7 @@ module.exports = (async () => {
   async function processMessage(
     messages,
     lastMessage,
-    { username = "", channel = "", guild = "", related_message_id = "" }
+    { username = '', channel = '', guild = '', related_message_id = '' }
   ) {
     const { logInteraction } = await memoryFunctionsPromise;
 
@@ -432,16 +432,17 @@ module.exports = (async () => {
     }
 
     if (messages[messages.length - 1].image) {
-      logger.info("Last Message is an Image");
+      logger.info('Last Message is an Image');
       return messages;
     }
     const lastUserMessage = messages
       .slice()
       .reverse()
-      .find((m) => m.role === "user");
+      .find((m) => m.role === 'user');
     const prompt = lastUserMessage.content;
     logger.info(`Prompt: ${prompt}`);
     const { temperature, frequency_penalty } = generateAiCompletionParams();
+    const { MAX_TOKEN } = await getConfigFromSupabase();
 
     const { aiResponse } = await generateAiCompletion(
       prompt,
@@ -449,12 +450,13 @@ module.exports = (async () => {
       messages,
       {
         temperature,
-        frequency_penalty
+        frequency_penalty,
+        max_token: MAX_TOKEN
       }
     )
     logger.info(`AI Response: ${aiResponse}`);
     messages.push({
-      role: "assistant",
+      role: 'assistant',
       content: aiResponse
     });
     const storedMessageId = await storeUserMessage(
@@ -471,7 +473,7 @@ module.exports = (async () => {
       { username, channel, guild, related_message_id: storedMessageId },
       messages,
       !!capabilityName,
-      capabilityName || ""
+      capabilityName || ''
     );
     return messages;
   }
@@ -489,7 +491,7 @@ module.exports = (async () => {
       lines = capabilityResponse
     }
     if (!Array.isArray(lines)) {
-      lines = capabilityResponse.split("\n");
+      lines = capabilityResponse.split('\n');
     }
     while (isResponseExceedingLimit(lines)) {
       lines = trimResponseByLineCount(lines, 0.2);

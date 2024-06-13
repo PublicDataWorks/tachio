@@ -486,7 +486,8 @@ async function sendMissiveResponse({
   conversationSubject,
   organization,
   addToInbox,
-  requestQuery
+  requestQuery,
+  addSharedLabels
 }) {
   // Separate thinking part out of result part of Claude's message
   let notification
@@ -497,12 +498,12 @@ async function sendMissiveResponse({
     logger.error('Error parsing notification:', error, notificationContent)
   }
   const result = removeTagAndContent(message, ['notification', 'thinking', 'memories']);
-  const attachments = splitIntoParagraphs(result.trim(), 5)
-    .map(paragraph => ({
-        color: '#2266ED',
-        text: paragraph.trim() // TODO: replace with markdown if send draft
-      })
-    )
+  const attachments = [
+    {
+      color: '#2266ED',
+      text: result.trim() // TODO: replace with markdown if send draft
+    }
+  ]
 
   const token = (requestQuery?.token?.length === 36) ? requestQuery.token : apiKey
   const responsePost = await fetch(`${apiFront}/posts/`, {
@@ -520,7 +521,8 @@ async function sendMissiveResponse({
         attachments,
         markdown: attachments.length > 0 ? undefined : message,
         organization,
-        add_to_inbox: addToInbox
+        add_to_inbox: addToInbox,
+        add_shared_labels: addSharedLabels,
       }
     })
   })

@@ -108,7 +108,8 @@ async function createProject({
  * @param {string} newStatus - The new status of the project. Can be 'active', 'paused', 'completed', or 'archived'.
  * @param {string} newStartDate - The new start date of the project.
  * @param {string} newEndDate - The new end date of the project.
- * @param {string} githubRepositoryUrls - A string in JSON format of an array that represents a list of GitHub repository that is linked to the project.
+ * @param {string} newLinearTeamId - The new Linear team ID of the project.
+ * @param {string} newGithubRepositoryUrls - A string in JSON format of an array that represents a list of GitHub repository that is linked to the project.
  *
  * @returns {Promise<string>} A promise that resolves to a string message indicating the result of the operation.
  *
@@ -121,9 +122,10 @@ async function updateProject({
                                newStatus,
                                newStartDate,
                                newEndDate,
-                               githubRepositoryUrls
+                               newLinearTeamId,
+                               newGithubRepositoryUrls
                              }) {
-  if (!newProjectName && !newAliases && !newStatus && !newStartDate && !newEndDate && !githubRepositoryUrls) throw new Error('No changes made')
+  if (!newProjectName && !newAliases && !newStatus && !newStartDate && !newEndDate && !newGithubRepositoryUrls) throw new Error('No changes made')
 
   const { data: existingProject } = await supabase
     .from(PROJECT_TABLE_NAME)
@@ -147,7 +149,8 @@ async function updateProject({
       start_date: newStartDate,
       end_date: newEndDate,
       updated_at: new Date(),
-      github_repository_urls: githubRepositoryUrls
+      linear_team_id: newLinearTeamId,
+      github_repository_urls: newGithubRepositoryUrls
     })
     .match({ name: projectName })
   if (errUpdateProject) throw new Error(errUpdateProject.message)
