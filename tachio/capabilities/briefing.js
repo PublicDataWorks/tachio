@@ -289,7 +289,7 @@ async function identifyProjectsInMemories(processedMemories) {
     {
       role: 'user',
       // this is an example message to extract IDs out of
-      content: `We should add a new issue to coachartie - we had three conversations about it in #23ij2329, #sdijs, and #studio. We also had a long conversation about Project 2 in #studio.
+      content: `We should add a new issue to tachio - we had three conversations about it in #23ij2329, #sdijs, and #studio. We also had a long conversation about Project 2 in #studio.
 
 In the previous message I just sent, please identify any GitHub Repos, Issues, Missive Conversations, or Projects. Please respond in the following format, newline-delimited with no other text:
 
@@ -299,10 +299,10 @@ In the previous message I just sent, please identify any GitHub Repos, Issues, M
     },
     {
       role: 'assistant',
-      content: `- Discussion on GitHub repo: GitHub#coachartie
-- Discussion on Coach Artie: Missive#23ij2329
-- Discussion on Coach Artie: Missive#sdijs
-- Discussion on Coach Artie: Discord#studio
+      content: `- Discussion on GitHub repo: GitHub#tachio
+- Discussion on Tachio: Missive#23ij2329
+- Discussion on Tachio: Missive#sdijs
+- Discussion on Tachio: Discord#studio
 - Discussion on Project 2: Discord#studio`
     },
     {
