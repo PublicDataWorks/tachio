@@ -12,4 +12,3 @@ To self-host Supabase:
 To run LinearLite:
 
 1. Refer to the `README.md` file located in the `linearlite` directory for instructions on how to proceed. This file contains the necessary steps to get LinearLite up and running.
-a

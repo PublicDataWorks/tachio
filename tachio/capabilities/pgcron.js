@@ -92,7 +92,7 @@ async function listWebhookJobs() {
   const { data, error } = await supabase.from("job").select("*").limit(100);
 
   if (error) {
-    console.error("Error listing webhook jobs with pg_cron:", error);
+    logger.error("Error listing webhook jobs with pg_cron:", error);
     throw error;
   }
 
