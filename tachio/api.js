@@ -29,10 +29,11 @@ const {
   BIWEEKLY_BRIEFING,
   PROJECT_BRIEFING,
   PROJECT_TABLE_NAME,
-  MISSIVE_CONVERSATIONS_TABLE_NAME, WEEKLY_BRIEFING, DAILY_BRIEFING
+  MISSIVE_CONVERSATIONS_TABLE_NAME, WEEKLY_BRIEFING, DAILY_BRIEFING, REMEMBERIZER
 } = require('./src/constants')
-const { getConfigFromSupabase } = require("./helpers");
-const { processPTRequest } = require("./src/pivotal-tracker");
+const { getConfigFromSupabase } = require('./helpers');
+const { processPTRequest } = require('./src/pivotal-tracker');
+const { retrieveSlackContent } = require('./src/rememberizer')
 require('dotenv').config()
 
 let port = process.env.EXPRESS_PORT
@@ -479,9 +480,9 @@ app.post(WEEKLY_BRIEFING, validateAuthorizationHeader, async (req, res) => {
   const weekOfYear = `${getWeek(today)}_${today.getFullYear()}`;
   const { data, error } = await supabase
     .from('weekly_conversations')
-    .select("id")
+    .select('id')
     .limit(1)
-    .eq("week_of_year", weekOfYear)
+    .eq('week_of_year', weekOfYear)
   if (error || (data && data.length > 0)) {
     logger.error(`Error processing weekly: ${error?.message} ${JSON.stringify(data)} ${weekOfYear}`);
     return
@@ -503,7 +504,7 @@ app.post(WEEKLY_BRIEFING, validateAuthorizationHeader, async (req, res) => {
     return
   }
   const { error: errorNewWeekly } = await supabase
-    .from("weekly_conversations")
+    .from('weekly_conversations')
     .insert(
       { conversation_id: conversationId, week_of_year: weekOfYear, briefing }
     );
@@ -530,7 +531,7 @@ app.post(PROJECT_BRIEFING, validateAuthorizationHeader, async (req, res) => {
   const today = new Date();
   const weekOfYear = `${getWeek(today)}_${today.getFullYear()}`;
   const { data: weeklyConversation, error } = await supabase
-    .from("weekly_conversations")
+    .from('weekly_conversations')
     .select('id, conversation_id')
     .eq('week_of_year', weekOfYear)
   if (error || weeklyConversation?.length === 0) {
@@ -567,7 +568,7 @@ app.post(DAILY_BRIEFING, validateAuthorizationHeader, async (req, res) => {
   const today = new Date()
   const weekOfYear = `${getWeek(today)}_${today.getFullYear()}`;
   const { data: weeklyConversation, error } = await supabase
-    .from("weekly_conversations")
+    .from('weekly_conversations')
     .select('conversation_id')
     .eq('week_of_year', weekOfYear)
   if (error || weeklyConversation?.length === 0) {
@@ -623,7 +624,7 @@ function validateAuthorizationHeader(req, res, next) {
   next();
 }
 
-app.post("/api/label-changed", async (req, res) => {
+app.post('/api/label-changed', async (req, res) => {
   const newLabelIds = req.body.conversation.shared_labels.map(label => label.id)
   const conversationId = req.body.conversation.id
 
@@ -639,4 +640,10 @@ app.post("/api/label-changed", async (req, res) => {
   }
 
   res.status(200).end()
+})
+
+app.post(REMEMBERIZER, async (req, res) => {
+  logger.info(`Sending 204 response`)
+  res.status(204).end()
+  await retrieveSlackContent()
 })

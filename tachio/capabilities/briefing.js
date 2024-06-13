@@ -804,5 +804,4 @@ module.exports = {
   makeWeeklyBriefing,
   makeProjectBriefing,
   makeDailyBriefing,
-  listTodoChanges
 }
