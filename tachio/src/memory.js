@@ -90,7 +90,7 @@ module.exports = (async () => {
     if (rememberText && rememberText !== "✨" && rememberText.length > 0) {
       logger.info(`Storing user memory for ${username}`);
       await storeUserMemory(
-        { username, channel, conversation_id: channel, related_message_id },
+        { username, channel, conversationId: channel, relatedMessageId: related_message_id },
         rememberText
       );
     }
