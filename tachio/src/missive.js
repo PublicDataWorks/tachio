@@ -489,11 +489,11 @@ async function sendMissiveResponse({
                                      requestQuery
                                    }) {
   // Separate thinking part out of result part of Claude's message
-  let notification
-  const notificationContent = extractTagContent(message, 'notification') || {
+  let notification = {
     title: notificationTitle || BOT_NAME,
     body: ''
   }
+  const notificationContent = extractTagContent(message, 'notification')
   try {
     notification = JSON.parse(notificationContent)
   } catch (error) {
