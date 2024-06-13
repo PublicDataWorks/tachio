@@ -67,7 +67,7 @@ const invokeDailyBriefing = async () => {
 }
 
 const invokeRememberizer = async () => {
-  const cronExpression = '0 6 * * *'; // 6:00 AM PT every day
+  const cronExpression = '0 5 * * *'; // 6:00 AM PT every day
   await createJob(
     cronExpression,
     `
