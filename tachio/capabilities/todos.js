@@ -13,8 +13,8 @@ const logger = require("../src/logger")('capability-todos')
  * @param {number} projectId - The project ID of the todo item.
  * @param {string} title - The title of the todo item.
  * @param {string} description - The description of the todo item.
- * @param {string} status - The status of the todo item. The value is one of 'icebox', 'todo', 'in_progress', 'done'.
- * @param {string} priority - The priority of the todo item. The value is one of 'now', 'next', 'later'.
+ * @param {string} status - The status of the todo item. The value is one of 'backlog', 'todo', 'in_progress', 'done', 'canceled'
+ * @param {string} priority - The priority of the todo item. The value is one of 'none', 'urgent', 'high', 'low', 'medium'
  * @param {string} externalUrls - A newline-delimited string to represent external URLs (e.g., linear or github issue or pull request).
  * @param {string} username - Email of the user creating the todo.
  * @returns {Promise<string>} A promise that resolves to a success message.
