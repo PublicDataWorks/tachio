@@ -8,6 +8,7 @@ const logger = require('./logger.js')('missive')
 const DAILY_REPORT_REGEX = /Hi.*What has the team done since the last call\/email regarding this project\??(.*)What will the team do between now and the next call\/email regarding this project\??(.*)What impedes the team from performing their work as effectively as possible\??(.*)How much time have we spent today\??(.*)How much time have we spent this week.*How much time have we spent this month.*Our team today:?(.*)Regards/
 const DESIGN_REGEX = /\[Design].*?billable (?:hour|day)\(s\)/
 const DONE_TODAY_DESIGN_REGEX = /(?:\[?Design]?|\[?Designer]?).*/
+const HEADING_REGEX = /(#+\s.*?)(?=\n#|\n*$)/gs;
 /*
 
 You must transmit your Missive user token as a Bearer token in the Authorization HTTP header.
@@ -497,13 +498,20 @@ async function sendMissiveResponse({
   } catch (error) {
     logger.error('Error parsing notification:', error, notificationContent)
   }
+  const thinking = extractTagContent(message, 'thinking')
   const result = removeTagAndContent(message, ['notification', 'thinking', 'memories']);
   const attachments = [
     {
-      color: '#2266ED',
-      text: result.trim() // TODO: replace with markdown if send draft
+      color: '#B2BEB5',
+      text: thinking.trim()
     }
   ]
+  attachments.push(
+    ...splitIntoParagraphs(result).map(paragraph => ({
+      color: '#2266ED',
+      text: paragraph.trim()
+    }))
+  )
 
   const token = (requestQuery?.token?.length === 36) ? requestQuery.token : apiKey
   const responsePost = await fetch(`${apiFront}/posts/`, {
@@ -522,7 +530,7 @@ async function sendMissiveResponse({
         markdown: attachments.length > 0 ? undefined : message,
         organization,
         add_to_inbox: addToInbox,
-        add_shared_labels: addSharedLabels,
+        add_shared_labels: addSharedLabels
       }
     })
   })
@@ -586,22 +594,21 @@ function extractTagContent(text, tag) {
   return null;
 }
 
-function splitIntoParagraphs(text, maxLines) {
-  const normalizedText = text.replace(/\n\s*\n/g, '\n');
-  const lines = normalizedText.split('\n');
-  const paragraphs = [];
-  let currentParagraph = [];
-  for (const line of lines) {
-    currentParagraph.push(line);
-    if (currentParagraph.length >= maxLines) {
-      paragraphs.push(currentParagraph.join('\n'));
-      currentParagraph = [];
+function splitIntoParagraphs(text) {
+  const regex = /(#+\s.*?)(?=\n#+|\n*$)/gs;
+  const splits = text.match(regex);
+  if (splits === null) {
+    return [text];
+  }
+
+  const firstHeadingIndex = text.search(regex);
+  if (firstHeadingIndex > 0) {
+    const beforeFirstHeading = text.substring(0, firstHeadingIndex).trim();
+    if (beforeFirstHeading) {
+      splits.unshift(beforeFirstHeading);
     }
   }
-  if (currentParagraph.length > 0) {
-    paragraphs.push(currentParagraph.join('\n'));
-  }
-  return paragraphs
+  return splits.length > 0 ? splits : [text];
 }
 
 async function getFullMessage(messageId) {
