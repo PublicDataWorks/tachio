@@ -642,6 +642,7 @@ async function createChatCompletion(
       temperature: config.temperature,
       max_tokens: +config.max_tokens
     });
+    logger.log(`Claude response: ${JSON.stringify(res)}`);
     if (res.content.length > 1 && res.content[1].type === 'tool_use') {
       const toolUse = res.content[1];
       return `${toolUse.id}-${toolUse.name}(${JSON.stringify(toolUse.input)})`;

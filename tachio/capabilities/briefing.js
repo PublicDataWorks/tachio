@@ -473,7 +473,9 @@ async function generateProjectSummary({
   messages.push({
     role: 'user',
     content: `Can you please generate a detailed summary for the ${projectName} project from ${startDate} to ${endDate} based on your own analysis and understanding?
-     Focus solely on creating the summary without utilizing any other capabilities. Please do the best you can using only the data I provide, do not mention or comment on any missing data or gaps.
+     Focus solely on creating the summary without utilizing any other capabilities.
+     Do not call makeBiweeklyProjectBriefing, makeWeeklyBriefing, makeProjectBriefing, or makeDailyBriefing.
+     Please do the best you can using only the data provided, and do not mention or comment on any missing data or gaps.
      Be as detailed as possible based on this: ${template}`
   })
 
@@ -570,7 +572,10 @@ async function generateMetaSummary({
     {
       role: 'user',
       content: `Can you please generate a detailed summary based on your own analysis and understanding?
-     Focus solely on creating the summary without utilizing any other capabilities. Please do the best you can using only the data I provide, do not mention or comment on any missing data or gaps.
+     Focus solely on creating the summarFocus solely on creating the summary without utilizing any other capabilities.
+     Do not call makeBiweeklyProjectBriefing, makeWeeklyBriefing, makeProjectBriefing, or makeDailyBriefing.
+     Please do the best you can using only the data provided, and do not mention or comment on any missing data or gaps.
+     Be as detailed as possible based on this:
      ${WEEKLY_BRIEFING_TEMPLATE}
       `
     },
@@ -646,7 +651,10 @@ async function generateDailyBriefing(calendarEntries, pendingTodos, projectBrief
   messages.push({
     role: 'user',
     content: `Can you please generate a detailed summary for today briefing ${today} based on your own analysis and understanding?
-     Focus solely on creating the summary without utilizing any other capabilities. Please do the best you can using only the data I provide, do not mention or comment on any missing data or gaps.
+     Focus solely on creating the summary without utilizing any other capabilities.
+     Do not call makeBiweeklyProjectBriefing, makeWeeklyBriefing, makeProjectBriefing, or makeDailyBriefing.
+     Please do the best you can using only the data provided, and do not mention or comment on any missing data or gaps.
+     Be as detailed as possible based on this:
      ${DAILY_BRIEFING_TEMPLATE}
      `
   })
