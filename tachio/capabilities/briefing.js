@@ -7,7 +7,7 @@ const {
 const logger = require('../src/logger')('briefing')
 const { listEventsBetweenDates } = require('./calendar.js') // Adjust the path as necessary
 
-const { destructureArgs, getPromptsFromSupabase } = require('../helpers')
+const { destructureArgs, getPromptsFromSupabase, parseJSONArg } = require('../helpers')
 const { supabase } = require('../src/supabaseclient')
 const { getActiveProjects } = require('./manageprojects')
 const { createChatCompletion } = require('../helpers')
@@ -22,20 +22,21 @@ const {
   MISSIVE_CONVERSATIONS_TABLE_NAME,
   NO_PROJECT_UPDATE
 } = require('../src/constants');
+const { getPTWebhooks } = require('../src/pivotal-tracker')
 
 const MISSIVE_CONVERSATION_URL_REGEX = /https:\/\/mail\.missiveapp\.com\/[^ ]*\/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})\/?/
 
 async function handleCapabilityMethod(method, args) {
-  const [arg1] = destructureArgs(args)
+  const jsonArgs = parseJSONArg(args)
 
   if (method === 'makeWeeklyBriefing') {
     return await makeWeeklyBriefing()
   } else if (method === 'makeDailyBriefing') {
     return await makeDailyBriefing()
   } else if (method === 'makeProjectBriefing') {
-    return await makeProjectBriefing(arg1)
+    return await makeProjectBriefing(jsonArgs.projectName)
   } else if (method === 'makeBiweeklyProjectBriefing') {
-    return await makeBiweeklyProjectBriefing(arg1)
+    return await makeBiweeklyProjectBriefing(jsonArgs.projectName)
   } else {
     throw new Error(`Method ${method} not supported by this capability.`)
   }
@@ -93,7 +94,7 @@ async function makeDailyBriefing() {
 async function makeProjectBriefing(projectName) {
   const { data, error } = await supabase
     .from(PROJECT_TABLE_NAME)
-    .select('id, missive_conversation_id, missive_label_id, github_repository_urls, linear_team_id')
+    .select('id, missive_conversation_id, missive_label_id, github_repository_urls, linear_team_id, pivotal_tracker_id')
     .ilike('name', `%${projectName.toLowerCase()}%`)
     .limit(1)
   if (error || !data || data.length === 0) throw new Error(`Error occurred while trying to fetch project in making project briefing ${projectName}: ${error?.message} ${data}`)
@@ -148,7 +149,7 @@ async function makeProjectBriefing(projectName) {
   }
   const githubWebhooks = await getGithubWebhooks(githubUrls, startDate, endDate)
   const linearWebhooks = await getLinearWebhooks(project.linear_team_id, startDate, endDate)
-  // TODO: Get PT
+  const pivotalTrackerWebhooks = await getPTWebhooks(project.pivotal_tracker_id, startDate, endDate)
   const { PROJECT_BRIEFING_TEMPLATE } = await getPromptsFromSupabase();
   if (todoChanges.length > 0 || conversationMessages.length > 0 || importedMessages.length > 0 || importedMemories.length > 0 || memoriesInProjectConversation.length > 0 || githubWebhooks.length > 0 || linearWebhooks.length > 0 || memoriesMentioningProject.length > 0) {
     return await generateProjectSummary({
@@ -162,6 +163,7 @@ async function makeProjectBriefing(projectName) {
       importedMessages,
       githubWebhooks,
       linearWebhooks,
+      pivotalTrackerWebhooks,
       template: PROJECT_BRIEFING_TEMPLATE
     })
   } else {
@@ -464,6 +466,7 @@ async function generateProjectSummary({
   importedMessages,
   githubWebhooks,
   linearWebhooks,
+  pivotalTrackerWebhooks,
   dailyReports,
   template
 }) {
@@ -473,10 +476,8 @@ async function generateProjectSummary({
   messages.push({
     role: 'user',
     content: `Can you please generate a detailed summary for the ${projectName} project from ${startDate} to ${endDate} based on your own analysis and understanding?
-     Focus solely on creating the summary without utilizing any other capabilities.
-     Do not call makeBiweeklyProjectBriefing, makeWeeklyBriefing, makeProjectBriefing, or makeDailyBriefing.
-     Please do the best you can using only the data provided, and do not mention or comment on any missing data or gaps.
-     Be as detailed as possible based on this: ${template}`
+      Be as detailed as possible based on this: ${template}
+    `
   })
 
   messages.push({
@@ -535,14 +536,20 @@ async function generateProjectSummary({
   messages.push({
     role: 'user',
     content: `Here are the Github webhook history for the ${projectName} project: ${
-      githubWebhooks?.map(data => JSON.stringify(data)).join('\n')
+      JSON.stringify(githubWebhooks)
     }`
   })
 
   messages.push({
     role: 'user',
     content: `Here are the Linear webhook history for the ${projectName} project: ${
-      linearWebhooks?.map(data => JSON.stringify(data)).join('\n')
+      JSON.stringify(linearWebhooks)
+    }`
+  })
+ messages.push({
+    role: 'user',
+    content: `Here are the Pivotal tracker webhook history for the ${projectName} project: ${
+      JSON.stringify(pivotalTrackerWebhooks)
     }`
   })
 
@@ -554,6 +561,14 @@ async function generateProjectSummary({
   messages.push({
     role: 'user',
     content: `Here are daily reports for the ${projectName} project: ${JSON.stringify(dailyReports)}`
+  })
+
+  messages.push({
+    role: 'user',
+    content: `Focus solely on creating the summary without utilizing any other capabilities.
+      Do not try to call makeBiweeklyProjectBriefing, makeWeeklyBriefing, makeProjectBriefing, or makeDailyBriefing.
+      Please do the best you can using only the data provided, and do not mention or comment on any missing data or gaps.
+    `
   })
 
   return await createChatCompletion(messages)
@@ -572,11 +587,8 @@ async function generateMetaSummary({
     {
       role: 'user',
       content: `Can you please generate a detailed summary based on your own analysis and understanding?
-     Focus solely on creating the summarFocus solely on creating the summary without utilizing any other capabilities.
-     Do not call makeBiweeklyProjectBriefing, makeWeeklyBriefing, makeProjectBriefing, or makeDailyBriefing.
-     Please do the best you can using only the data provided, and do not mention or comment on any missing data or gaps.
-     Be as detailed as possible based on this:
-     ${WEEKLY_BRIEFING_TEMPLATE}
+        Be as detailed as possible based on this:
+        ${WEEKLY_BRIEFING_TEMPLATE}
       `
     },
     {
@@ -595,6 +607,13 @@ async function generateMetaSummary({
     {
       role: 'user',
       content: `Here are the active projects with their to-do list. Each to-do has its own rank in terms of urgency: ${JSON.stringify(projectSummaries)}`
+    },
+    {
+      role: 'user',
+      content: `Focus solely on creating the summary without utilizing any other capabilities.
+        Do not try to call makeBiweeklyProjectBriefing, makeWeeklyBriefing, makeProjectBriefing, or makeDailyBriefing.
+        Please do the best you can using only the data provided, and do not mention or comment on any missing data or gaps.
+      `
     }
   ])
 }
@@ -651,12 +670,9 @@ async function generateDailyBriefing(calendarEntries, pendingTodos, projectBrief
   messages.push({
     role: 'user',
     content: `Can you please generate a detailed summary for today briefing ${today} based on your own analysis and understanding?
-     Focus solely on creating the summary without utilizing any other capabilities.
-     Do not call makeBiweeklyProjectBriefing, makeWeeklyBriefing, makeProjectBriefing, or makeDailyBriefing.
-     Please do the best you can using only the data provided, and do not mention or comment on any missing data or gaps.
-     Be as detailed as possible based on this:
-     ${DAILY_BRIEFING_TEMPLATE}
-     `
+      Be as detailed as possible based on this:
+      ${DAILY_BRIEFING_TEMPLATE}
+    `
   })
 
   messages.push({
@@ -674,6 +690,13 @@ async function generateDailyBriefing(calendarEntries, pendingTodos, projectBrief
     content: `Here are the project briefings for today: ${
       projectBriefings?.map(briefing => `${briefing.content} of ${briefing.projects.name} project`).join('\n')
     }`
+  })
+  messages.push({
+    role: 'user',
+    content: `Focus solely on creating the summary without utilizing any other capabilities.
+      Do not try to call makeBiweeklyProjectBriefing, makeWeeklyBriefing, makeProjectBriefing, or makeDailyBriefing.
+      Please do the best you can using only the data provided, and do not mention or comment on any missing data or gaps.
+    `
   })
 
   return await createChatCompletion(messages)

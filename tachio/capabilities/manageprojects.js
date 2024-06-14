@@ -21,6 +21,7 @@ require('dotenv').config()
  * @param {string} startDate - The start date of the project.
  * @param {string} endDate - The end date of the project.
  * @param {string} linearTeamId - The Linear team ID of the project.
+ * @param {string} pivotalTrackerId - The Pivotal tracker ID of the project.
  * @param {string} githubRepositoryUrls - A string in JSON format of an array that represents a list of GitHub repository that is linked to the project.
  * @returns {Promise<string>} A promise that resolves to a string message indicating the result of the operation.
  *
@@ -37,7 +38,8 @@ async function createProject({
                                startDate,
                                endDate,
                                linearTeamId,
-                               githubRepositoryUrls
+                               githubRepositoryUrls,
+                               pivotalTrackerId
                              }) {
   if (!orgName || !projectName) throw new Error('Missing required fields')
 
@@ -90,6 +92,7 @@ async function createProject({
       end_date: endDate,
       linear_team_id: linearTeamId,
       github_repository_urls: githubRepositoryUrls,
+      pivotal_tracker_id: pivotalTrackerId,
       created_at: new Date() // ElectricSQL does not support default values
     }
   ])
@@ -109,6 +112,7 @@ async function createProject({
  * @param {string} newStartDate - The new start date of the project.
  * @param {string} newEndDate - The new end date of the project.
  * @param {string} newLinearTeamId - The new Linear team ID of the project.
+ * @param {string} newPivotalTrackerId - The new Pivotal tracker ID of the project.
  * @param {string} newGithubRepositoryUrls - A string in JSON format of an array that represents a list of GitHub repository that is linked to the project.
  *
  * @returns {Promise<string>} A promise that resolves to a string message indicating the result of the operation.
@@ -123,9 +127,11 @@ async function updateProject({
                                newStartDate,
                                newEndDate,
                                newLinearTeamId,
+                               newPivotalTrackerId,
                                newGithubRepositoryUrls
                              }) {
-  if (!newProjectName && !newAliases && !newStatus && !newStartDate && !newEndDate && !newGithubRepositoryUrls) throw new Error('No changes made')
+  if (!newProjectName && !newAliases && !newStatus && !newStartDate && !newEndDate && !newGithubRepositoryUrls && !newPivotalTrackerId)
+    throw new Error('No changes made')
 
   const { data: existingProject } = await supabase
     .from(PROJECT_TABLE_NAME)
@@ -150,6 +156,7 @@ async function updateProject({
       end_date: newEndDate,
       updated_at: new Date(),
       linear_team_id: newLinearTeamId,
+      pivotal_tracker_id: newPivotalTrackerId,
       github_repository_urls: newGithubRepositoryUrls
     })
     .match({ name: projectName })

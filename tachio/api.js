@@ -530,14 +530,13 @@ app.post(PROJECT_BRIEFING, validateAuthorizationHeader, async (req, res) => {
     return
   }
 
-  const today = new Date();
-  const weekOfYear = `${getWeek(today)}_${today.getFullYear()}`;
   const { data: weeklyConversation, error } = await supabase
     .from('weekly_conversations')
     .select('id, conversation_id')
-    .eq('week_of_year', weekOfYear)
+    .order('id', { ascending: false })
+    .limit(1)
   if (error || weeklyConversation?.length === 0) {
-    logger.error(`Error processing project-briefing: ${error?.message} ${JSON.stringify(data)} ${weekOfYear}`);
+    logger.error(`Error processing project-briefing: ${error?.message} ${JSON.stringify(data)}`);
     return
   }
 
@@ -553,28 +552,27 @@ app.post(PROJECT_BRIEFING, validateAuthorizationHeader, async (req, res) => {
     conversationId: data[0].missive_conversation_id,
     notificationTitle: `Project briefing for ${data[0].name}`
   })
-  const { error: insertProjectBriefing } = await supabase.from('project_briefings').insert([
+  const { error: insertProjectBriefingError } = await supabase.from('project_briefings').insert([
     {
       project_id: projectId,
       content: briefing,
       weekly_conversation_id: weeklyConversation[0].id
     }
   ])
-  if (insertProjectBriefing)
-    logger.error(`Error insert new project briefing: ${insertProjectBriefing.message}, ${projectId}, ${weeklyConversation[0].id}`);
+  if (insertProjectBriefingError)
+    logger.error(`Error insert new project briefing: ${insertProjectBriefingError.message}, ${projectId}, ${weeklyConversation[0].id}`);
 })
 
 
 app.post(DAILY_BRIEFING, validateAuthorizationHeader, async (req, res) => {
   res.status(204).end()
-  const today = new Date()
-  const weekOfYear = `${getWeek(today)}_${today.getFullYear()}`;
   const { data: weeklyConversation, error } = await supabase
     .from('weekly_conversations')
     .select('conversation_id')
-    .eq('week_of_year', weekOfYear)
+    .order('id', { ascending: false })
+    .limit(1)
   if (error || weeklyConversation?.length === 0) {
-    logger.error(`Error processing project-briefing: ${error?.message} ${JSON.stringify(weeklyConversation)} ${weekOfYear}`);
+    logger.error(`Error processing daily-briefing: ${error?.message} ${JSON.stringify(weeklyConversation)}`);
     return
   }
   const briefing = await makeDailyBriefing()
@@ -582,7 +580,7 @@ app.post(DAILY_BRIEFING, validateAuthorizationHeader, async (req, res) => {
   await sendMissiveResponse({
     message: briefing,
     conversationId: weeklyConversation[0].conversation_id,
-    notificationTitle: `Daily briefing for ${today}`
+    notificationTitle: `Daily briefing for ${new Date()}`
   })
   await supabase
     .from('daily_briefings')

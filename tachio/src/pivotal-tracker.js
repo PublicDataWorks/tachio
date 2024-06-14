@@ -21,6 +21,19 @@ function processWebhookPayload(payload) {
   }
 }
 
+
+async function getPTWebhooks(pivotalTrackerId, startDate, endDate) {
+  if (!pivotalTrackerId) return []
+  const { data, error } = await supabase
+    .from(WEBHOOK_TABLE_NAME)
+    .select('kind, message, highlight, changes, primary_resources, performed_by')
+    .eq('project_id', pivotalTrackerId)
+    .gte('created_at', startDate)
+    .lte('created_at', endDate)
+  if (error) throw new Error(`Error occurred while trying to fetch Pivotal tracker webhook ${error.message}, ${startDate}`)
+  return data || []
+}
+
 module.exports = {
-  processPTRequest,
+  processPTRequest, getPTWebhooks
 };
