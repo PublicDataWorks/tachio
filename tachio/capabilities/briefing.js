@@ -94,7 +94,7 @@ async function makeProjectBriefing(projectName) {
   const { data, error } = await supabase
     .from(PROJECT_TABLE_NAME)
     .select('id, missive_conversation_id, missive_label_id, github_repository_urls, linear_team_id')
-    .eq('name', projectName)
+    .ilike('name', `%${projectName.toLowerCase()}%`)
     .limit(1)
   if (error || !data || data.length === 0) throw new Error(`Error occurred while trying to fetch project in making project briefing ${projectName}: ${error?.message} ${data}`)
   const project = data[0]
