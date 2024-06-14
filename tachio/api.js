@@ -153,7 +153,7 @@ async function processMissiveRequest(body, query) {
   if (task) {
     contextPrompt = 'I want to record this as a todo (no further action needed beyond that). '
       + (task.completed_at ? `This todo is already completed at ${new Date(task.completed_at * 1000)}. \n` : `This todo is not completed yet. \n`)
-  } else if (body.comment.attachment?.extension === 'md') {
+  } else if (body.comment.attachment?.extension === 'md' || body.comment.attachment?.extension === 'txt') {
     contextPrompt = `ingest:read(${body.comment.attachment.url}, ${conversationId})`
   } else if (body.comment.body?.startsWith('https://docs.pdw.co')) {
     contextPrompt = `ingest:read(${body.comment.body}, ${conversationId})`
@@ -165,7 +165,7 @@ async function processMissiveRequest(body, query) {
   const attachment = body.comment.attachment
 
   // text memory is handled by ingest::read
-  if (attachment && body.comment.attachment?.extension !== 'md') {
+  if (attachment && !(body.comment.attachment?.extension === 'md' || body.comment.attachment?.extension === 'txt')) {
     // Extract the resource ID from the attachment
     const resourceId = attachment.id
 
