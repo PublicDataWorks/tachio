@@ -546,7 +546,8 @@ async function generateProjectSummary({
       JSON.stringify(linearWebhooks)
     }`
   })
- messages.push({
+
+  messages.push({
     role: 'user',
     content: `Here are the Pivotal tracker webhook history for the ${projectName} project: ${
       JSON.stringify(pivotalTrackerWebhooks)
@@ -571,7 +572,7 @@ async function generateProjectSummary({
     `
   })
 
-  return await createChatCompletion(messages)
+  return await createChatCompletion(messages, { temperature: 0.3 }) // To make LLM more deterministic
 }
 
 async function generateMetaSummary({

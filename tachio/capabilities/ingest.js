@@ -1,23 +1,23 @@
-const puppeteer = require("puppeteer");
-const cheerio = require("cheerio");
-const dotenv = require("dotenv");
+const puppeteer = require('puppeteer');
+const cheerio = require('cheerio');
+const dotenv = require('dotenv');
 dotenv.config();
-const { webPageToText, webpageToHTML } = require("./web.js"); // Adjust the path as necessary
-const { destructureArgs, createChatCompletion, getPromptsFromSupabase, getConfigFromSupabase } = require("../helpers");
+const { webPageToText, webpageToHTML } = require('./web.js'); // Adjust the path as necessary
+const { destructureArgs, createChatCompletion, getPromptsFromSupabase, getConfigFromSupabase } = require('../helpers');
 const {
   storeUserMemory,
   hasMemoryOfResource,
   deleteMemoriesOfResource,
   getResourceMemories
-} = require("../src/remember");
-const logger = require("../src/logger.js")("ingest-capability");
-const { convert } = require("html-to-text");
-const fs = require("fs");
-const path = require("path");
-const crypto = require("crypto");
+} = require('../src/remember');
+const logger = require('../src/logger.js')('ingest-capability');
+const { convert } = require('html-to-text');
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
 
 const MEMORY_TYPE = 'capability-read'
-const cacheDir = path.join(__dirname, "cache");
+const cacheDir = path.join(__dirname, 'cache');
 if (!fs.existsSync(cacheDir)) {
   fs.mkdirSync(cacheDir, { recursive: true });
 }
@@ -25,7 +25,7 @@ if (!fs.existsSync(cacheDir)) {
 async function handleCapabilityMethod(method, args) {
   const [arg1, arg2] = destructureArgs(args);
 
-  if (method === "read") {
+  if (method === 'read') {
     return await read(arg1, arg2);
   } else {
     throw new Error(`Method ${method} not supported by this capability.`);
@@ -47,7 +47,7 @@ async function read(url, conversationId) {
   const { TOKEN_LIMIT } = await getConfigFromSupabase();
 
   // Generate a hash for the URL to use as a cache identifier
-  const urlHash = crypto.createHash("md5").update(url).digest("hex");
+  const urlHash = crypto.createHash('md5').update(url).digest('hex');
   const cacheFilePath = path.join(cacheDir, `${urlHash}.json`);
 
   // Check if cache exists and is recent (e.g., less than 1 hour old)
@@ -56,8 +56,8 @@ async function read(url, conversationId) {
     fs.existsSync(cacheFilePath) &&
     Date.now() - fs.statSync(cacheFilePath).mtimeMs < 3600000
   ) {
-    logger.log("Using cached data");
-    cachedData = JSON.parse(fs.readFileSync(cacheFilePath, "utf8"));
+    logger.log('Using cached data');
+    cachedData = JSON.parse(fs.readFileSync(cacheFilePath, 'utf8'));
   }
 
   try {
@@ -84,7 +84,7 @@ async function read(url, conversationId) {
       // make a new memory that the document was re-ingested
       const updateMessage = `We previously ingested this document on ${prevImportDate}. We re-ingested it at ${new Date().toISOString()} and removed our previous memories.`;
       await storeUserMemory(
-        { username: MEMORY_TYPE, guild: "", conversationId },
+        { username: MEMORY_TYPE, guild: '', conversationId },
         updateMessage,
         MEMORY_TYPE,
         url
@@ -94,7 +94,7 @@ async function read(url, conversationId) {
 
     const messages = [
       {
-        role: "user",
+        role: 'user',
         content: `Can you please write an extremely long and thorough reiteration of the following document:
 ${JSON.stringify(document, null, 2)}
 
@@ -107,14 +107,14 @@ Make separate sections of facts for each section of the document, using \`\`\`--
       max_tokens: 4000
     });
 
-    const facts = completion.split("\n---\n");
+    const facts = completion.split('\n---\n');
 
     facts.forEach(async (fact, index) => {
       const factAsMemory = `Memory about RESOURCE_ID: ${url}\n${fact}
 (${index + 1}/${facts.length})
       `;
       await storeUserMemory(
-        { username: MEMORY_TYPE, guild: "" },
+        { username: MEMORY_TYPE, guild: '' },
         factAsMemory,
         MEMORY_TYPE,
         url
@@ -123,7 +123,7 @@ Make separate sections of facts for each section of the document, using \`\`\`--
 
     const metaSummaryMessages = [
       {
-        role: "user",
+        role: 'user',
         content: `Can you please provide a high-level summary of the most important facts in this document:
   ${JSON.stringify(document, null, 2)}`
       }
@@ -134,16 +134,16 @@ Make separate sections of facts for each section of the document, using \`\`\`--
     });
 
     await storeUserMemory(
-      { username: MEMORY_TYPE, guild: "" },
+      { username: MEMORY_TYPE, guild: '' },
       metaSummaryCompletion,
       MEMORY_TYPE,
       url
     );
 
     // Cache the current document for future reference
-    fs.writeFileSync(cacheFilePath, JSON.stringify({ document, facts, metaSummary: metaSummaryCompletion }), "utf8");
+    fs.writeFileSync(cacheFilePath, JSON.stringify({ document, facts, metaSummary: metaSummaryCompletion }), 'utf8');
 
-    return `Document ingested successfully. ${facts.length} groups of facts were extracted from the ${url}.`;
+    return `Document ingested successfully. The facts are as follows: \n${facts.join('\n')} from the ${url}.`;
   } catch (error) {
     logger.error(`Error occurred while making external request: ${error}`);
     throw error
