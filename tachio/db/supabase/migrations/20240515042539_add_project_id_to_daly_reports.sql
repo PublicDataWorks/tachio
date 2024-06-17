@@ -4,6 +4,4 @@ alter table "public"."daily_reports" add constraint "public_daily_reports_projec
 
 alter table "public"."daily_reports" validate constraint "public_daily_reports_project_id_fkey";
 
-alter table "public"."issues" alter column "kanbanorder" drop not null;
-
 alter table "public"."projects" add column "last_sent_biweekly_briefing" timestamp with time zone;
