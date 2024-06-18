@@ -240,14 +240,46 @@ $$;
 - **MASTODON_API_URL** and **MASTODON_ACCESS_TOKEN**: Register your application with your Mastodon instance to receive the API URL, then follow the authentication process to obtain your access token.
 
 
-## Setup: Initialize Cron Jobs for Briefings
+## Initial Setup
 
-# Run the following command to set up the cron jobs for creating weekly and daily briefings:
-
+### Setting up Weekly and Daily Briefings:
+Execute the following command to set up two PostgreSQL cron jobs for creating weekly and daily briefings.
+These jobs use the SERVICE_ROLE key for authentication. Remember to update these cron jobs if the SERVICE_ROLE changes.
 ```sh
 npm run briefing:init
-
-# Run the following command to set up the cron jobs for trigger Rememberizer crawling
+```
+This script set up 2 pg cron jobs. These jobs run service_key role for authentication, so remember to uppdate these scron when we hjappen to chagne service_role key
+### Setting up Rememberizer Slack Crawling
 
 ```sh
 npm run rememberizer
+```
+
+### Setting up Capability Manifest
+```sh
+npm run manifest
+```
+
+### Configure Google Service Account
+Place your Google service account JSON file in the root directory of your project.
+The name of this file is set in the GOOGLE_KEY_PATH environment variable.
+
+## Flowchart
+
+This flowchart represents the process for handling a webhook.
+
+```mermaid
+graph TD
+    A[Webhook call to api/missive-reply] --> B[processMissiveRequest is called]
+    B --> C[Construct a prompt list with messages & user query]
+    C --> D[processMessage is called to handle the user query]
+    D --> E{Is it a capability call?}
+    E -- Yes --> F[Execute capability]
+    F --> G[Use capability result to call generateAiCompletion]
+    E -- No --> H[Use user query to call generateAiCompletion]
+    G --> I[generateAiCompletion uses Claude to generate AI completion]
+    H --> I[generateAiCompletion uses Claude to generate AI completion]
+    I --> J[logInteraction is called to generate memory]
+    J --> K{Does Claude's response have tool_use block?}
+    K -- Yes, processMessage is called again with Claude's response --> D
+    K -- No --> L[Post missive response using sendMissiveResponse]
