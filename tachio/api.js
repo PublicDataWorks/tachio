@@ -434,7 +434,7 @@ app.post(BIWEEKLY_BRIEFING, validateAuthorizationHeader, async (req, res) => {
 
   const { data, error } = await supabase
     .from(PROJECT_TABLE_NAME)
-    .select('name, last_sent_biweekly_briefing, missive_conversation_id, client_email')
+    .select('name, last_sent_biweekly_briefing, missive_conversation_id, client_emails')
     .eq('id', projectId)
   if (error || !data || data.length === 0) {
     logger.error(`Error processing biweekly: Project not found. Data: ${projectId} ${error?.message}`);
@@ -451,7 +451,13 @@ app.post(BIWEEKLY_BRIEFING, validateAuthorizationHeader, async (req, res) => {
 
   const briefing = await makeBiweeklyProjectBriefing(project.name)
   logger.info(`Biweekly briefing: \n ${briefing}`)
-  await sendMissiveDraft({ subject: `Biweekly briefing for ${project.name}`, message: briefing, toEmails: project.client_email ? [project.client_email] : [] })
+  let toEmails = []
+  try {
+    toEmails = JSON.parse(project.client_emails)
+  } catch (e) {
+    logger.error(`Error parsing client_emails: ${e.message} ${project.client_emails}`)
+  }
+  await sendMissiveDraft({ subject: `Biweekly briefing for ${project.name}`, message: briefing, toEmails: toEmails || [] })
 
   await supabase
     .from(PROJECT_TABLE_NAME)

@@ -41,7 +41,8 @@ function processWebhookPayload(payload) {
     webhook_timestamp: new Date(payload.webhookTimestamp),
     webhook_id: payload.webhookId,
     project_id: payload.data.project?.id,
-    team_id: payload.data.team?.id,
+    team_id: payload.data.team?.id || payload.data.teamId,
+    url: payload.url,
   }
 }
 

@@ -20,7 +20,7 @@ require('dotenv').config()
  * @param {string} status - The status of the project, defaults to 'active'. Can be 'active', 'paused', 'completed', or 'archived'.
  * @param {string} startDate - The start date of the project.
  * @param {string} endDate - The end date of the project.
- * @param {string} clientEmail - The client email for the project.
+ * @param {string} clientEmails - A string in JSON format of an array that represent a list of client emails for the project.
  * @param {string} linearTeamId - The Linear team ID of the project.
  * @param {string} pivotalTrackerId - The Pivotal tracker ID of the project.
  * @param {string} githubRepositoryUrls - A string in JSON format of an array that represents a list of GitHub repository that is linked to the project.
@@ -38,7 +38,7 @@ async function createProject({
   status,
   startDate,
   endDate,
-  clientEmail,
+  clientEmails,
   linearTeamId,
   githubRepositoryUrls,
   pivotalTrackerId
@@ -92,7 +92,7 @@ async function createProject({
       missive_label_id: labelId,
       start_date: startDate || new Date(),
       end_date: endDate,
-      client_email: clientEmail,
+      client_emails: clientEmails,
       linear_team_id: linearTeamId,
       github_repository_urls: githubRepositoryUrls,
       pivotal_tracker_id: pivotalTrackerId,
@@ -114,7 +114,7 @@ async function createProject({
  * @param {string} newStatus - The new status of the project. Can be 'active', 'paused', 'completed', or 'archived'.
  * @param {string} newStartDate - The new start date of the project.
  * @param {string} newEndDate - The new end date of the project.
- * @param {string} newClientEmail - The new client email of the project.
+ * @param {string} newClientEmails - A string in JSON format of an array that represent a list of new client emails of the project.
  * @param {string} newLinearTeamId - The new Linear team ID of the project.
  * @param {string} newPivotalTrackerId - The new Pivotal tracker ID of the project.
  * @param {string} newGithubRepositoryUrls - A string in JSON format of an array that represents a list of GitHub repository that is linked to the project.
@@ -130,14 +130,14 @@ async function updateProject({
   newStatus,
   newStartDate,
   newEndDate,
-  newClientEmail,
+  newClientEmails,
   newLinearTeamId,
   newPivotalTrackerId,
   newGithubRepositoryUrls
 }) {
   if (
     !newProjectName && !newAliases && !newStatus && !newStartDate && !newEndDate
-      && !newGithubRepositoryUrls && !newPivotalTrackerId && !newClientEmail
+      && !newGithubRepositoryUrls && !newPivotalTrackerId && !newClientEmails
   )
     throw new Error('No changes made')
 
@@ -164,7 +164,7 @@ async function updateProject({
       end_date: newEndDate,
       updated_at: new Date(),
       linear_team_id: newLinearTeamId,
-      client_email: newClientEmail,
+      client_emails: newClientEmails,
       pivotal_tracker_id: newPivotalTrackerId,
       github_repository_urls: newGithubRepositoryUrls
     })
