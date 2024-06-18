@@ -216,6 +216,12 @@ $$;
 - **OPENAI_API_KEY**: Sign up at [OpenAI](https://beta.openai.com/signup/), and after verification, you can access your API key in your account settings.
 - **OPENAI_API_ORGANIZATION**: This is your organization ID on OpenAI, available in your account settings on the OpenAI dashboard.
 
+### Anthropic Claude
+- **ANTHROPIC_API_KEY**: Sign up at [Anthropic](https://console.anthropic.com/login).
+
+### Voyage Embeddings
+- **VOYAGE_API_KEY**: Sign up at [Voyage AI](https://www.voyageai.com)
+
 ### GitHub
 
 - **GITHUB_USER**: The bot's github username.
@@ -233,7 +239,7 @@ $$;
 ### Google
 
 - **GOOGLE_CLIENT_ID** and **GOOGLE_SECRET**: Go to the [Google Cloud Console](https://console.cloud.google.com/), create a new project, and navigate to 'APIs & Services' > 'Credentials'. Here, you can create your OAuth 2.0 credentials. You will need to create a service account and download the JSON file containing your credentials. You will also need to enable the Google Drive, Calendar, and Docs APIs for your project.
-- **Google Calendar** requires the service account to [&#34;insert&#34;](https://developers.google.com/calendar/api/v3/reference/calendarList/insert) your calendar to the service account's calendar list through the API (even after you have explicitly shared it from the).
+- **Google Calendar** requires the service account to [&#34;insert&#34;](https://developers.google.com/calendar/api/v3/reference/calendarList/insert) your calendar to the _service account's_ calendar list through the API (even after you have explicitly shared it from the _calendar owner's_ Google account).
 
 ### Mastodon
 
