@@ -15,7 +15,8 @@ const {
   processDailyReport,
   sendMissiveResponse,
   processEmailMessage,
-  verifyMissiveSignature
+  verifyMissiveSignature,
+  sendMissiveDraft
 } = require('./src/missive')
 const { supabase } = require('./src/supabaseclient')
 const {
@@ -433,7 +434,7 @@ app.post(BIWEEKLY_BRIEFING, validateAuthorizationHeader, async (req, res) => {
 
   const { data, error } = await supabase
     .from(PROJECT_TABLE_NAME)
-    .select('name, last_sent_biweekly_briefing, missive_conversation_id')
+    .select('name, last_sent_biweekly_briefing, missive_conversation_id, client_emails')
     .eq('id', projectId)
   if (error || !data || data.length === 0) {
     logger.error(`Error processing biweekly: Project not found. Data: ${projectId} ${error?.message}`);
@@ -442,7 +443,6 @@ app.post(BIWEEKLY_BRIEFING, validateAuthorizationHeader, async (req, res) => {
   const project = data[0]
   // Assume that last_sent_biweekly_briefing is in the past
   // Cron jobs cannot run biweekly directly, so we use a workaround to run it weekly and check if the task is within a 2-week period.
-  // TODO: do nothing if last_sent_biweekly_briefing is null
   const within2Weeks = differenceInMilliseconds(new Date(), new Date(project.last_sent_biweekly_briefing)) < (14 * 24 * 60 * 60 - 5 * 60) * 1000 // 2 weeks - 5 minutes to account for potential delays
   if (project.last_sent_biweekly_briefing && within2Weeks) {
     logger.error(`Error processing biweekly: Project already sent briefing in the last 2 weeks. Data: ${projectId} ${project.last_sent_biweekly_briefing}`);
@@ -451,14 +451,14 @@ app.post(BIWEEKLY_BRIEFING, validateAuthorizationHeader, async (req, res) => {
 
   const briefing = await makeBiweeklyProjectBriefing(project.name)
   logger.info(`Biweekly briefing: \n ${briefing}`)
-  await sendMissiveResponse({
-    message: briefing,
-    notificationTitle: `Biweekly briefing for ${project.name}`,
-    conversationSubject: `Biweekly briefing for ${project.name}`,
-    organization: process.env.MISSIVE_ORGANIZATION,
-    addSharedLabels: [process.env.MISSIVE_SHARED_LABEL],
-    addToInbox: true
-  })
+  let toEmails = []
+  try {
+    toEmails = JSON.parse(project.client_emails)
+  } catch (e) {
+    logger.error(`Error parsing client_emails: ${e.message} ${project.client_emails}`)
+  }
+  await sendMissiveDraft({ subject: `Biweekly briefing for ${project.name}`, message: briefing, toEmails: toEmails || [] })
+
   await supabase
     .from(PROJECT_TABLE_NAME)
     .update({

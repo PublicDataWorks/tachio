@@ -492,20 +492,21 @@ async function sendMissiveResponse({
 }) {
   // Separate thinking part out of result part of Claude's message
   let notification
-  const notificationContent = extractTagContent(message, 'notification')
+  const notificationContent = extractTag(message, 'notification')
   try {
     notification = JSON.parse(notificationContent)
   } catch (error) {
     logger.error('Error parsing notification:', error, notificationContent)
   }
-  const thinking = extractTagContent(message, 'thinking')
-  const result = removeTagAndContent(message, ['notification', 'thinking', 'memories']);
-  const attachments = [
-    {
+  const thinking = extractTag(message, 'thinking')
+  const result = removeTag(message, ['notification', 'thinking', 'memories']);
+  const attachments = []
+  if (thinking?.length > 0) {
+    attachments.push({
       color: '#B2BEB5',
       text: thinking.trim()
-    }
-  ]
+    })
+  }
   attachments.push(
     ...splitIntoParagraphs(result).map(paragraph => ({
       color: '#2266ED',
@@ -531,6 +532,40 @@ async function sendMissiveResponse({
         organization,
         add_to_inbox: addToInbox,
         add_shared_labels: addSharedLabels
+      }
+    })
+  })
+  const response = await responsePost.json()
+  // Log the response status and body from the Missive API
+  logger.info(`Response post status: ${responsePost.status}`)
+  logger.info(`Response post body: ${JSON.stringify(response)}`)
+  return response
+}
+
+async function sendMissiveDraft({ subject, message, conversationSubject, toEmails }) {
+  let result = removeTag(message, ['notification', 'thinking', 'memories']).trim();
+  if (result.length === 0) {
+    result = extractTag(message, 'thinking')
+  }
+  const toFields = toEmails.map(email => ({ address: email }))
+  const responsePost = await fetch(`${apiFront}/drafts/`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      drafts: {
+        subject,
+        body: result.replace(/\n/g, '<br>'),
+        to_fields: toFields,
+        from_field: {
+          address: process.env.MISSIVE_SENDER_EMAIL
+        },
+        add_shared_labels: [process.env.MISSIVE_SHARED_LABEL],
+        add_to_inbox: true,
+        organization: process.env.MISSIVE_ORGANIZATION,
+        conversation_subject: conversationSubject
       }
     })
   })
@@ -572,7 +607,7 @@ function missiveOptions(body = undefined, method = 'GET') {
   }
 }
 
-function removeTagAndContent(text, tags) {
+function removeTag(text, tags) {
   tags.forEach(tag => {
     while (text.includes(`<${tag}>`)) {
       const start = text.indexOf(`<${tag}>`);
@@ -585,7 +620,7 @@ function removeTagAndContent(text, tags) {
   return text
 }
 
-function extractTagContent(text, tag) {
+function extractTag(text, tag) {
   const start = text.indexOf(`<${tag}>`);
   const end = text.indexOf(`</${tag}>`, start);
   if (start !== -1 && end !== -1) {
@@ -626,5 +661,11 @@ async function getFullMessage(messageId) {
 }
 
 module.exports = {
-  createSharedLabel, createPost, processDailyReport, sendMissiveResponse, processEmailMessage, verifyMissiveSignature
+  createSharedLabel,
+  createPost,
+  processDailyReport,
+  sendMissiveResponse,
+  processEmailMessage,
+  verifyMissiveSignature,
+  sendMissiveDraft
 }

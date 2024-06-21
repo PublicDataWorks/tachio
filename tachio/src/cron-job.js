@@ -20,7 +20,7 @@ const invokeBiWeeklyBriefing = async (projectId) => {
 }
 
 const invokeProjectBriefing = async (projectId) => {
-  const cronExpression = '30 13 * * *'; // 5:30 AM PT every day
+  const cronExpression = '30 12 * * *'; // 5:30 AM PT every day
   await createJob(
     cronExpression,
     `
@@ -36,7 +36,7 @@ const invokeProjectBriefing = async (projectId) => {
 }
 
 const invokeWeeklyBriefing = async () => {
-  const cronExpression = '0 6 * * 0'; // 6:00 AM PT every Sunday
+  const cronExpression = '0 13 * * 0'; // 6:00 AM PT every Sunday
   // Removing the Content-Type header causes it to not work
   await createJob(
     cronExpression,
@@ -52,7 +52,7 @@ const invokeWeeklyBriefing = async () => {
 }
 
 const invokeDailyBriefing = async () => {
-  const cronExpression = '0 6 * * *'; // 6:00 AM PT every day
+  const cronExpression = '0 13 * * *'; // 6:00 AM PT every day
   await createJob(
     cronExpression,
     `
@@ -67,7 +67,7 @@ const invokeDailyBriefing = async () => {
 }
 
 const invokeRememberizer = async () => {
-  const cronExpression = '0 5 * * *'; // 6:00 AM PT every day
+  const cronExpression = '0 12 * * *'; // 5:00 AM PT every day
   await createJob(
     cronExpression,
     `

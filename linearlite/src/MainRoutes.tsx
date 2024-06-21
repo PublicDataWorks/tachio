@@ -65,6 +65,7 @@ export const MainRoutes = ({ onElectricLoaded }: MainRoutesProps) => {
   }, 300)
 
   useEffect(() => {
+    // Only for the Missive sidebar, no-op for direct web access
     Missive.on('change:conversations', handleConversationChange)
     const init = async () => {
       try {

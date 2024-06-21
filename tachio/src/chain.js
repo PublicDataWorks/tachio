@@ -442,7 +442,7 @@ module.exports = (async () => {
     const prompt = lastUserMessage.content;
     logger.info(`Prompt: ${prompt}`);
     const { temperature, frequency_penalty } = generateAiCompletionParams();
-    const { MAX_TOKEN } = await getConfigFromSupabase();
+    const { MAX_TOKENS } = await getConfigFromSupabase();
 
     const { aiResponse } = await generateAiCompletion(
       prompt,
@@ -451,7 +451,7 @@ module.exports = (async () => {
       {
         temperature,
         frequency_penalty,
-        max_token: MAX_TOKEN
+        max_tokens: MAX_TOKENS
       }
     )
     logger.info(`AI Response: ${aiResponse}`);
