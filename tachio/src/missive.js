@@ -500,12 +500,13 @@ async function sendMissiveResponse({
   }
   const thinking = extractTag(message, 'thinking')
   const result = removeTag(message, ['notification', 'thinking', 'memories']);
-  const attachments = [
-    {
+  const attachments = []
+  if (thinking?.length > 0) {
+    attachments.push({
       color: '#B2BEB5',
       text: thinking.trim()
-    }
-  ]
+    })
+  }
   attachments.push(
     ...splitIntoParagraphs(result).map(paragraph => ({
       color: '#2266ED',
