@@ -9,7 +9,7 @@ name: tachio
 services:
   studio:
     container_name: supabase-studio
-    image: supabase/studio:20240729-ce42139
+    image: supabase/studio:20240326-5e5586d
     restart: unless-stopped
     healthcheck:
       test:
@@ -75,7 +75,7 @@ services:
 
   auth:
     container_name: supabase-auth
-    image: supabase/gotrue:v2.158.1
+    image: supabase/gotrue:v2.143.0
     depends_on:
       db:
         # Disable this if you are using an external Postgres database
@@ -134,7 +134,7 @@ services:
 
   rest:
     container_name: supabase-rest
-    image: postgrest/postgrest:v12.2.0
+    image: postgrest/postgrest:v12.0.1
     depends_on:
       db:
         # Disable this if you are using an external Postgres database
@@ -155,7 +155,7 @@ services:
   realtime:
     # This container name looks inconsistent but is correct because realtime constructs tenant id by parsing the subdomain
     container_name: realtime-dev.supabase-realtime
-    image: supabase/realtime:v2.30.34
+    image: supabase/realtime:v2.27.5
     depends_on:
       db:
         # Disable this if you are using an external Postgres database
@@ -196,7 +196,7 @@ services:
   # To use S3 backed storage: docker compose -f docker-compose.yml -f docker-compose.s3.yml up
   storage:
     container_name: supabase-storage
-    image: supabase/storage-api:v1.10.1
+    image: supabase/storage-api:v0.46.4
     depends_on:
       db:
         # Disable this if you are using an external Postgres database
@@ -256,7 +256,7 @@ services:
 
   meta:
     container_name: supabase-meta
-    image: supabase/postgres-meta:v0.83.2
+    image: supabase/postgres-meta:v0.80.0
     depends_on:
       db:
         # Disable this if you are using an external Postgres database
@@ -274,7 +274,7 @@ services:
 
   functions:
     container_name: supabase-edge-functions
-    image: supabase/edge-runtime:v1.58.2
+    image: supabase/edge-runtime:v1.41.2
     restart: unless-stopped
     depends_on:
       analytics:
@@ -339,7 +339,7 @@ services:
   # Comment out everything below this point if you are using an external Postgres database
   db:
     container_name: supabase-db
-    image: supabase/postgres:15.1.1.78
+    image: supabase/postgres:15.1.0.147
     healthcheck:
       test: pg_isready -U postgres -h localhost
       interval: 5s

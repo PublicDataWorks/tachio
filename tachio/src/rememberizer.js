@@ -72,7 +72,7 @@ const retrieveSlackContent = async (apiKey, projectName, conversationId) => {
     await sendMissiveResponse({
       message: completion,
       conversationId,
-      notificationTitle: `Summary of the response from rememberizer for the ${projectName} project`,
+      notificationTitle: `Daily slack summary for ${projectName}`,
       organization: process.env.MISSIVE_ORGANIZATION,
       addSharedLabels: [process.env.MISSIVE_SHARED_LABEL],
       addToInbox: true
