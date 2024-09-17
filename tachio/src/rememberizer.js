@@ -3,6 +3,7 @@ const { PROJECT_TABLE_NAME } = require('./constants')
 const { getPromptsFromSupabase, createChatCompletion } = require('../helpers')
 const { sendMissiveResponse } = require('./missive')
 const logger = require('./logger.js')('rememberizer');
+const { storeUserMessage } = require('./remember');
 
 const RETRIEVE_DOCUMENTS_URL = 'https://api.rememberizer.ai/api/v1/documents?integration_type=slack&page_size=1000'
 const TIME_REGEX = /\[ time ] (.*?) \[ message ]/
@@ -69,6 +70,14 @@ const retrieveSlackContent = async (apiKey, projectName, conversationId) => {
     ]
     const completion = await createChatCompletion(messages)
     logger.info(`Text completion for the ${projectName} project:\n${completion}`)
+  
+    const storedMessageId = await storeUserMessage(
+      { username: 'rememberizer', conversationId, guild: 'missive', response: completion },
+      JSON.stringify(content)
+    );
+  
+    logger.info(`Stored Message ID: ${storedMessageId}`);
+  
     await sendMissiveResponse({
       message: completion,
       conversationId,
