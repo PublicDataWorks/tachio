@@ -24,8 +24,13 @@ const crawlSlack = async () => {
 const retrieveSlackContent = async (apiKey, projectName, conversationId) => {
   const now = new Date();
   const twentyFourHoursAgo = new Date(now.getTime() - (24 * 60 * 60 * 1000));
-  const startDate = Math.floor(twentyFourHoursAgo.getTime() / 1000);
-  const endDate = Math.floor(now.getTime() / 1000);
+
+  // Convert to ISO 8601 format
+  const startDate = twentyFourHoursAgo.toISOString();
+  const endDate = now.toISOString();
+
+  console.log('Start Date:', startDate);
+  console.log('End Date:', endDate);
 
   const ids = await retrieveSlackIds(apiKey); // each id is a slack channel
   const content = []
@@ -39,8 +44,8 @@ const retrieveSlackContent = async (apiKey, projectName, conversationId) => {
         .from('slack_messages')
         .select('id')
         .eq('rememberizer_document_id', documentId)
-        .gte('created_at', twentyFourHoursAgo.toISOString())
-        .lte('created_at', now.toISOString())
+        .gte('created_at', startDate)
+        .lte('created_at', endDate)
         .limit(1)
       if (data && data.length > 0) {
         logger.info(`DocumentId: ${documentId} ${documentName} already exists in the database. Skipping...`)
@@ -117,7 +122,6 @@ const retrieveSlackContentByDocumentId = async (apiKey, documentId, documentName
     }
     startChunk = (data.end_chunk && data.end_chunk >= startChunk) ? data.end_chunk + 1 : -1
   } while (startChunk >= 0)
-
   return processedMessages
 }
 
