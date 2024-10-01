@@ -6,7 +6,6 @@ const logger = require('./logger.js')('rememberizer');
 const { storeUserMessage } = require('./remember');
 
 const RETRIEVE_DOCUMENTS_URL = 'https://api.rememberizer.ai/api/v1/documents?integration_type=slack&page_size=1000'
-const TIME_REGEX = /\[ time ] (.*?) \[ message ]/
 
 const crawlSlack = async () => {
   const { data, error } = await supabase
@@ -19,7 +18,7 @@ const crawlSlack = async () => {
   }
   await Promise
     .all(data.map(project => retrieveSlackContent(project.rememberizer_key, project.name, project.missive_conversation_id)))
-    .catch(error => logger.error(error.message))
+    .catch(error => logger.error(error.stack))
 }
 
 const retrieveSlackContent = async (apiKey, projectName, conversationId) => {
@@ -27,8 +26,8 @@ const retrieveSlackContent = async (apiKey, projectName, conversationId) => {
   const twentyFourHoursAgo = new Date(now.getTime() - (24 * 60 * 60 * 1000));
 
   // Convert to ISO 8601 format
-  const startDate = twentyFourHoursAgo.toISOString();
-  const endDate = now.toISOString();
+  const startDate = twentyFourHoursAgo.toISOString().slice(0, 19) + 'Z';
+  const endDate = now.toISOString().slice(0, 19) + 'Z';
 
   console.log('Start Date:', startDate);
   console.log('End Date:', endDate);
@@ -70,14 +69,14 @@ const retrieveSlackContent = async (apiKey, projectName, conversationId) => {
     ]
     const completion = await createChatCompletion(messages)
     logger.info(`Text completion for the ${projectName} project:\n${completion}`)
-  
+
     const storedMessageId = await storeUserMessage(
       { username: 'rememberizer', conversationId, guild: 'missive', response: completion },
       JSON.stringify(content)
     );
-  
+
     logger.info(`Stored Message ID: ${storedMessageId}`);
-  
+
     await sendMissiveResponse({
       message: completion,
       conversationId,
@@ -95,7 +94,7 @@ const retrieveSlackContentByDocumentId = async (apiKey, documentId, documentName
   const processedMessages = []
   let startChunk = 0
   do {
-    const response = await fetch(`https://api.rememberizer.ai/api/v1/documents/${documentId}/contents?start_chunk=${startChunk}&from=${startDate}&to=${endDate}`, {
+    const response = await fetch(`https://api.rememberizer.ai/api/v1/discussions/${documentId}/contents/?integration_type=slack&start_chunk=${startChunk}&from=${startDate}&to=${endDate}`, {
       method: 'GET',
       headers: {
         'X-API-Key': apiKey
@@ -106,9 +105,8 @@ const retrieveSlackContentByDocumentId = async (apiKey, documentId, documentName
       logger.error(`Failed to retrieve slack content for documentId: ${documentId}. Status: ${response.status}, chunk ${startChunk}`)
       return
     }
-    // e.g. data = <s> [ user ] a [ time ] 2024 - 03 - 18 04 : 34 : 34 : 275879 [ message ] a has joined the channel </s>
-    // <s> [ user ] b [ time ] 2024 - 03 - 18 04 : 34 : 42 : 143039 [ message ] b has joined the channel </s>
-    const items = data.content.split(/<\/s>\s*<s>/)
+    // e.g. data = <s>User: abc, Time: 2023-09-26 01:58:45:727359, Message: So if you want to sign in with email &amp; password, please reset your password following</s>
+    const items = data.discussion_content.split(/<\/s>\s*<s>/)
       .filter(item => item.trim() !== '')
       .map(item => {
         const cleaned = item.trim().replace('<s>', '').replace('</s>', '')
@@ -146,8 +144,7 @@ const retrieveSlackIds = async (apiKey) => {
     logger.error(`Failed to retrieve documents from Rememberizer. Status: ${response.status}, data ${JSON.stringify(data)}`)
     return []
   }
-
-  const documentIds = data.results.map(document => ({ id: document.id, name: document.name }))
+  const documentIds = data.results.map(document => ({ id: document.pk, name: document.name }))
   const count = data.count
   // maximum page_size
   if (count > 1000) {
@@ -177,33 +174,17 @@ const retrieveSlackIdsByPage = async (apiKey, page = 1) => {
     logger.error(`Failed to retrieve documents from page ${page}. Status: ${response.status}, data ${JSON.stringify(data)}`)
     return []
   }
-
   return data.results.map(document => ({ id: document.id, name: document.name }));
 }
 
 const parseDateString = (text) => {
-  const timeMatch = text.match(TIME_REGEX); // e.g. <s> [ time ] 2024 - 03 - 18 04 : 34 : 34 : 275879 [ message ] or <s> [ time ] 2024-03-18 04:34:34:275879 [ message ]
-  if (!timeMatch) {
-    logger.error(`Time string not found in the text ${text}`);
-    return null;
+  const match = text.match(/Time: (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}):(\d{6})/);
+  if (match) {
+    const [, dateTime, microseconds] = match;
+    const ms = Math.floor(parseInt(microseconds) / 1000);
+    return `${dateTime}.${ms.toString().padStart(3, '0')}Z`;
   }
-
-  const timeString = timeMatch[1].trim();
-  let formattedText = timeString.replace(/ - /g, '-').replace(/ : /g, ':').replace(/ /g, 'T');
-  const millisMatch = formattedText.match(/:(\d{6})$/);
-  if (millisMatch) {
-    formattedText = formattedText.replace(/:(\d{6})$/, `.${millisMatch[1].slice(0, 3)}`);
-  }
-
-  if (!formattedText.endsWith('Z')) {
-    formattedText += 'Z';
-  }
-  const date = new Date(formattedText);
-  if (isNaN(date.getTime())) {
-    logger.error(`Invalid date format ${formattedText}`);
-    return null;
-  }
-  return date;
+  return null;
 }
 
 module.exports = {
